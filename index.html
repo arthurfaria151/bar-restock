@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Restock" />
+  <meta name="theme-color" content="#121218" />
+  <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <title>Bar Restock</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Bar Restock</h1>
+    <span id="headerBadge" class="badge empty">0</span>
+  </header>
+
+  <main>
+    <section id="panel-products" class="panel active" aria-label="Products">
+      <div id="productsRoot"></div>
+    </section>
+
+    <section id="panel-restock" class="panel" aria-label="Restock list">
+      <div class="restock-actions">
+        <button type="button" class="btn btn-primary" id="btnCopy">Copy list</button>
+        <button type="button" class="btn btn-secondary" id="btnShare" hidden>Share</button>
+        <button type="button" class="btn btn-ghost" id="btnClear">Clear</button>
+      </div>
+      <div id="restockRoot"></div>
+    </section>
+  </main>
+
+  <nav class="tab-bar" role="tablist">
+    <button type="button" class="tab-btn active" data-tab="products" role="tab" aria-selected="true">
+      <span class="icon">📦</span>
+      Products
+    </button>
+    <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false">
+      <span class="icon">🛒</span>
+      Restock
+      <span class="tab-badge" id="tabBadge">0</span>
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+[
+  {
+    "id": "de-bortoli-prosecco",
+    "name": "De Bortoli Prosecco",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0229.jpg",
+    "notes": "Cork & cage bottles; also small screw-cap versions in IMG_0218"
+  },
+  {
+    "id": "red-bull-red-edition",
+    "name": "Red Bull The Red Edition",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0218.jpg",
+    "notes": "Watermelon flavour"
+  },
+  {
+    "id": "red-bull-tropical-edition",
+    "name": "Red Bull The Tropical Edition",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0218.jpg",
+    "notes": "Yellow can"
+  },
+  {
+    "id": "red-bull-pink-edition",
+    "name": "Red Bull The Pink Edition Sugarfree",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0218.jpg",
+    "notes": "Forest Fruit"
+  },
+  {
+    "id": "red-bull-energy",
+    "name": "Red Bull Energy Drink",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0218.jpg",
+    "notes": "Classic blue/silver"
+  },
+  {
+    "id": "red-bull-sugarfree",
+    "name": "Red Bull Sugarfree",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0218.jpg",
+    "notes": "Light blue can"
+  },
+  {
+    "id": "vodka-cruiser-guava",
+    "name": "Vodka Cruiser Lush Guava",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0219.jpg",
+    "notes": ""
+  },
+  {
+    "id": "vodka-cruiser-watermelon",
+    "name": "Vodka Cruiser Juicy Watermelon",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0219.jpg",
+    "notes": ""
+  },
+  {
+    "id": "vodka-cruiser-lemon-lime",
+    "name": "Vodka Cruiser Zesty Lemon Lime",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0219.jpg",
+    "notes": ""
+  },
+  {
+    "id": "vodka-cruiser-pineapple",
+    "name": "Vodka Cruiser Pure Pineapple",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0219.jpg",
+    "notes": ""
+  },
+  {
+    "id": "bundaberg-sarsaparilla",
+    "name": "Bundaberg Sarsaparilla",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0220.jpg",
+    "notes": ""
+  },
+  {
+    "id": "bundaberg-ginger-beer",
+    "name": "Bundaberg Ginger Beer",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0220.jpg",
+    "notes": ""
+  },
+  {
+    "id": "bundaberg-guava",
+    "name": "Bundaberg Guava Sparkling Drink",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0220.jpg",
+    "notes": ""
+  },
+  {
+    "id": "somersby-pear",
+    "name": "Somersby Cider Pear",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0221.jpg",
+    "notes": ""
+  },
+  {
+    "id": "somersby-apple",
+    "name": "Somersby Cider Apple",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0221.jpg",
+    "notes": ""
+  },
+  {
+    "id": "suntory-196-double-lemon",
+    "name": "Suntory -196 Double Lemon",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0222.jpg",
+    "notes": "6% Alc/Vol"
+  },
+  {
+    "id": "brookvale-union-ginger-beer",
+    "name": "Brookvale Union Alcoholic Ginger Beer",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0222.jpg",
+    "notes": "4.0% Alc/Vol"
+  },
+  {
+    "id": "bundaberg-rum-cola",
+    "name": "Bundaberg Rum Original & Cola",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0223.jpg",
+    "notes": "4.6% 345mL"
+  },
+  {
+    "id": "jack-daniels-cola",
+    "name": "Jack Daniel's Tennessee Whiskey & Cola",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0223.jpg",
+    "notes": "4.8% 330mL"
+  },
+  {
+    "id": "pure-blonde",
+    "name": "Pure Blonde Ultra Low Carb Lager",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0226.jpg",
+    "notes": "Also in IMG_0224"
+  },
+  {
+    "id": "coopers-pale-ale",
+    "name": "Coopers Original Pale Ale",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0224.jpg",
+    "notes": ""
+  },
+  {
+    "id": "great-northern",
+    "name": "Great Northern Original Full Strength",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0224.jpg",
+    "notes": ""
+  },
+  {
+    "id": "corona-extra",
+    "name": "Corona Extra",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0224.jpg",
+    "notes": ""
+  },
+  {
+    "id": "peroni-0",
+    "name": "Peroni Nastro Azzurro 0.0%",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0225.jpg",
+    "notes": "Also partially in IMG_0223"
+  },
+  {
+    "id": "heineken-0",
+    "name": "Heineken 0.0",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0225.jpg",
+    "notes": ""
+  },
+  {
+    "id": "better-beer-middy",
+    "name": "Better Beer Middy Ultra Low Carb",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0225.jpg",
+    "notes": ""
+  },
+  {
+    "id": "brouhaha-milk-stout",
+    "name": "Brouhaha Milk Stout",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0225.jpg",
+    "notes": ""
+  },
+  {
+    "id": "james-boags-premium-light",
+    "name": "James Boag's Premium Light",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0226.jpg",
+    "notes": ""
+  },
+  {
+    "id": "strongbow-apple",
+    "name": "Strongbow Apple Cider",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0226.jpg",
+    "notes": "? Partially visible behind Pure Blonde"
+  },
+  {
+    "id": "de-bortoli-vivo-moscato",
+    "name": "De Bortoli Vivo Moscato",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0227.jpg",
+    "notes": ""
+  },
+  {
+    "id": "de-bortoli-vivo-sauvignon-blanc",
+    "name": "De Bortoli Vivo Sauvignon Blanc",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0227.jpg",
+    "notes": ""
+  },
+  {
+    "id": "rose-pale-dry-2023",
+    "name": "Ros\u00e9 Pale & Dry 2023",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0227.jpg",
+    "notes": "Brand name only 'Ros\u00e9' on circular black label"
+  },
+  {
+    "id": "jean-pierre-brut",
+    "name": "Jean Pierre Brut",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0227.jpg",
+    "notes": ""
+  },
+  {
+    "id": "de-bortoli-chardonnay",
+    "name": "De Bortoli Regional Reserve Chardonnay",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0229.jpg",
+    "notes": "Yarra Valley"
+  },
+  {
+    "id": "lyres-classico",
+    "name": "Lyre's Classico",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0229.jpg",
+    "notes": "Non-alcoholic sparkling"
+  },
+  {
+    "id": "james-boags-premium-lager",
+    "name": "James Boag's Premium Lager",
+    "category": "Fridge",
+    "sourcePhoto": "IMG_0229.jpg",
+    "notes": "? Partially obscured on far left"
+  },
+  {
+    "id": "de-bortoli-vivo-shiraz",
+    "name": "De Bortoli Vivo Shiraz",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0228.jpg",
+    "notes": "Close-up on bar; also stocked with bar wines"
+  },
+  {
+    "id": "aubrey-cold-brew",
+    "name": "Aubrey Cold Brew Coffee Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "vok-peach",
+    "name": "Vok Peach Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "lyres-white-cane",
+    "name": "Lyre's White Cane Spirit",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "Non-alcoholic"
+  },
+  {
+    "id": "lyres-agave-blanco",
+    "name": "Lyre's Agave Blanco Spirit",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "Non-alcoholic"
+  },
+  {
+    "id": "lyres-italian-spritz",
+    "name": "Lyre's Italian Spritz",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "Non-alcoholic"
+  },
+  {
+    "id": "lyres-coffee-originale",
+    "name": "Lyre's Coffee Originale",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "Non-alcoholic"
+  },
+  {
+    "id": "lyres-dry-london",
+    "name": "Lyre's Dry London Spirit",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "Non-alcoholic"
+  },
+  {
+    "id": "monin-passion-fruit",
+    "name": "Monin Passion Fruit Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "monin-blue-curacao",
+    "name": "Monin Blue Cura\u00e7ao Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "monin-lavender",
+    "name": "Monin Lavender Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "monin-toasted-marshmallow",
+    "name": "Monin Toasted Marshmallow Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "monin-pineapple",
+    "name": "Monin Pineapple Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "licor-43",
+    "name": "Licor 43",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "1800-coconut",
+    "name": "1800 Coconut Tequila",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "frangelico",
+    "name": "Frangelico",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "midori",
+    "name": "Midori Melon Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "agwa",
+    "name": "Agwa de Bolivia Coca Leaf Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "four-pillars-bloody-shiraz",
+    "name": "Four Pillars Bloody Shiraz Gin",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "paraiso-lychee",
+    "name": "Paraiso Lychee Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "hendricks-gin",
+    "name": "Hendrick's Gin",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "passo\u00e3",
+    "name": "Passo\u00e3 Passion Fruit Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "patient-wolf-gin",
+    "name": "Patient Wolf Premium Dry Gin",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "alize-bleu",
+    "name": "Aliz\u00e9 Bleu Passion",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": ""
+  },
+  {
+    "id": "monin-agave",
+    "name": "Monin Agave Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Top shelf"
+  },
+  {
+    "id": "monin-elderflower",
+    "name": "Monin Elderflower Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Top shelf"
+  },
+  {
+    "id": "monin-vanilla",
+    "name": "Monin Vanilla Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Top shelf"
+  },
+  {
+    "id": "absolut-vodka",
+    "name": "Absolut Vodka",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Back row, partially visible"
+  },
+  {
+    "id": "belvedere-vodka",
+    "name": "Belvedere Vodka",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Frosted bottle back row"
+  },
+  {
+    "id": "smirnoff-red",
+    "name": "Smirnoff Red Label",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Back row"
+  },
+  {
+    "id": "massenez-creme-de-mure",
+    "name": "Massenez Cr\u00e8me de M\u00fbre",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Far right back"
+  },
+  {
+    "id": "massenez-creme-de-cassis",
+    "name": "Massenez Cr\u00e8me de Cassis",
+    "category": "Bar Shelves",
+    "sourcePhoto": "IMG_0236.jpg",
+    "notes": "? Far right back"
+  }
+]
