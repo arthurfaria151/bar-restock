@@ -20,9 +20,38 @@
     <span id="headerBadge" class="badge empty">0</span>
   </header>
 
+  <div id="lowBanner" class="low-banner" hidden>
+    <div class="low-banner-text">
+      <strong id="lowBannerTitle">Low stock</strong>
+      <span id="lowBannerDetail"></span>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" id="btnSendReminder">Send reminder</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="btnDismissBanner" aria-label="Dismiss">✕</button>
+  </div>
+
   <main>
     <section id="panel-products" class="panel active" aria-label="Products">
       <div id="productsRoot"></div>
+    </section>
+
+    <section id="panel-stock" class="panel" aria-label="Stock">
+      <form id="addProductForm" class="add-product">
+        <input id="newProductName" type="text" placeholder="New product name" maxlength="80" required autocomplete="off" enterkeyhint="done" />
+        <select id="newProductCategory" aria-label="Category">
+          <option value="Fridge">Fridge</option>
+          <option value="Bar Shelves">Bar Shelves</option>
+          <option value="Other">Other</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Add product</button>
+      </form>
+      <div id="stockSummary" class="stock-summary"></div>
+      <div id="stockRoot"></div>
+    </section>
+
+    <section id="panel-par" class="panel" aria-label="Par levels">
+      <p class="par-help">Set the minimum on-hand quantity for each product. When stock hits this level, you’ll get an email reminder.</p>
+      <div id="parSummary" class="stock-summary"></div>
+      <div id="parRoot"></div>
     </section>
 
     <section id="panel-restock" class="panel" aria-label="Restock list">
@@ -39,6 +68,15 @@
     <button type="button" class="tab-btn active" data-tab="products" role="tab" aria-selected="true">
       <span class="icon">📦</span>
       Products
+    </button>
+    <button type="button" class="tab-btn" data-tab="stock" role="tab" aria-selected="false">
+      <span class="icon">📋</span>
+      Stock
+    </button>
+    <button type="button" class="tab-btn" data-tab="par" role="tab" aria-selected="false">
+      <span class="icon">🎯</span>
+      Par
+      <span class="tab-badge" id="parBadge">0</span>
     </button>
     <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false">
       <span class="icon">🛒</span>
