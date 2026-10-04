@@ -15,9 +15,42 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div id="loginScreen" class="login-screen">
+    <form id="loginForm" class="login-card" autocomplete="off">
+      <h2>Sign in</h2>
+      <p class="login-sub">Choose your role and enter the PIN.</p>
+      <div class="role-list" role="radiogroup" aria-label="Role">
+        <label class="role-option">
+          <input type="radio" name="role" value="manager" required />
+          <span>Venue manager</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="assistant" />
+          <span>Venue assistant manager</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="supervisor" />
+          <span>Shift supervisor</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="bartender" />
+          <span>Bartenders</span>
+        </label>
+      </div>
+      <label class="pin-label" for="loginPin">PIN</label>
+      <input id="loginPin" class="login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off" enterkeyhint="go" required />
+      <p id="loginError" class="login-error" hidden></p>
+      <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+  </div>
+
   <header class="app-header">
     <h1>Bar Restock</h1>
-    <span id="headerBadge" class="badge empty">0</span>
+    <div class="header-right">
+      <span id="roleLabel" class="role-label" hidden></span>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnLogout" hidden>Log out</button>
+      <span id="headerBadge" class="badge empty">0</span>
+    </div>
   </header>
 
   <div id="lowBanner" class="low-banner" hidden>

@@ -470,3 +470,138 @@ body {
   font-size: 0.9rem;
   line-height: 1.4;
 }
+
+/* Login */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow: auto;
+}
+.login-screen[hidden] { display: none !important; }
+
+.login-card {
+  width: min(440px, 100%);
+  background: var(--surface);
+  border: 1px solid #2a2a38;
+  border-radius: 20px;
+  padding: 24px 20px 20px;
+}
+.login-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+.login-sub {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface2);
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 52px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.role-option.selected,
+.role-option:has(input:checked) {
+  border-color: var(--accent);
+  background: #2a1820;
+}
+.role-option input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  margin: 0;
+  flex-shrink: 0;
+}
+.pin-label {
+  display: block;
+  margin: 0 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.login-pin {
+  width: 100%;
+  background: #121218;
+  color: var(--text);
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 1.35rem;
+  letter-spacing: 0.35em;
+  min-height: 52px;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+.login-pin:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.login-error {
+  margin: 0 0 12px;
+  color: #ff8a9a;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+.login-error[hidden] { display: none !important; }
+.login-card .btn { width: 100%; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.role-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+  max-width: 9.5rem;
+}
+.role-label[hidden],
+#btnLogout[hidden] { display: none !important; }
+#btnLogout.btn {
+  padding: 8px 12px;
+  min-height: 36px;
+  font-size: 0.8rem;
+  flex: 0 0 auto;
+}
+
+/* Bartenders: Stock + Restock only */
+body.role-bartender .tab-btn[data-tab="products"],
+body.role-bartender .tab-btn[data-tab="par"] {
+  display: none !important;
+}
+body.role-bartender #panel-products,
+body.role-bartender #panel-par {
+  display: none !important;
+}
+body.role-bartender .tab-bar {
+  grid-template-columns: 1fr 1fr;
+}

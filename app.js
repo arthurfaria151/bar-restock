@@ -17,6 +17,7 @@
     reminded: {}, // id -> true once low-stock email prepared
     tab: "products",
     bannerDismissed: false,
+    role: null, // session role id, or null when signed out
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -353,10 +354,14 @@
   function renderRestock() {
     const ids = Object.keys(state.selection);
     if (ids.length === 0) {
+      const canPick = !state.role || ROLES[state.role].tabs.includes("products");
+      const hint = canPick
+        ? "Tap products on the Products tab to build your restock list."
+        : "Nothing has been added to the restock list yet.";
       restockRoot.innerHTML = `
         <div class="empty-state">
           <strong>Nothing selected yet</strong>
-          Tap products on the Products tab to build your restock list.
+          ${hint}
         </div>`;
       return;
     }
@@ -462,6 +467,11 @@
   }
 
   function switchTab(tab) {
+    const allowed = state.role ? ROLES[state.role].tabs : null;
+    if (allowed && !allowed.includes(tab)) {
+      // Bartenders (and any future limited role) cannot open Products or Par.
+      tab = allowed.includes("stock") ? "stock" : allowed[0];
+    }
     state.tab = tab;
     document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -658,14 +668,115 @@
       .replace(/"/g, "&quot;");
   }
 
+
+  /*
+   * Login (static PWA — PINs are in the client, not a real security boundary).
+   * Default PINs:
+   *   Venue manager:            1001
+   *   Venue assistant manager:  2002
+   *   Shift supervisor:         3003
+   *   Bartenders:               4004
+   * Session only: role id is kept in sessionStorage so a refresh stays signed in
+   * for this tab. A new tab or browser session must sign in again.
+   */
+  const SESSION_KEY = "bar-restock-role-v1";
+  const ROLES = {
+    manager: {
+      label: "Venue manager",
+      pin: "1001",
+      tabs: ["products", "stock", "par", "restock"],
+    },
+    assistant: {
+      label: "Venue assistant manager",
+      pin: "2002",
+      tabs: ["products", "stock", "par", "restock"],
+    },
+    supervisor: {
+      label: "Shift supervisor",
+      pin: "3003",
+      tabs: ["products", "stock", "par", "restock"],
+    },
+    bartender: {
+      label: "Bartenders",
+      pin: "4004",
+      tabs: ["stock", "restock"],
+    },
+  };
+
+  function readSessionRole() {
+    try {
+      const id = sessionStorage.getItem(SESSION_KEY);
+      if (id && ROLES[id]) return id;
+    } catch (_) {}
+    return null;
+  }
+
+  function applyRole(roleId) {
+    state.role = roleId && ROLES[roleId] ? roleId : null;
+    document.body.classList.remove(
+      "role-manager",
+      "role-assistant",
+      "role-supervisor",
+      "role-bartender"
+    );
+    const loginScreen = $("#loginScreen");
+    const roleLabel = $("#roleLabel");
+    const btnLogout = $("#btnLogout");
+    if (!state.role) {
+      loginScreen.hidden = false;
+      roleLabel.hidden = true;
+      roleLabel.textContent = "";
+      btnLogout.hidden = true;
+      return;
+    }
+    document.body.classList.add("role-" + state.role);
+    loginScreen.hidden = true;
+    roleLabel.hidden = false;
+    roleLabel.textContent = ROLES[state.role].label;
+    btnLogout.hidden = false;
+    const allowed = ROLES[state.role].tabs;
+    if (!allowed.includes(state.tab)) {
+      switchTab(allowed.includes("stock") ? "stock" : allowed[0]);
+    }
+  }
+
+  function signIn(roleId, pin) {
+    const role = ROLES[roleId];
+    if (!role || String(pin).trim() !== role.pin) return false;
+    try {
+      sessionStorage.setItem(SESSION_KEY, roleId);
+    } catch (_) {}
+    applyRole(roleId);
+    return true;
+  }
+
+  function signOut() {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch (_) {}
+    applyRole(null);
+    const pin = $("#loginPin");
+    if (pin) pin.value = "";
+    const err = $("#loginError");
+    if (err) {
+      err.hidden = true;
+      err.textContent = "";
+    }
+  }
+
   async function init() {
     loadSelection();
     loadStockState();
     if (navigator.share) btnShare.hidden = false;
+    // Apply the session role before any await so restricted tabs never flash.
+    applyRole(readSessionRole());
 
     const res = await fetch("catalog.json");
     state.catalog = await res.json();
     renderProducts();
+    if (state.tab === "stock") renderStock();
+    if (state.tab === "par") renderPar();
+    if (state.tab === "restock") renderRestock();
     updateLowBanner();
     updateBadges();
 
@@ -702,6 +813,36 @@
     $("#btnDismissBanner").addEventListener("click", () => {
       state.bannerDismissed = true;
       lowBanner.hidden = true;
+    });
+    $("#btnLogout").addEventListener("click", signOut);
+    document.querySelectorAll(".role-option input").forEach((input) => {
+      input.addEventListener("change", () => {
+        document.querySelectorAll(".role-option").forEach((el) => {
+          el.classList.toggle("selected", el.contains(input) && input.checked);
+        });
+      });
+    });
+    $("#loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const picked = document.querySelector('input[name="role"]:checked');
+      const pinEl = $("#loginPin");
+      const err = $("#loginError");
+      const roleId = picked ? picked.value : "";
+      const pin = pinEl.value;
+      if (!roleId) {
+        err.textContent = "Choose a role.";
+        err.hidden = false;
+        return;
+      }
+      if (!signIn(roleId, pin)) {
+        err.textContent = "Wrong PIN for that role.";
+        err.hidden = false;
+        pinEl.select();
+        return;
+      }
+      err.hidden = true;
+      err.textContent = "";
+      pinEl.value = "";
     });
 
     if ("serviceWorker" in navigator) {

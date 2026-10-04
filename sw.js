@@ -1,4 +1,4 @@
-const CACHE = "bar-restock-v4";
+const CACHE = "bar-restock-v5";
 const SHELL = [
   "./",
   "./index.html",
