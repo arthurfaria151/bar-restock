@@ -586,3 +586,10 @@ body {
   flex: 0 0 auto;
 }
 
+
+/* Phones: stock/par buttons drop below the name so long names stay readable */
+@media (max-width: 520px) {
+  .stock-item { flex-wrap: wrap; }
+  .stock-item .info { flex: 1 1 calc(100% - 76px); }
+  .stock-item .stock-actions { flex: 1 1 100%; justify-content: flex-end; }
+}
