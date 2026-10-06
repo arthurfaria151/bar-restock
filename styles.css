@@ -18,7 +18,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -238,6 +238,8 @@ body {
 .restock-item .info .cat { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
 
 .restock-item .qty-row { display: flex; }
+.tab-btn[hidden], .add-product[hidden], #btnRestoreHidden[hidden] { display: none !important; }
+#btnRestoreHidden { margin: 0 4px 12px; }
 
 .empty-state {
   text-align: center;
@@ -282,7 +284,8 @@ body {
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.72rem;
+  padding: 0 2px;
   font-weight: 700;
   display: flex;
   flex-direction: column;
@@ -293,7 +296,7 @@ body {
   position: relative;
 }
 .tab-btn.active { color: var(--text); }
-.tab-btn .icon { font-size: 1.35rem; line-height: 1; }
+.tab-btn .icon { font-size: 1.2rem; line-height: 1; }
 .tab-btn .tab-badge {
   position: absolute;
   top: 6px;
@@ -357,7 +360,6 @@ body {
   flex-shrink: 0;
 }
 
-.stock-item .qty-row { display: flex; }
 
 .btn-danger {
   background: transparent;
@@ -394,12 +396,6 @@ body {
   cursor: default;
 }
 
-/* Four-tab bar — denser labels */
-.tab-btn {
-  font-size: 0.72rem;
-  padding: 0 2px;
-}
-.tab-btn .icon { font-size: 1.2rem; }
 
 /* Low-stock banner */
 .low-banner {
@@ -411,9 +407,6 @@ body {
   background: #3a1c22;
   border: 1px solid #6a3038;
   border-radius: 14px;
-  position: sticky;
-  top: var(--header-h);
-  z-index: 15;
 }
 .low-banner[hidden] { display: none !important; }
 .low-banner-text {
@@ -593,15 +586,3 @@ body {
   flex: 0 0 auto;
 }
 
-/* Bartenders: Stock + Restock only */
-body.role-bartender .tab-btn[data-tab="products"],
-body.role-bartender .tab-btn[data-tab="par"] {
-  display: none !important;
-}
-body.role-bartender #panel-products,
-body.role-bartender #panel-par {
-  display: none !important;
-}
-body.role-bartender .tab-bar {
-  grid-template-columns: 1fr 1fr;
-}
