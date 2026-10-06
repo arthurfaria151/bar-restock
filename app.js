@@ -9,6 +9,7 @@
   const CATEGORIES = ["Fridge", "Bar Shelves", "Other"];
   const state = {
     catalog: [],
+    catalogError: null, // message when catalog.json failed to load
     custom: [], // user-added products
     hidden: [], // static catalog ids removed locally
     selection: {}, // id -> restock qty
@@ -36,19 +37,6 @@
   const lowBannerDetail = $("#lowBannerDetail");
   const lowBannerTitle = $("#lowBannerTitle");
 
-  function loadSelection() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) state.selection = JSON.parse(raw) || {};
-    } catch (_) {
-      state.selection = {};
-    }
-  }
-
-  function saveSelection() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.selection));
-  }
-
   function loadJson(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -57,37 +45,65 @@
     return fallback;
   }
 
+  function loadMap(key) {
+    const v = loadJson(key, {});
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  }
+
+  // Writes never throw: a full or blocked storage must not leave the UI half-updated.
+  function saveJson(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (_) {
+      showToast("Couldn’t save — storage is full or blocked");
+    }
+  }
+
+  function loadSelection() {
+    state.selection = loadMap(STORAGE_KEY);
+  }
+
   function loadStockState() {
-    const stock = loadJson(STOCK_KEY, {});
-    state.stock = stock && typeof stock === "object" && !Array.isArray(stock) ? stock : {};
+    state.stock = loadMap(STOCK_KEY);
     const custom = loadJson(CUSTOM_KEY, []);
     state.custom = Array.isArray(custom) ? custom.filter((p) => p && p.id && p.name) : [];
     const hidden = loadJson(HIDDEN_KEY, []);
     state.hidden = Array.isArray(hidden) ? hidden : [];
-    const par = loadJson(PAR_KEY, {});
-    state.par = par && typeof par === "object" && !Array.isArray(par) ? par : {};
-    const reminded = loadJson(REMINDED_KEY, {});
-    state.reminded = reminded && typeof reminded === "object" && !Array.isArray(reminded) ? reminded : {};
+    state.par = loadMap(PAR_KEY);
+    state.reminded = loadMap(REMINDED_KEY);
   }
 
-  function saveStock() {
-    localStorage.setItem(STOCK_KEY, JSON.stringify(state.stock));
+  const saveSelection = () => saveJson(STORAGE_KEY, state.selection);
+  const saveStock = () => saveJson(STOCK_KEY, state.stock);
+  const saveCustom = () => saveJson(CUSTOM_KEY, state.custom);
+  const saveHidden = () => saveJson(HIDDEN_KEY, state.hidden);
+  const savePar = () => saveJson(PAR_KEY, state.par);
+  const saveReminded = () => saveJson(REMINDED_KEY, state.reminded);
+
+  // Drop restock entries whose product no longer exists (e.g. removed from catalog.json),
+  // so badges and totals match the visible list.
+  function pruneSelection() {
+    const ids = new Set(effectiveCatalog().map((p) => p.id));
+    let changed = false;
+    for (const id of Object.keys(state.selection)) {
+      const q = Number(state.selection[id]);
+      if (!ids.has(id) || !Number.isFinite(q) || q <= 0) {
+        delete state.selection[id];
+        changed = true;
+      }
+    }
+    if (changed) saveSelection();
   }
 
-  function saveCustom() {
-    localStorage.setItem(CUSTOM_KEY, JSON.stringify(state.custom));
+  function groupByCategory(items) {
+    return CATEGORIES.map((title) => ({
+      title,
+      items: items.filter((p) => (CATEGORIES.includes(p.category) ? p.category : "Other") === title),
+    })).filter((g) => g.items.length);
   }
 
-  function saveHidden() {
-    localStorage.setItem(HIDDEN_KEY, JSON.stringify(state.hidden));
-  }
-
-  function savePar() {
-    localStorage.setItem(PAR_KEY, JSON.stringify(state.par));
-  }
-
-  function saveReminded() {
-    localStorage.setItem(REMINDED_KEY, JSON.stringify(state.reminded));
+  function canEditCatalog() {
+    return !state.role || ROLES[state.role].editCatalog;
   }
 
   function effectiveCatalog() {
@@ -160,15 +176,12 @@
     return effectiveCatalog().find((p) => p.id === id);
   }
 
-  function stockQty(id) {
-    const n = Number(state.stock[id] || 0);
+  function countOf(map, id) {
+    const n = Number(map[id] || 0);
     return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
   }
-
-  function parQty(id) {
-    const n = Number(state.par[id] || 0);
-    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
-  }
+  const stockQty = (id) => countOf(state.stock, id);
+  const parQty = (id) => countOf(state.par, id);
 
   function isLow(id) {
     const par = parQty(id);
@@ -217,7 +230,7 @@
       `mailto:${encodeURIComponent(EMAIL_TO)}` +
       `?subject=${encodeURIComponent(subject)}` +
       `&body=${encodeURIComponent(body)}`;
-    // Use location.assign so iPad Mail opens reliably
+    // Navigate to the mailto: URL so iPad Mail opens reliably
     window.location.href = url;
   }
 
@@ -304,11 +317,7 @@
   }
 
   function renderProducts() {
-    const items = effectiveCatalog();
-    const groups = CATEGORIES.map((title) => ({
-      title,
-      items: items.filter((p) => (p.category || "Other") === title),
-    })).filter((g) => g.items.length);
+    const groups = groupByCategory(effectiveCatalog());
     productsRoot.innerHTML = "";
     for (const g of groups) {
       const title = document.createElement("div");
@@ -408,26 +417,10 @@
       (a, b) => order.indexOf(a) - order.indexOf(b)
     );
     const lines = ["Restock list", "────────────"];
-    let fridge = [], bar = [], other = [];
-    for (const id of ids) {
-      const p = productById(id);
-      if (!p) continue;
-      const line = `${state.selection[id]}× ${p.name}`;
-      if (p.category === "Fridge") fridge.push(line);
-      else if (p.category === "Bar Shelves") bar.push(line);
-      else other.push(line);
-    }
-    if (fridge.length) {
-      lines.push("Fridge:");
-      lines.push(...fridge.map((l) => "  " + l));
-    }
-    if (bar.length) {
-      lines.push("Bar Shelves:");
-      lines.push(...bar.map((l) => "  " + l));
-    }
-    if (other.length) {
-      lines.push("Other:");
-      lines.push(...other.map((l) => "  " + l));
+    const products = ids.map(productById).filter(Boolean);
+    for (const g of groupByCategory(products)) {
+      lines.push(`${g.title}:`);
+      lines.push(...g.items.map((p) => `  ${state.selection[p.id]}× ${p.name}`));
     }
     lines.push("");
     lines.push(`Total: ${totalUnits()} items (${selectedCount()} products)`);
@@ -462,7 +455,8 @@
     try {
       await navigator.share({ title: "Bar Restock", text });
     } catch (e) {
-      if (e && e.name !== "AbortError") showToast("Share cancelled");
+      // AbortError means the user closed the share sheet; anything else is a real failure.
+      if (e && e.name !== "AbortError") showToast("Share failed — try Copy list");
     }
   }
 
@@ -496,7 +490,12 @@
 
   function addCustomProduct(name, category) {
     const clean = String(name || "").trim().replace(/\s+/g, " ");
-    if (!clean) return;
+    if (!clean || !canEditCatalog()) return;
+    const lower = clean.toLowerCase();
+    if (effectiveCatalog().some((p) => p.name.toLowerCase() === lower)) {
+      showToast("That product already exists");
+      return;
+    }
     const cat = CATEGORIES.includes(category) ? category : "Other";
     const product = { id: slugify(clean), name: clean, category: cat, custom: true };
     state.custom.push(product);
@@ -509,7 +508,7 @@
 
   function deleteProduct(id) {
     const p = productById(id);
-    if (!p) return;
+    if (!p || !canEditCatalog()) return;
     if (!confirm(`Remove “${p.name}” from the catalog?`)) return;
     if (p.custom) {
       state.custom = state.custom.filter((c) => c.id !== id);
@@ -532,8 +531,19 @@
     renderStock();
     if (state.tab === "par") renderPar();
     updateLowBanner();
-    updateBadges();
     showToast("Product removed");
+  }
+
+  function restoreHidden() {
+    if (!state.hidden.length || !canEditCatalog()) return;
+    const n = state.hidden.length;
+    if (!confirm(`Bring back ${n} removed catalog product${n === 1 ? "" : "s"}?`)) return;
+    state.hidden = [];
+    saveHidden();
+    renderProducts();
+    renderStock();
+    updateLowBanner();
+    showToast("Products restored");
   }
 
   function renderStock() {
@@ -544,16 +554,24 @@
     stockSummary.textContent =
       `${items.length} products · ${inStock} in stock · ${units} units` +
       (lowN ? ` · ${lowN} low` : "");
+    const editable = canEditCatalog();
+    $("#addProductForm").hidden = !editable;
+    const restoreBtn = $("#btnRestoreHidden");
+    restoreBtn.hidden = !editable || !state.hidden.length;
+    restoreBtn.textContent = `Restore removed (${state.hidden.length})`;
 
     stockRoot.innerHTML = "";
-    if (!items.length) {
-      stockRoot.innerHTML = `<div class="empty-state"><strong>No products</strong>Add one with the form above.</div>`;
+    if (state.catalogError) {
+      stockRoot.innerHTML = catalogErrorMarkup();
       return;
     }
-    const groups = CATEGORIES.map((title) => ({
-      title,
-      items: items.filter((p) => (p.category || "Other") === title),
-    })).filter((g) => g.items.length);
+    if (!items.length) {
+      stockRoot.innerHTML = `<div class="empty-state"><strong>No products</strong>${
+        editable ? "Add one with the form above." : "Ask a manager to add products."
+      }</div>`;
+      return;
+    }
+    const groups = groupByCategory(items);
 
     for (const g of groups) {
       const title = document.createElement("div");
@@ -583,7 +601,7 @@
               <span class="qty-val">${qty}</span>
               <button type="button" class="qty-btn" data-act="inc" aria-label="Increase stock">+</button>
             </div>
-            <button type="button" class="btn btn-danger" data-act="del">Delete</button>
+            ${editable ? `<button type="button" class="btn btn-danger" data-act="del" aria-label="Delete ${escapeHtml(p.name)}">Delete</button>` : ""}
           </div>
         `;
         li.querySelectorAll("[data-act]").forEach((btn) => {
@@ -613,12 +631,7 @@
       parRoot.innerHTML = `<div class="empty-state"><strong>No products</strong>Add products on the Stock tab first.</div>`;
       return;
     }
-    const groups = CATEGORIES.map((title) => ({
-      title,
-      items: items.filter((p) => (p.category || "Other") === title),
-    })).filter((g) => g.items.length);
-
-    for (const g of groups) {
+    for (const g of groupByCategory(items)) {
       const title = document.createElement("div");
       title.className = "section-title";
       title.textContent = `${g.title} (${g.items.length})`;
@@ -665,7 +678,14 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function catalogErrorMarkup() {
+    return `<div class="empty-state"><strong>Couldn’t load the product list</strong>
+      Check the connection and try again.<br /><br />
+      <button type="button" class="btn btn-secondary" data-retry>Retry</button></div>`;
   }
 
 
@@ -685,23 +705,28 @@
       label: "Venue manager",
       pin: "1001",
       tabs: ["products", "stock", "par", "restock"],
+      editCatalog: true,
     },
     assistant: {
       label: "Venue assistant manager",
       pin: "2002",
       tabs: ["products", "stock", "par", "restock"],
+      editCatalog: true,
     },
     supervisor: {
       label: "Shift supervisor",
       pin: "3003",
       tabs: ["products", "stock", "par", "restock"],
+      editCatalog: true,
     },
     bartender: {
       label: "Bartenders",
       pin: "4004",
       tabs: ["stock", "restock"],
+      editCatalog: false, // count stock only; cannot add or remove products
     },
   };
+  const ALL_TABS = ["products", "stock", "par", "restock"];
 
   function readSessionRole() {
     try {
@@ -713,12 +738,13 @@
 
   function applyRole(roleId) {
     state.role = roleId && ROLES[roleId] ? roleId : null;
-    document.body.classList.remove(
-      "role-manager",
-      "role-assistant",
-      "role-supervisor",
-      "role-bartender"
-    );
+    Object.keys(ROLES).forEach((id) => document.body.classList.remove("role-" + id));
+    // Show only the tabs this role may open (driven by ROLES, not per-role CSS).
+    const allowedTabs = state.role ? ROLES[state.role].tabs : ALL_TABS;
+    document.querySelectorAll(".tab-btn").forEach((b) => {
+      b.hidden = !allowedTabs.includes(b.dataset.tab);
+    });
+    $(".tab-bar").style.gridTemplateColumns = `repeat(${allowedTabs.length}, 1fr)`;
     const loginScreen = $("#loginScreen");
     const roleLabel = $("#roleLabel");
     const btnLogout = $("#btnLogout");
@@ -737,6 +763,8 @@
     const allowed = ROLES[state.role].tabs;
     if (!allowed.includes(state.tab)) {
       switchTab(allowed.includes("stock") ? "stock" : allowed[0]);
+    } else if (state.tab === "stock") {
+      renderStock(); // refresh edit controls for the new role
     }
   }
 
@@ -757,6 +785,8 @@
     applyRole(null);
     const pin = $("#loginPin");
     if (pin) pin.value = "";
+    document.querySelectorAll('.role-option input').forEach((i) => (i.checked = false));
+    document.querySelectorAll(".role-option").forEach((el) => el.classList.remove("selected"));
     const err = $("#loginError");
     if (err) {
       err.hidden = true;
@@ -764,22 +794,35 @@
     }
   }
 
-  async function init() {
-    loadSelection();
-    loadStockState();
-    if (navigator.share) btnShare.hidden = false;
-    // Apply the session role before any await so restricted tabs never flash.
-    applyRole(readSessionRole());
-
-    const res = await fetch("catalog.json");
-    state.catalog = await res.json();
+  // Fetch the catalog. Listeners are already bound, so a failure here never
+  // blocks sign-in; the error shows in the visible panel with a Retry button.
+  async function loadCatalog() {
+    try {
+      const res = await fetch("catalog.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error("catalog is not a list");
+      state.catalog = data.filter((p) => p && typeof p.id === "string" && p.name);
+      state.catalogError = null;
+    } catch (err) {
+      state.catalogError = String(err);
+    }
+    pruneSelection();
     renderProducts();
+    if (state.catalogError) productsRoot.innerHTML = catalogErrorMarkup();
     if (state.tab === "stock") renderStock();
     if (state.tab === "par") renderPar();
     if (state.tab === "restock") renderRestock();
     updateLowBanner();
-    updateBadges();
+  }
 
+  function bindEvents() {
+    document.addEventListener("click", (e) => {
+      if (e.target.closest("[data-retry]")) loadCatalog();
+    });
+    $("#btnRestoreHidden").addEventListener("click", restoreHidden);
+    const catSelect = $("#newProductCategory");
+    catSelect.innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => switchTab(btn.dataset.tab));
     });
@@ -845,6 +888,16 @@
       pinEl.value = "";
     });
 
+  }
+
+  async function init() {
+    loadSelection();
+    loadStockState();
+    if (navigator.share) btnShare.hidden = false;
+    bindEvents();
+    // Apply the session role before any await so restricted tabs never flash.
+    applyRole(readSessionRole());
+    await loadCatalog();
     if ("serviceWorker" in navigator) {
       try {
         await navigator.serviceWorker.register("./sw.js");
@@ -852,7 +905,5 @@
     }
   }
 
-  init().catch((err) => {
-    productsRoot.innerHTML = `<div class="empty-state"><strong>Failed to load catalog</strong>${escapeHtml(String(err))}</div>`;
-  });
+  init();
 })();

@@ -71,18 +71,17 @@
       <form id="addProductForm" class="add-product">
         <input id="newProductName" type="text" placeholder="New product name" maxlength="80" required autocomplete="off" enterkeyhint="done" />
         <select id="newProductCategory" aria-label="Category">
-          <option value="Fridge">Fridge</option>
-          <option value="Bar Shelves">Bar Shelves</option>
-          <option value="Other">Other</option>
+          <!-- Options are filled from CATEGORIES in app.js -->
         </select>
         <button type="submit" class="btn btn-primary">Add product</button>
       </form>
       <div id="stockSummary" class="stock-summary"></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreHidden" hidden>Restore removed</button>
       <div id="stockRoot"></div>
     </section>
 
     <section id="panel-par" class="panel" aria-label="Par levels">
-      <p class="par-help">Set the minimum on-hand quantity for each product. When stock hits this level, you’ll get an email reminder.</p>
+      <p class="par-help">Set the minimum on-hand quantity for each product. When stock on the Stock tab drops to this level, an email reminder draft opens in your mail app — tap Send to deliver it.</p>
       <div id="parSummary" class="stock-summary"></div>
       <div id="parRoot"></div>
     </section>
