@@ -591,5 +591,7 @@ body {
 @media (max-width: 520px) {
   .stock-item { flex-wrap: wrap; }
   .stock-item .info { flex: 1 1 calc(100% - 76px); }
-  .stock-item .stock-actions { flex: 1 1 100%; justify-content: flex-end; }
+  /* Same spot on Stock and Par: counter under the name, Delete (if any) at the right */
+  .stock-item .stock-actions { flex: 1 1 100%; justify-content: space-between; padding-left: 76px; }
+  .stock-item .qty-row { width: auto; }
 }
