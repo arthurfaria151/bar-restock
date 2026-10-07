@@ -457,8 +457,21 @@ select.input {
   margin-top: var(--s-4);
 }
 .add-product-submit { min-height: 52px; }
+.field-optional { color: var(--text-2); font-weight: 400; }
+.photo-picker { display: flex; align-items: center; gap: var(--s-2); min-height: 52px; }
+.photo-btn { min-height: 52px; }
+.photo-preview { width: 52px; height: 52px; flex: none; border-radius: var(--r-inner); object-fit: cover; background: var(--surface-sunken); }
+.photo-picker:has(input:focus-visible) .photo-btn { outline: 3px solid var(--focus); outline-offset: 2px; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 @media (min-width: 768px) {
-  .add-product-fields { grid-template-columns: 1fr 200px auto; align-items: end; }
+  .add-product-fields { grid-template-columns: 1fr auto 200px auto; align-items: end; }
 }
 
 /* ==========================================================================
@@ -476,23 +489,37 @@ select.input {
 .hero-login { padding-left: 0; padding-right: 0; padding-bottom: var(--s-6); }
 .login-card { display: grid; gap: var(--s-5); padding: var(--s-5); }
 
-.role-list { display: grid; gap: var(--s-2); }
-.role-option {
+.role-choice {
   display: flex;
   align-items: center;
-  gap: var(--s-3);
-  min-height: 52px;
-  padding: 0 var(--s-4);
+  gap: var(--s-4);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
   border-radius: var(--r-inner);
   background: var(--surface-sunken);
-  box-shadow: inset 0 0 0 2px transparent;
+  text-align: left;
   cursor: pointer;
   transition: box-shadow var(--t-fast) var(--ease);
 }
-.role-option input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
-.role-option.selected,
-.role-option:has(input:checked) { box-shadow: inset 0 0 0 2px var(--accent); }
-.role-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.role-choice:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+.role-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent-text);
+}
+.role-choice-text { flex: 1; display: grid; gap: 2px; }
+.role-choice-text strong { font-size: var(--fs-h3); font-weight: var(--fw-semibold); letter-spacing: -0.015em; }
+.role-choice-text span { color: var(--text-2); font-size: var(--fs-small); }
+.role-choice-arrow { color: var(--text-3); }
+.login-form-head { display: flex; align-items: center; gap: var(--s-2); margin-left: calc(var(--s-3) * -1); }
+.icon-flip { transform: scaleX(-1); }
 .login-pin { font-size: 1.375rem; letter-spacing: 0.3em; }
 
 /* ==========================================================================

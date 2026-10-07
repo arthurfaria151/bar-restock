@@ -11,6 +11,7 @@
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
     loading: true, // catalog.json not loaded yet (UI shows skeletons)
+    pendingPhoto: null, // resized data URL chosen in the Add product form
     custom: [], // user-added products
     hidden: [], // static catalog ids removed locally
     selection: {}, // id -> restock qty
@@ -54,11 +55,13 @@
   }
 
   // Writes never throw: a full or blocked storage must not leave the UI half-updated.
-  function saveJson(key, value) {
+  function saveJson(key, value, quiet) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      return true;
     } catch (_) {
-      showToast("Couldn’t save — storage is full or blocked");
+      if (!quiet) showToast("Couldn’t save — storage is full or blocked");
+      return false;
     }
   }
 
@@ -196,6 +199,10 @@
   }
 
   function thumbMarkup(p, size) {
+    if (p.custom && typeof p.image === "string" && p.image.startsWith("data:image/")) {
+      const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
+      return `<img src="${escapeHtml(p.image)}" alt=""${wh} />`;
+    }
     if (p.custom) {
       const letter = escapeHtml((p.name || "?").trim().charAt(0).toUpperCase() || "?");
       return `<div class="thumb-fallback" aria-hidden="true">${letter}</div>`;
@@ -503,8 +510,14 @@
     }
     const cat = CATEGORIES.includes(category) ? category : "Other";
     const product = { id: slugify(clean), name: clean, category: cat, custom: true };
+    if (state.pendingPhoto) product.image = state.pendingPhoto;
     state.custom.push(product);
-    saveCustom();
+    if (!saveJson(CUSTOM_KEY, state.custom, true)) {
+      // Photos are the bulky part; fall back to saving the product without one.
+      delete product.image;
+      if (saveCustom()) showToast("Storage is full — saved without the photo");
+    }
+    clearPendingPhoto();
     renderProducts();
     renderStock();
     if (state.tab === "par") renderPar();
@@ -578,7 +591,7 @@
     }
     if (!items.length) {
       stockRoot.innerHTML = `<div class="empty-state"><strong>No products</strong>${
-        editable ? "Add one with the form above." : "Ask a manager to add products."
+        editable ? "Add one with the form above." : "Ask an admin to add products."
       }</div>`;
       return;
     }
@@ -705,38 +718,23 @@
 
 
   /*
-   * Login (static PWA — PINs are in the client, not a real security boundary).
-   * Default PINs:
-   *   Venue manager:            1001
-   *   Venue assistant manager:  2002
-   *   Shift supervisor:         3003
-   *   Bartenders:               4004
+   * Login (static PWA — the PIN is in the client, not a real security boundary).
+   *   Bartender: no PIN, signs in with one tap (Stock + Restock only).
+   *   Admin:     PIN 1001, full app.
    * Session only: role id is kept in sessionStorage so a refresh stays signed in
    * for this tab. A new tab or browser session must sign in again.
    */
   const SESSION_KEY = "bar-restock-role-v1";
   const ROLES = {
-    manager: {
-      label: "Venue manager",
+    admin: {
+      label: "Admin",
       pin: "1001",
       tabs: ["products", "stock", "par", "restock"],
       editCatalog: true,
     },
-    assistant: {
-      label: "Venue assistant manager",
-      pin: "2002",
-      tabs: ["products", "stock", "par", "restock"],
-      editCatalog: true,
-    },
-    supervisor: {
-      label: "Shift supervisor",
-      pin: "3003",
-      tabs: ["products", "stock", "par", "restock"],
-      editCatalog: true,
-    },
     bartender: {
-      label: "Bartenders",
-      pin: "4004",
+      label: "Bartender",
+      pin: null, // no PIN: one-tap sign-in
       tabs: ["stock", "restock"],
       editCatalog: false, // count stock only; cannot add or remove products
     },
@@ -785,7 +783,7 @@
 
   function signIn(roleId, pin) {
     const role = ROLES[roleId];
-    if (!role || String(pin).trim() !== role.pin) return false;
+    if (!role || (role.pin !== null && String(pin || "").trim() !== role.pin)) return false;
     try {
       sessionStorage.setItem(SESSION_KEY, roleId);
     } catch (_) {}
@@ -798,15 +796,18 @@
       sessionStorage.removeItem(SESSION_KEY);
     } catch (_) {}
     applyRole(null);
+    showLoginStep("choice");
+  }
+
+  // Sign-in screen has two steps: the Bartender/Admin choice, then the Admin PIN form.
+  function showLoginStep(step) {
     const pin = $("#loginPin");
-    if (pin) pin.value = "";
-    document.querySelectorAll('.role-option input').forEach((i) => (i.checked = false));
-    document.querySelectorAll(".role-option").forEach((el) => el.classList.remove("selected"));
-    const err = $("#loginError");
-    if (err) {
-      err.hidden = true;
-      err.textContent = "";
-    }
+    $("#loginChoice").hidden = step !== "choice";
+    $("#loginForm").hidden = step !== "pin";
+    $("#btnLoginAdmin").setAttribute("aria-expanded", step === "pin" ? "true" : "false");
+    pin.value = "";
+    setFieldError(pin, $("#loginError"), null);
+    if (step === "pin") pin.focus();
   }
 
   // Fetch the catalog. Listeners are already bound, so a failure here never
@@ -830,6 +831,65 @@
     if (state.tab === "par") renderPar();
     if (state.tab === "restock") renderRestock();
     updateLowBanner();
+  }
+
+  // Product photo: downscale to a 320px square JPEG so it fits in localStorage.
+  const PHOTO_SIZE = 320;
+  async function onPhotoChosen(e) {
+    const file = e.target.files && e.target.files[0];
+    const err = $("#addProductError");
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFieldError(null, err, "That file isn’t an image.");
+      e.target.value = "";
+      return;
+    }
+    try {
+      state.pendingPhoto = await resizePhoto(file);
+      setFieldError(null, err, null);
+      const preview = $("#newProductPreview");
+      preview.src = state.pendingPhoto;
+      preview.hidden = false;
+      $("#btnRemovePhoto").hidden = false;
+      $("#photoBtnText").textContent = "Change image";
+    } catch (_) {
+      clearPendingPhoto();
+      setFieldError(null, err, "Couldn’t read that image. Try a JPG or PNG.");
+    }
+  }
+
+  function resizePhoto(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.naturalWidth, img.naturalHeight);
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = PHOTO_SIZE;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, PHOTO_SIZE, PHOTO_SIZE);
+        // Centre-crop to a square, like the catalog thumbnails.
+        ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("decode failed"));
+      };
+      img.src = url;
+    });
+  }
+
+  function clearPendingPhoto() {
+    state.pendingPhoto = null;
+    $("#newProductPhoto").value = "";
+    const preview = $("#newProductPreview");
+    preview.hidden = true;
+    preview.removeAttribute("src");
+    $("#btnRemovePhoto").hidden = true;
+    $("#photoBtnText").textContent = "Upload image";
   }
 
   // Inline form validation: message under the field, field outlined, cleared on input.
@@ -929,37 +989,31 @@
       lowBanner.hidden = true;
     });
     $("#btnLogout").addEventListener("click", signOut);
-    document.querySelectorAll(".role-option input").forEach((input) => {
-      input.addEventListener("change", () => {
-        document.querySelectorAll(".role-option").forEach((el) => {
-          el.classList.toggle("selected", el.contains(input) && input.checked);
-        });
-      });
+    $("#btnLoginBartender").addEventListener("click", () => signIn("bartender"));
+    $("#btnLoginAdmin").addEventListener("click", () => showLoginStep("pin"));
+    $("#btnLoginBack").addEventListener("click", () => {
+      showLoginStep("choice");
+      $("#btnLoginAdmin").focus();
     });
     $("#loginForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      const picked = document.querySelector('input[name="role"]:checked');
       const pinEl = $("#loginPin");
       const err = $("#loginError");
-      const roleId = picked ? picked.value : "";
       const pin = pinEl.value;
-      if (!roleId) {
-        setFieldError(null, err, "Choose a role.");
-        return;
-      }
       if (!pin.trim()) {
         setFieldError(pinEl, err, "Enter your PIN.");
         pinEl.focus();
         return;
       }
-      if (!signIn(roleId, pin)) {
-        setFieldError(pinEl, err, "Wrong PIN for that role.");
+      if (!signIn("admin", pin)) {
+        setFieldError(pinEl, err, "Wrong PIN.");
         pinEl.select();
         return;
       }
-      setFieldError(pinEl, err, null);
-      pinEl.value = "";
+      showLoginStep("choice");
     });
+    $("#newProductPhoto").addEventListener("change", onPhotoChosen);
+    $("#btnRemovePhoto").addEventListener("click", clearPendingPhoto);
     $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
     bindChrome();
 
