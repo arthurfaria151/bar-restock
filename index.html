@@ -4,9 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Restock" />
-  <meta name="theme-color" content="#121218" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -15,109 +17,215 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Line icon set (Lucide-style, 24×24, 2px stroke). Use: <svg class="icon"><use href="#i-name"/></svg> -->
+  <svg xmlns="http://www.w3.org/2000/svg" hidden>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4M12 2v13"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
   <div id="loginScreen" class="login-screen">
-    <form id="loginForm" class="login-card" autocomplete="off">
-      <h2>Sign in</h2>
-      <p class="login-sub">Choose your role and enter the PIN.</p>
-      <div class="role-list" role="radiogroup" aria-label="Role">
-        <label class="role-option">
-          <input type="radio" name="role" value="manager" required />
-          <span>Venue manager</span>
-        </label>
-        <label class="role-option">
-          <input type="radio" name="role" value="assistant" />
-          <span>Venue assistant manager</span>
-        </label>
-        <label class="role-option">
-          <input type="radio" name="role" value="supervisor" />
-          <span>Shift supervisor</span>
-        </label>
-        <label class="role-option">
-          <input type="radio" name="role" value="bartender" />
-          <span>Bartenders</span>
-        </label>
-      </div>
-      <label class="pin-label" for="loginPin">PIN</label>
-      <input id="loginPin" class="login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off" enterkeyhint="go" required />
-      <p id="loginError" class="login-error" hidden></p>
-      <button type="submit" class="btn btn-primary">Sign in</button>
-    </form>
+    <div class="login-wrap">
+      <header class="hero hero-login reveal">
+        <h1 class="hero-title">Bar Restock.</h1>
+        <p class="hero-sub">Sign in to count stock and build tonight’s restock list.</p>
+      </header>
+      <form id="loginForm" class="card login-card reveal" autocomplete="off" novalidate>
+        <fieldset class="field">
+          <legend class="field-label">Role</legend>
+          <div class="role-list">
+            <label class="role-option">
+              <input type="radio" name="role" value="manager" required />
+              <span>Venue manager</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="role" value="assistant" />
+              <span>Venue assistant manager</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="role" value="supervisor" />
+              <span>Shift supervisor</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="role" value="bartender" />
+              <span>Bartenders</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="field">
+          <label class="field-label" for="loginPin">PIN</label>
+          <input id="loginPin" class="input login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off" enterkeyhint="go" required aria-describedby="loginError" />
+          <p id="loginError" class="field-error" role="alert" hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+      </form>
+    </div>
   </div>
 
-  <header class="app-header">
-    <h1>Bar Restock</h1>
-    <div class="header-right">
-      <span id="roleLabel" class="role-label" hidden></span>
-      <button type="button" class="btn btn-ghost btn-sm" id="btnLogout" hidden>Log out</button>
-      <span id="headerBadge" class="badge empty">0</span>
+  <header class="app-header" id="appHeader">
+    <div class="nav-inner">
+      <span class="brand">Bar Restock</span>
+      <span id="headerBadge" class="badge empty" aria-label="Units on restock list">0</span>
+      <button type="button" class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Open menu">
+        <svg class="icon icon-open" aria-hidden="true"><use href="#i-menu"/></svg>
+        <svg class="icon icon-close" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+      <div class="nav-menu" id="navMenu">
+        <nav class="tab-bar" role="tablist" aria-label="Sections">
+          <button type="button" class="tab-btn active" data-tab="products" role="tab" aria-selected="true" aria-controls="panel-products">
+            <svg class="icon" aria-hidden="true"><use href="#i-package"/></svg>
+            Products
+          </button>
+          <button type="button" class="tab-btn" data-tab="stock" role="tab" aria-selected="false" aria-controls="panel-stock">
+            <svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg>
+            Stock
+          </button>
+          <button type="button" class="tab-btn" data-tab="par" role="tab" aria-selected="false" aria-controls="panel-par">
+            <svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>
+            Par
+            <span class="tab-badge" id="parBadge" aria-label="products low">0</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false" aria-controls="panel-restock">
+            <svg class="icon" aria-hidden="true"><use href="#i-cart"/></svg>
+            Restock
+            <span class="tab-badge" id="tabBadge" aria-label="products on list">0</span>
+          </button>
+        </nav>
+        <div class="header-right">
+          <span id="roleLabel" class="role-label" hidden></span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnLogout" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>
+            Log out
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <div id="lowBanner" class="low-banner" hidden>
+  <div id="lowBanner" class="low-banner" role="status" hidden>
+    <svg class="icon low-banner-icon" aria-hidden="true"><use href="#i-alert"/></svg>
     <div class="low-banner-text">
       <strong id="lowBannerTitle">Low stock</strong>
       <span id="lowBannerDetail"></span>
     </div>
     <button type="button" class="btn btn-primary btn-sm" id="btnSendReminder">Send reminder</button>
-    <button type="button" class="btn btn-ghost btn-sm" id="btnDismissBanner" aria-label="Dismiss">✕</button>
+    <button type="button" class="icon-btn" id="btnDismissBanner" aria-label="Dismiss">
+      <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+    </button>
   </div>
 
-  <main>
-    <section id="panel-products" class="panel active" aria-label="Products">
-      <div id="productsRoot"></div>
-    </section>
-
-    <section id="panel-stock" class="panel" aria-label="Stock">
-      <form id="addProductForm" class="add-product">
-        <input id="newProductName" type="text" placeholder="New product name" maxlength="80" required autocomplete="off" enterkeyhint="done" />
-        <select id="newProductCategory" aria-label="Category">
-          <!-- Options are filled from CATEGORIES in app.js -->
-        </select>
-        <button type="submit" class="btn btn-primary">Add product</button>
-      </form>
-      <div id="stockSummary" class="stock-summary"></div>
-      <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreHidden" hidden>Restore removed</button>
-      <div id="stockRoot"></div>
-    </section>
-
-    <section id="panel-par" class="panel" aria-label="Par levels">
-      <p class="par-help">Set the minimum on-hand quantity for each product. When stock on the Stock tab drops to this level, an email reminder draft opens in your mail app — tap Send to deliver it.</p>
-      <div id="parSummary" class="stock-summary"></div>
-      <div id="parRoot"></div>
-    </section>
-
-    <section id="panel-restock" class="panel" aria-label="Restock list">
-      <div class="restock-actions">
-        <button type="button" class="btn btn-primary" id="btnCopy">Copy list</button>
-        <button type="button" class="btn btn-secondary" id="btnShare" hidden>Share</button>
-        <button type="button" class="btn btn-ghost" id="btnClear">Clear</button>
+  <main id="main">
+    <section id="panel-products" class="panel active" role="tabpanel" aria-labelledby="h-products">
+      <header class="hero reveal">
+        <h2 class="hero-title" id="h-products">Build tonight’s restock.</h2>
+        <p class="hero-sub">Tap a product to add it. Use − and + to set how many.</p>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary" data-goto="restock">Review list
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button type="button" class="btn btn-secondary" data-goto="stock">Count stock</button>
+        </div>
+      </header>
+      <div class="section">
+        <div id="productsRoot">
+          <div class="grid" aria-hidden="true">
+            <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+            <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+          </div>
+        </div>
       </div>
-      <div id="restockRoot"></div>
+    </section>
+
+    <section id="panel-stock" class="panel" role="tabpanel" aria-labelledby="h-stock">
+      <header class="hero reveal">
+        <h2 class="hero-title" id="h-stock">Count what’s on the shelf.</h2>
+        <p class="hero-sub">Keep on-hand numbers current so low stock gets flagged.</p>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary" id="heroAddProduct">Add a product</button>
+          <button type="button" class="btn btn-secondary" data-goto="restock">Open restock list</button>
+        </div>
+      </header>
+      <div class="section">
+        <form id="addProductForm" class="card add-product" novalidate>
+          <h3 class="card-title">Add a product</h3>
+          <div class="add-product-fields">
+            <div class="field field-grow">
+              <label class="field-label" for="newProductName">Product name</label>
+              <input id="newProductName" class="input" type="text" placeholder="e.g. Aperol" maxlength="80" required autocomplete="off" enterkeyhint="done" aria-describedby="addProductError" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="newProductCategory">Category</label>
+              <select id="newProductCategory" class="input">
+                <!-- Options are filled from CATEGORIES in app.js -->
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary add-product-submit">
+              <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+              Add product
+            </button>
+          </div>
+          <p id="addProductError" class="field-error" role="alert" hidden></p>
+        </form>
+        <div class="list-toolbar">
+          <div id="stockSummary" class="summary"></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreHidden" hidden>Restore removed</button>
+        </div>
+        <div id="stockRoot"></div>
+      </div>
+    </section>
+
+    <section id="panel-par" class="panel" role="tabpanel" aria-labelledby="h-par">
+      <header class="hero reveal">
+        <h2 class="hero-title" id="h-par">Set the minimum for each product.</h2>
+        <p class="hero-sub">When stock drops to its par, an email reminder draft opens in your mail app — tap Send to deliver it.</p>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-secondary" data-goto="stock">Back to stock</button>
+        </div>
+      </header>
+      <div class="section">
+        <div class="list-toolbar">
+          <div id="parSummary" class="summary"></div>
+        </div>
+        <div id="parRoot"></div>
+      </div>
+    </section>
+
+    <section id="panel-restock" class="panel" role="tabpanel" aria-labelledby="h-restock">
+      <header class="hero reveal">
+        <h2 class="hero-title" id="h-restock">Your restock list.</h2>
+        <p class="hero-sub">Copy it or share it with whoever is placing the order.</p>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary" id="btnCopy">
+            <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+            Copy list
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnShare" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#i-share"/></svg>
+            Share
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnClear">Clear</button>
+        </div>
+      </header>
+      <div class="section">
+        <div id="restockRoot"></div>
+      </div>
     </section>
   </main>
 
-  <nav class="tab-bar" role="tablist">
-    <button type="button" class="tab-btn active" data-tab="products" role="tab" aria-selected="true">
-      <span class="icon">📦</span>
-      Products
-    </button>
-    <button type="button" class="tab-btn" data-tab="stock" role="tab" aria-selected="false">
-      <span class="icon">📋</span>
-      Stock
-    </button>
-    <button type="button" class="tab-btn" data-tab="par" role="tab" aria-selected="false">
-      <span class="icon">🎯</span>
-      Par
-      <span class="tab-badge" id="parBadge">0</span>
-    </button>
-    <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false">
-      <span class="icon">🛒</span>
-      Restock
-      <span class="tab-badge" id="tabBadge">0</span>
-    </button>
-  </nav>
-
-  <div class="toast" id="toast" role="status"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
 </html>

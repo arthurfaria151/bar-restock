@@ -4,8 +4,8 @@
   "description": "Tap products to build a bar restock list",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121218",
-  "theme_color": "#121218",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "any",
   "icons": [
     {

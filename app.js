@@ -10,6 +10,7 @@
   const state = {
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
+    loading: true, // catalog.json not loaded yet (UI shows skeletons)
     custom: [], // user-added products
     hidden: [], // static catalog ids removed locally
     selection: {}, // id -> restock qty
@@ -22,6 +23,8 @@
   };
 
   const $ = (sel) => document.querySelector(sel);
+  const ICON = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const SKELETON_ROWS = `<div aria-hidden="true">${'<div class="skeleton-row"></div>'.repeat(5)}</div>`;
   const productsRoot = $("#productsRoot");
   const stockRoot = $("#stockRoot");
   const stockSummary = $("#stockSummary");
@@ -320,7 +323,7 @@
     const groups = groupByCategory(effectiveCatalog());
     productsRoot.innerHTML = "";
     for (const g of groups) {
-      const title = document.createElement("div");
+      const title = document.createElement("h3");
       title.className = "section-title";
       title.textContent = `${g.title} (${g.items.length})`;
       productsRoot.appendChild(title);
@@ -336,9 +339,9 @@
           ${thumbMarkup(p)}
           <div class="name">${escapeHtml(p.name)}</div>
           <div class="qty-row">
-            <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">−</button>
+            <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">${ICON("minus")}</button>
             <span class="qty-val">1</span>
-            <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">+</button>
+            <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">${ICON("plus")}</button>
           </div>
         `;
         card.addEventListener("click", (e) => {
@@ -371,6 +374,7 @@
         <div class="empty-state">
           <strong>Nothing selected yet</strong>
           ${hint}
+          ${canPick ? '<button type="button" class="btn btn-primary" data-goto="products">Browse products</button>' : ""}
         </div>`;
       return;
     }
@@ -393,9 +397,9 @@
           <div class="cat">${escapeHtml(p.category)}</div>
         </div>
         <div class="qty-row">
-          <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">−</button>
+          <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">${ICON("minus")}</button>
           <span class="qty-val">${qty}</span>
-          <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">+</button>
+          <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">${ICON("plus")}</button>
         </div>
       `;
       li.querySelectorAll("[data-act]").forEach((btn) => {
@@ -488,13 +492,14 @@
     return id;
   }
 
+  // Returns an error message for the form, or null when the product was added.
   function addCustomProduct(name, category) {
     const clean = String(name || "").trim().replace(/\s+/g, " ");
-    if (!clean || !canEditCatalog()) return;
+    if (!canEditCatalog()) return null;
+    if (!clean) return "Enter a product name.";
     const lower = clean.toLowerCase();
     if (effectiveCatalog().some((p) => p.name.toLowerCase() === lower)) {
-      showToast("That product already exists");
-      return;
+      return "That product already exists.";
     }
     const cat = CATEGORIES.includes(category) ? category : "Other";
     const product = { id: slugify(clean), name: clean, category: cat, custom: true };
@@ -504,6 +509,7 @@
     renderStock();
     if (state.tab === "par") renderPar();
     showToast("Product added");
+    return null;
   }
 
   function deleteProduct(id) {
@@ -556,11 +562,16 @@
       (lowN ? ` · ${lowN} low` : "");
     const editable = canEditCatalog();
     $("#addProductForm").hidden = !editable;
+    $("#heroAddProduct").hidden = !editable;
     const restoreBtn = $("#btnRestoreHidden");
     restoreBtn.hidden = !editable || !state.hidden.length;
     restoreBtn.textContent = `Restore removed (${state.hidden.length})`;
 
     stockRoot.innerHTML = "";
+    if (state.loading) {
+      stockRoot.innerHTML = SKELETON_ROWS;
+      return;
+    }
     if (state.catalogError) {
       stockRoot.innerHTML = catalogErrorMarkup();
       return;
@@ -574,7 +585,7 @@
     const groups = groupByCategory(items);
 
     for (const g of groups) {
-      const title = document.createElement("div");
+      const title = document.createElement("h3");
       title.className = "section-title";
       title.textContent = `${g.title} (${g.items.length})`;
       stockRoot.appendChild(title);
@@ -597,11 +608,11 @@
           </div>
           <div class="stock-actions">
             <div class="qty-row">
-              <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease stock"${qty <= 0 ? " disabled" : ""}>−</button>
+              <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease stock"${qty <= 0 ? " disabled" : ""}>${ICON("minus")}</button>
               <span class="qty-val">${qty}</span>
-              <button type="button" class="qty-btn" data-act="inc" aria-label="Increase stock">+</button>
+              <button type="button" class="qty-btn" data-act="inc" aria-label="Increase stock">${ICON("plus")}</button>
             </div>
-            ${editable ? `<button type="button" class="btn btn-danger" data-act="del" aria-label="Delete ${escapeHtml(p.name)}">Delete</button>` : ""}
+            ${editable ? `<button type="button" class="btn btn-danger" data-act="del" aria-label="Delete ${escapeHtml(p.name)}">${ICON("trash")}Delete</button>` : ""}
           </div>
         `;
         li.querySelectorAll("[data-act]").forEach((btn) => {
@@ -627,12 +638,16 @@
       (lowN ? ` · ${lowN} currently low` : "");
 
     parRoot.innerHTML = "";
+    if (state.loading) {
+      parRoot.innerHTML = SKELETON_ROWS;
+      return;
+    }
     if (!items.length) {
       parRoot.innerHTML = `<div class="empty-state"><strong>No products</strong>Add products on the Stock tab first.</div>`;
       return;
     }
     for (const g of groupByCategory(items)) {
-      const title = document.createElement("div");
+      const title = document.createElement("h3");
       title.className = "section-title";
       title.textContent = `${g.title} (${g.items.length})`;
       parRoot.appendChild(title);
@@ -654,9 +669,9 @@
           </div>
           <div class="stock-actions">
             <div class="qty-row">
-              <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease par"${par <= 0 ? " disabled" : ""}>−</button>
+              <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease par"${par <= 0 ? " disabled" : ""}>${ICON("minus")}</button>
               <span class="qty-val">${par}</span>
-              <button type="button" class="qty-btn" data-act="inc" aria-label="Increase par">+</button>
+              <button type="button" class="qty-btn" data-act="inc" aria-label="Increase par">${ICON("plus")}</button>
             </div>
           </div>
         `;
@@ -683,9 +698,9 @@
   }
 
   function catalogErrorMarkup() {
-    return `<div class="empty-state"><strong>Couldn’t load the product list</strong>
-      Check the connection and try again.<br /><br />
-      <button type="button" class="btn btn-secondary" data-retry>Retry</button></div>`;
+    return `<div class="empty-state is-error"><strong>Couldn’t load the product list</strong>
+      Check the connection and try again.
+      <button type="button" class="btn btn-primary" data-retry>Retry</button></div>`;
   }
 
 
@@ -807,6 +822,7 @@
     } catch (err) {
       state.catalogError = String(err);
     }
+    state.loading = false;
     pruneSelection();
     renderProducts();
     if (state.catalogError) productsRoot.innerHTML = catalogErrorMarkup();
@@ -814,6 +830,59 @@
     if (state.tab === "par") renderPar();
     if (state.tab === "restock") renderRestock();
     updateLowBanner();
+  }
+
+  // Inline form validation: message under the field, field outlined, cleared on input.
+  function setFieldError(input, msgEl, message) {
+    msgEl.textContent = message || "";
+    msgEl.hidden = !message;
+    if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
+  }
+
+  // Presentation-only wiring: mobile menu, hero shortcuts, scroll reveal.
+  function bindChrome() {
+    const header = $("#appHeader");
+    const toggle = $("#menuToggle");
+    const setMenu = (open) => {
+      header.classList.toggle("menu-open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+    toggle.addEventListener("click", () => setMenu(!header.classList.contains("menu-open")));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && header.classList.contains("menu-open")) {
+        setMenu(false);
+        toggle.focus();
+      }
+    });
+    header.addEventListener("click", (e) => {
+      if (e.target.closest(".tab-btn, #btnLogout")) setMenu(false);
+    });
+    document.addEventListener("click", (e) => {
+      const go = e.target.closest("[data-goto]");
+      if (!go) return;
+      switchTab(go.dataset.goto);
+      window.scrollTo(0, 0);
+    });
+    $("#heroAddProduct").addEventListener("click", () => {
+      const form = $("#addProductForm");
+      form.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      $("#newProductName").focus({ preventScroll: true });
+    });
+    const reveals = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) {
+      reveals.forEach((el) => el.classList.add("in"));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      }
+    }, { rootMargin: "0px 0px -10% 0px" });
+    reveals.forEach((el) => io.observe(el));
   }
 
   function bindEvents() {
@@ -831,10 +900,12 @@
     $("#addProductForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const input = $("#newProductName");
-      addCustomProduct(input.value, $("#newProductCategory").value);
-      input.value = "";
+      const error = addCustomProduct(input.value, $("#newProductCategory").value);
+      setFieldError(input, $("#addProductError"), error);
+      if (!error) input.value = "";
       input.focus();
     });
+    $("#newProductName").addEventListener("input", (e) => setFieldError(e.target, $("#addProductError"), null));
     $("#btnClear").addEventListener("click", () => {
       if (!selectedCount()) return;
       if (!confirm("Clear the restock list?")) return;
@@ -873,20 +944,24 @@
       const roleId = picked ? picked.value : "";
       const pin = pinEl.value;
       if (!roleId) {
-        err.textContent = "Choose a role.";
-        err.hidden = false;
+        setFieldError(null, err, "Choose a role.");
+        return;
+      }
+      if (!pin.trim()) {
+        setFieldError(pinEl, err, "Enter your PIN.");
+        pinEl.focus();
         return;
       }
       if (!signIn(roleId, pin)) {
-        err.textContent = "Wrong PIN for that role.";
-        err.hidden = false;
+        setFieldError(pinEl, err, "Wrong PIN for that role.");
         pinEl.select();
         return;
       }
-      err.hidden = true;
-      err.textContent = "";
+      setFieldError(pinEl, err, null);
       pinEl.value = "";
     });
+    $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
+    bindChrome();
 
   }
 
