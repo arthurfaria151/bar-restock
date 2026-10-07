@@ -489,7 +489,7 @@ select.input {
   cursor: pointer;
   transition: box-shadow var(--t-fast) var(--ease);
 }
-.role-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.role-option input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
 .role-option.selected,
 .role-option:has(input:checked) { box-shadow: inset 0 0 0 2px var(--accent); }
 .role-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
