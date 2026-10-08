@@ -10,7 +10,7 @@ const normalize = (text) => text.replace(/\?v=[a-f0-9]{12}/g, '')
 const html = await readFile(join(root, 'index.html'), 'utf8');
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 const hash = createHash('sha256').update(normalize(html)).update(normalize(sw));
-const assets = ['app.js', 'binder.js', 'binder-data.js', 'storage.js', 'gs1.js', 'receive.js', 'styles.css', 'catalog.json',
+const assets = ['app.js', 'handout.js', 'handout-config.js', 'binder.js', 'binder-data.js', 'storage.js', 'gs1.js', 'receive.js', 'styles.css', 'catalog.json',
   'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
   'vendor/zxing-wasm/zxing-reader.iife.js', 'vendor/zxing-wasm/zxing_reader.wasm',
   ...(await readdir(join(root, 'binder-pages'))).sort().map(name => `binder-pages/${name}`),

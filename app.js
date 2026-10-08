@@ -845,6 +845,7 @@
     if (tab === "shelves") renderShelves();
     if (receive && tab === "receive") receive.onTabChange(tab);
     if (binder) binder.onTabChange(tab);
+    if (handout) handout.onTabChange(tab);
   }
 
   function slugify(name) {
@@ -1826,17 +1827,17 @@
     admin: {
       label: "Admin",
       pin: "1001",
-      tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures"],
+      tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
       pin: null, // no PIN: one-tap sign-in
-      tabs: ["stock", "receive", "restock", "shelves", "checklist", "procedures"],
+      tabs: ["stock", "receive", "restock", "shelves", "checklist", "procedures", "handout"],
       editCatalog: false, // count stock and receive deliveries; cannot add or remove products or link barcodes
     },
   };
-  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures"];
+  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"];
 
   function readSessionRole() {
     try {
@@ -1867,6 +1868,7 @@
     if (state.tab === "shelves") renderShelves();
     if (receive) receive.onRoleChange();
     if (binder) binder.onRoleChange();
+    if (handout) handout.onRoleChange();
     if (!state.role) {
       loginScreen.hidden = false;
       clearPendingPhoto();
@@ -1902,6 +1904,7 @@
   }
 
   function signOut() {
+    if (handout && !handout.canSignOut()) return;
     try {
       sessionStorage.removeItem(SESSION_KEY);
     } catch (_) {}
@@ -2187,6 +2190,7 @@
     bindReceive();
     binder = window.BarRestockBinder({ escapeHtml, asset, loadJson, saveJson,
       withStorageLock: storage.withLock, showToast, roleId: () => state.role });
+    handout = window.BarRestockHandout({ escapeHtml, roleId: () => state.role });
     bindChrome();
     window.addEventListener("hashchange", () => {
       const requested = location.hash.slice(1);
@@ -2201,6 +2205,7 @@
    */
   let receive = null;
   let binder = null;
+  let handout = null;
   function bindReceive() {
     if (typeof window.BarRestockReceive !== "function" || !window.BarRestockGS1) return;
     receive = window.BarRestockReceive({

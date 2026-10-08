@@ -1,11 +1,13 @@
 const BINDER_PAGES = ["./binder-pages/beer-line-clean-1.jpg", "./binder-pages/beer-line-clean-2.jpg", "./binder-pages/beer-line-clean-3.jpg", "./binder-pages/beer-line-clean-4.jpg", "./binder-pages/incident-policy-1.jpg", "./binder-pages/incident-policy-2.jpg", "./binder-pages/incident-policy-3.jpg", "./binder-pages/induction-1.jpg", "./binder-pages/induction-2.jpg", "./binder-pages/induction-3.jpg", "./binder-pages/induction-4.jpg", "./binder-pages/induction-5.jpg", "./binder-pages/trivia-1.jpg", "./binder-pages/trivia-2.jpg", "./binder-pages/trivia-3.jpg"];
-const VERSION = "afa614ccb6bb";
+const VERSION = "5ef7f99fa3e8";
 const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./handout.js",
+  "./handout-config.js",
   "./binder-data.js",
   "./binder.js",
   ...BINDER_PAGES,
@@ -22,7 +24,7 @@ const SHELL = [
 ].map((path) => path === "./" || path === "./index.html" ? path : `${path}?v=${VERSION}`);
 // App code and data: try the network first so updates arrive without a cache bump.
 // The vendored decoder (vendor/…) is cache-first: it only changes with a CACHE bump.
-const FRESH = ["/", "/index.html", "/app.js", "/storage.js", "/gs1.js", "/receive.js", "/binder-data.js", "/binder.js", "/styles.css", "/catalog.json"];
+const FRESH = ["/", "/index.html", "/app.js", "/handout.js", "/handout-config.js", "/storage.js", "/gs1.js", "/receive.js", "/binder-data.js", "/binder.js", "/styles.css", "/catalog.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

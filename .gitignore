@@ -11,3 +11,8 @@ ios/App/build/
 ios/App/**/xcuserdata/
 ios/App/**/.build/
 ios/App/**/Package.resolved
+
+# Local shared Handout data and credentials
+/handout-data/
+/handout-users.json
+/handout.env

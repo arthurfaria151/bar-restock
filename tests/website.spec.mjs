@@ -333,14 +333,14 @@ test('dialogs contain keyboard focus and restore the shelf opener after renderin
   await expect(opener).toBeFocused();
 });
 
-test('all eight panels fit seven widths in both color schemes', async ({ page }) => {
+test('all nine panels fit seven widths in both color schemes', async ({ page }) => {
   test.setTimeout(60000);
   await setup(page);
   for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
     for (const width of [320, 375, 768, 820, 1024, 1180, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves', 'checklist', 'procedures']) {
+      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves', 'checklist', 'procedures', 'handout']) {
         await tab(page, panel);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${panel}, ${width}px, ${colorScheme}`).toBe(true);
       }

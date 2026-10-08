@@ -1641,3 +1641,20 @@ button.shelf-slot:active .slot-thumb { transform: scale(0.96); }
 @keyframes shelf-land { 0% { transform: translateY(-18px) scale(1.08); } 65% { transform: translateY(3px) scale(.97); } 100% { transform: none; } }
 @media (max-width: 600px) { .shelf-display.cabinet { padding: 16px 8px 24px; } .shelf-display .shelf-level { padding: 10px 4px 0; border-width: 3px; } .shelf-display .shelf-level:nth-of-type(1) { width: 94%; } .shelf-display .shelf-level:nth-of-type(2) { width: 97%; } .shelf-display .shelf-lip { margin: 0 -8px; } .shelf-display .shelf-tools { flex-wrap: wrap; max-width: 88px; } .shelf-tray { padding: 12px; } }
 @media (prefers-reduced-motion: reduce) { .shelf-arrived { animation: none; } .shelf-display .shelf-level, .shelf-tray-product { transition: none; } }
+
+/* Shared venue handout */
+.handout-session, .handout-entry-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.handout-session { margin-bottom: 16px; color: var(--text-2); }
+#handoutStatus { margin: 12px 0; }
+.handout-login { max-width: 520px; }
+.handout-login .field { margin: 16px 0; }
+.handout-day { margin-bottom: 20px; }
+.handout-day p { color: var(--text-2); margin: 8px 0 16px; }
+.handout-entry { padding: 20px; border: 1px solid var(--separator); border-radius: 16px; background: var(--surface); margin: 12px 0; }
+.handout-entry-head { justify-content: space-between; }
+.handout-entry-head span { font-size: var(--fs-small); color: var(--text-2); }
+.handout-entry-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; margin: 16px 0; }
+.handout-entry-actions { display: flex; gap: 8px; }
+.handout-editor { margin: 20px 0; }
+.handout-editor textarea { margin-top: 10px; }
+.handout-history { margin-top: 32px; }

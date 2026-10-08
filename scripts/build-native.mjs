@@ -6,7 +6,7 @@ import { build } from 'esbuild';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'www');
 const assets = [
-  'app.js', 'binder.js', 'binder-data.js', 'binder-pages', 'storage.js', 'gs1.js', 'receive.js', 'styles.css', 'catalog.json', 'manifest.webmanifest',
+  'app.js', 'handout.js', 'handout-config.js', 'binder.js', 'binder-data.js', 'binder-pages', 'storage.js', 'gs1.js', 'receive.js', 'styles.css', 'catalog.json', 'manifest.webmanifest',
   'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'thumbs', 'vendor/zxing-wasm',
 ];
 

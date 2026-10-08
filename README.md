@@ -14,6 +14,10 @@ pre-batching training requirements, with 15 original procedure pages available
 offline. See [binder coverage and pending sources](docs/BINDER.md). Both roles
 can use these pages; `/#checklist` and `/#procedures` open them directly.
 
+Handout has a separate Raspberry Pi server for shared notes and daily archives
+at 02:00 Brisbane time. See [Pi installation and connection](docs/HANDOUT-PI.md).
+It requires the Pi service and a verified public HTTPS endpoint before activation.
+
 Serve the repository root to run the website; it needs no server-side build.
 `npm run build` prepares the separate native iPad bundle in `www/`.
 

@@ -1,0 +1,13 @@
+import { readFileSync, existsSync, writeFileSync, renameSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { passwordHash } from './auth.mjs';
+const [file,id,name,access='edit']=process.argv.slice(2);
+if(!file || !/^[a-z0-9][a-z0-9._-]{0,79}$/.test(id || '') || !name || name.length>80 || !['edit','view'].includes(access)) throw new Error('Usage: add-user.mjs USERS_FILE username "Display name" [edit|view], with the password on stdin');
+const password=readFileSync(0,'utf8');
+if(password.length<12 || password.length>256) throw new Error('Use a password of 12–256 characters');
+const accounts=existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : [];
+if(accounts.some(user=>user.id===id)) throw new Error('That username already exists');
+const salt=randomBytes(16).toString('base64url');
+accounts.push({id,name,canEdit:access==='edit',salt,passwordHash:await passwordHash(password,salt)});
+writeFileSync(file+'.tmp',JSON.stringify(accounts,null,2)+'\n',{mode:0o600});renameSync(file+'.tmp',file);
+console.log('Created Handout account: '+id);
