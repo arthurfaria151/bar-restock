@@ -51,6 +51,11 @@ npm run test:web
 For an existing system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its
 absolute path. The test runner starts and stops its own local static server.
 GitHub Actions runs the website tests separately from the macOS iPad build.
+GitHub Pages deploys the root of `main` to the production domain. After changing
+runtime files, run `npm run version:web` and commit the updated `index.html`
+and `sw.js`. `npm run check:web` verifies that the committed release stamp
+matches the assets; CI checks this before testing. Versioned asset URLs avoid
+old JavaScript, styles, images and scanner files remaining in the HTTP cache.
 See [the fix validation notes](docs/QA-FIXES.md) for scope and remaining limits.
 
 The Xcode project is `ios/App/App.xcodeproj`, with the shared `App` scheme.

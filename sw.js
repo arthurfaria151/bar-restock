@@ -1,4 +1,5 @@
-const CACHE = "bar-restock-v13";
+const VERSION = "b96b9952d312";
+const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",
   "./index.html",
@@ -14,7 +15,7 @@ const SHELL = [
   "./apple-touch-icon.png",
   "./icon-192.png",
   "./icon-512.png"
-];
+].map((path) => path === "./" || path === "./index.html" ? path : `${path}?v=${VERSION}`);
 // App code and data: try the network first so updates arrive without a cache bump.
 // The vendored decoder (vendor/…) is cache-first: it only changes with a CACHE bump.
 const FRESH = ["/", "/index.html", "/app.js", "/storage.js", "/gs1.js", "/receive.js", "/styles.css", "/catalog.json"];
@@ -22,12 +23,12 @@ const FRESH = ["/", "/index.html", "/app.js", "/storage.js", "/gs1.js", "/receiv
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
-      await cache.addAll(SHELL);
+      await cache.addAll(SHELL.map((path) => new Request(path, { cache: "reload" })));
       // Prefetch thumbs one by one so a single missing image doesn't skip the rest.
       try {
-        const res = await fetch("./catalog.json");
+        const res = await fetch(`./catalog.json?v=${VERSION}`);
         const catalog = await res.json();
-        await Promise.allSettled(catalog.map((p) => cache.add(`./thumbs/${p.id}.jpg`)));
+        await Promise.allSettled(catalog.map((p) => cache.add(`./thumbs/${p.id}.jpg?v=${VERSION}`)));
       } catch (e) {
         // thumbs can load on demand
       }
@@ -38,13 +39,14 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k.startsWith("bar-restock-") && k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
 function fromNetwork(req) {
-  return fetch(req).then((res) => {
+  return fetch(req, { cache: "no-cache" }).then((res) => {
+    if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
     // Only cache good same-origin responses; never pin a 404/500.
     if (res.ok && res.type === "basic") {
       const copy = res.clone();
@@ -67,7 +69,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fromNetwork(req).catch(() =>
         caches.match(req, { ignoreSearch: true })
-          .then((c) => c || caches.match("./index.html"))
+          .then((c) => c || (req.mode === "navigate" ? caches.match("./index.html") : null))
           .then((c) => c || offline())
       )
     );

@@ -12,7 +12,9 @@
     "check:native": "node scripts/check-native.mjs",
     "ios:sync": "npm run build && cap sync ios",
     "ios:open": "npm run ios:sync && cap open ios",
-    "test:web": "playwright test"
+    "test:web": "playwright test",
+    "version:web": "node scripts/version-web.mjs",
+    "check:web": "node scripts/version-web.mjs --check"
   },
   "dependencies": {
     "@capacitor/app-launcher": "8.0.1",

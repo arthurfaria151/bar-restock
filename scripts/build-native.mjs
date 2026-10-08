@@ -16,7 +16,7 @@ await mkdir(output, { recursive: true });
 for (const asset of assets) {
   await cp(join(root, asset), join(output, asset), { recursive: true });
 }
-let html = await readFile(join(root, 'index.html'), 'utf8');
+let html = (await readFile(join(root, 'index.html'), 'utf8')).replace(/\?v=[a-f0-9]{12}/g, '');
 const appScript = '<script src="app.js"></script>';
 if (!html.includes(appScript)) {
   throw new Error('Cannot locate app.js script in index.html');

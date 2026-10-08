@@ -38,6 +38,37 @@ and the complete offline automatic scanner path using the real vendored WASM
 decoder and a synthetic local camera stream. Native sync and bundle checks passed.
 
 Chromium tests do not establish physical iPad/Safari compatibility or a signed
-Xcode build. The Linux environment cannot compile/sign iOS. Production HTTPS
-verification is currently blocked by this cloud environment's domain access;
-a GitHub push alone does not establish that the hosting deployment succeeded.
+Xcode build. The Linux environment cannot compile/sign iOS. The October 8 follow-up confirmed the prior GitHub Pages deployment succeeded
+and production runtime assets matched commit `409754e`. The site's edge rejects
+Python's default user agent; verified HTTPS requests with a browser user agent
+succeed. Script responses have a four-hour HTTP cache lifetime.
+
+## Follow-up fixes
+
+- Each committed release stamps the HTML, worker and runtime asset URLs with a
+  content hash. Service-worker updates bypass the browser HTTP cache.
+- Empty, malformed or duplicate catalogs cannot erase the saved restock list.
+- Product selection is a native button with keyboard support and pressed state.
+- Camera requests and decoder results are cancelled when capture stops, including
+  signing out while camera permission is still pending.
+- Delivery quantities must be whole numbers within their supported range. Invalid
+  input stays available for correction. Merging large lines retains every unit;
+  best-before and use-by entries retain separate meanings.
+- Draft edits read fresh storage under the inventory lock. Browser IndexedDB
+  transactions synchronize storage visibility across tabs, alongside Web Locks,
+  so queued increments survive and edits cannot resurrect finished receipts.
+- Worker activation preserves caches owned by other apps. A server 503 uses cached
+  app data, and unavailable scripts receive an offline error instead of HTML.
+
+Production UI checks use actual HTTPS responses fetched with the environment's
+existing certificate verification through a site-scoped transport. Chromium's
+direct HTTPS connection cannot validate the environment proxy certificate;
+automatic approval review rejected adding broad browser CA trust. No TLS
+verification or trust configuration was changed. Service workers and real offline
+WASM camera scanning are checked separately against the same local assets.
+
+Follow-up validation passed 39 unit tests, 37 browser regressions including all
+84 layouts, and five repeated runs of the four concurrency scenarios. The
+normal delivery/GS1/date/history flows, barcode import/export/edit/delete flows,
+permission fallback, and real automatic offline WASM camera scan also passed.
+Native asset synchronization and package checks passed.

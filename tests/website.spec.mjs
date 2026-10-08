@@ -56,7 +56,7 @@ test('catalog failure and retry preserve the saved restock list', async ({ page 
     sessionStorage.setItem('bar-restock-role-v1', 'admin');
   }, { key: keys.selection, id: p.id });
   let fail = true;
-  await page.route('**/catalog.json', route => fail ? route.fulfill({ status: 503, body: 'Offline' }) : route.continue());
+  await page.route('**/catalog.json*', route => fail ? route.fulfill({ status: 503, body: 'Offline' }) : route.continue());
   await page.goto('/');
   await expect(page.locator('[data-retry]')).toBeVisible();
   expect(await stored(page, keys.selection)).toEqual({ [p.id]: 7 });
@@ -357,7 +357,7 @@ test('service worker caches the new storage script and the website reloads offli
     if (!registration.active) throw new Error('Service worker not active');
   });
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-  expect(await page.evaluate(async () => !!await caches.match('./storage.js'))).toBe(true);
+  expect(await page.evaluate(async () => !!await caches.match('./storage.js', { ignoreSearch: true }))).toBe(true);
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('#productsRoot .product-card')).toHaveCount(catalog.length);
@@ -365,4 +365,157 @@ test('service worker caches the new storage script and the website reloads offli
   await page.locator(`#stockRoot [data-id="${p.id}"] [data-act=inc]`).click();
   await expect(page.locator(`#stockRoot [data-id="${p.id}"] .qty-val`)).toHaveText('1');
   await context.close();
+});
+
+test.describe('deeper review', () => {
+  test('a delayed camera permission result cannot start capture after sign-out', async ({ page }) => {
+    await setup(page);
+    await tab(page, 'receive');
+    await page.evaluate(() => {
+      window.ZXingWASM = { prepareZXingModule: async () => {}, readBarcodes: async () => [] };
+      navigator.mediaDevices.getUserMedia = () => new Promise(resolve => { window.__grantCamera = resolve; });
+      const video = document.querySelector('#rxVideo');
+      Object.defineProperty(video, 'srcObject', { writable: true, value: null });
+      video.play = async () => {};
+      video.pause = () => {};
+      window.__cameraStopped = false;
+      const track = { stop() { window.__cameraStopped = true; }, getCapabilities() { return {}; } };
+      window.__lateStream = { getTracks: () => [track], getVideoTracks: () => [track] };
+    });
+    await page.locator('#rxStart').click();
+    await expect(page.locator('#rxStart')).toBeDisabled();
+    await page.locator('#btnLogout').click();
+    await page.evaluate(() => window.__grantCamera(window.__lateStream));
+    await expect.poll(() => page.evaluate(() => window.__cameraStopped)).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('#rxVideo').srcObject)).toBeNull();
+  });
+
+  for (const quantity of ['0', '-1', '1.5', '100000', '']) {
+    test(`invalid delivery quantity ${JSON.stringify(quantity)} is rejected without adding a unit`, async ({ page }) => {
+      const pending = { ...item({ uid: 'pending', qty: 1 }), cartons: 1, packSize: 1, code: 'TEST', warnings: [], oneOff: false };
+      await setup(page, { [keys.draft]: draft([], pending) });
+      await tab(page, 'receive');
+      await page.locator('#rxQty').fill(quantity);
+      await page.locator('#rxConfirm [data-rx-act=confirm]').click();
+      expect((await stored(page, keys.draft)).items).toHaveLength(0);
+      await expect(page.locator('#rxQty')).toHaveAttribute('aria-invalid', 'true');
+    });
+  }
+
+  test('merging large delivery lines preserves every unit', async ({ page }) => {
+    const pending = { ...item({ uid: 'pending', qty: 1 }), cartons: 1, packSize: 1, code: 'TEST', warnings: [], oneOff: false };
+    await setup(page, { [keys.draft]: draft([item({ qty: 99999 })], pending) });
+    await tab(page, 'receive');
+    await page.locator('#rxConfirm [data-rx-act=confirm]').click();
+    const receipt = await stored(page, keys.draft);
+    expect(receipt.items.reduce((total, line) => total + line.qty, 0)).toBe(100000);
+  });
+
+  test('product selection is available with the keyboard', async ({ page }) => {
+    await setup(page);
+    const select = page.locator('#productsRoot .product-card').first().getByRole('button', { name: new RegExp(p.name) });
+    await select.focus();
+    await page.keyboard.press('Space');
+    await expect(page.locator('#headerBadge')).toHaveText('1');
+    await expect(select).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#headerBadge')).toHaveText('0');
+  });
+
+  test('empty catalog responses retain the saved restock list', async ({ page }) => {
+    await page.addInitScript(({ key, id }) => {
+      localStorage.setItem(key, JSON.stringify({ [id]: 7 }));
+      sessionStorage.setItem('bar-restock-role-v1', 'admin');
+    }, { key: keys.selection, id: p.id });
+    await page.route('**/catalog.json*', route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+    await page.goto('/');
+    expect(await stored(page, keys.selection)).toEqual({ [p.id]: 7 });
+    await expect(page.locator('[data-retry]')).toBeVisible();
+  });
+
+  test('service-worker activation preserves caches owned by other apps', async ({ browser }) => {
+    const context = await browser.newContext({ serviceWorkers: 'allow' });
+    await context.addInitScript(() => { window.__foreignCache = caches.open('another-app-cache'); });
+    const page = await context.newPage();
+    await setup(page);
+    await page.evaluate(async () => { await window.__foreignCache; await navigator.serviceWorker.ready; });
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    expect(await page.evaluate(() => caches.keys())).toContain('another-app-cache');
+    await context.close();
+  });
+
+  test('a cached catalog keeps working during a server 503', async ({ browser }) => {
+    const context = await browser.newContext({ serviceWorkers: 'allow' });
+    const page = await context.newPage();
+    await setup(page);
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    await context.route('**/catalog.json*', route => route.fulfill({ status: 503, body: 'Temporarily unavailable' }));
+    await page.reload();
+    await expect(page.locator('#productsRoot .product-card')).toHaveCount(catalog.length);
+    await context.close();
+  });
+
+  test('an unavailable script never receives index HTML as an offline fallback', async ({ browser }) => {
+    const context = await browser.newContext({ serviceWorkers: 'allow' });
+    const page = await context.newPage();
+    await setup(page);
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    await page.evaluate(async () => {
+      for (const key of await caches.keys()) {
+        const cache = await caches.open(key);
+        await cache.delete(new URL('storage.js', document.baseURI).href, { ignoreSearch: true });
+      }
+    });
+    await context.setOffline(true);
+    const response = await page.evaluate(async () => { const r = await fetch('storage.js'); return { status: r.status, body: await r.text() }; });
+    expect(response.status).toBe(503);
+    expect(response.body).not.toContain('<html');
+    await context.close();
+  });
+});
+
+test('queued delivery edits from two tabs preserve both increments', async ({ context, page }) => {
+  await setup(page, { [keys.draft]: draft() });
+  const other = await context.newPage();
+  await setup(other);
+  await tab(page, 'receive');
+  await tab(other, 'receive');
+  await page.evaluate(() => { navigator.locks.request('bar-restock-storage', async () => {
+    window.__lockHeld = true;
+    await new Promise(resolve => { window.__releaseLock = resolve; });
+  }); });
+  await expect.poll(() => page.evaluate(() => window.__lockHeld)).toBe(true);
+  await Promise.all([page, other].map(current => current.evaluate(() => document.querySelector('#rxDraft [data-rx-act=item-inc]').click())));
+  await page.evaluate(() => window.__releaseLock());
+  await expect.poll(async () => (await stored(page, keys.draft)).items[0].qty).toBe(6);
+});
+
+test('a queued edit cannot resurrect a delivery after it finishes', async ({ context, page }) => {
+  await setup(page, { [keys.draft]: draft() });
+  const other = await context.newPage();
+  await setup(other);
+  await tab(page, 'receive');
+  await tab(other, 'receive');
+  await page.evaluate(() => { navigator.locks.request('bar-restock-storage', async () => {
+    window.__lockHeld = true;
+    await new Promise(resolve => { window.__releaseLock = resolve; });
+  }); });
+  await expect.poll(() => page.evaluate(() => window.__lockHeld)).toBe(true);
+  await page.evaluate(() => { window.confirm = () => true; document.querySelector('#rxFinish').click(); });
+  await other.evaluate(() => document.querySelector('#rxDraft [data-rx-act=item-inc]').click());
+  await page.evaluate(() => window.__releaseLock());
+  await expect.poll(() => stored(page, keys.stock)).toEqual({ [p.id]: 4 });
+  expect((await stored(page, keys.draft)).items).toHaveLength(0);
+  expect(await stored(page, keys.history)).toHaveLength(1);
+});
+
+test('use-by and best-before lines keep their separate date meanings', async ({ page }) => {
+  const pending = { ...item({ uid: 'pending', date: '2026-12-01', dateKind: 'useBy' }), cartons: 1, packSize: 1, code: 'TEST', warnings: [] };
+  await setup(page, { [keys.draft]: draft([item({ date: '2026-12-01' })], pending) });
+  await tab(page, 'receive');
+  await page.locator('#rxConfirm [data-rx-act=confirm]').click();
+  await expect.poll(async () => (await stored(page, keys.draft)).items.length).toBe(2);
+  expect((await stored(page, keys.draft)).items.map(line => line.dateKind).sort()).toEqual(['bestBefore', 'useBy']);
 });

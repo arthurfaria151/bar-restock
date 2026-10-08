@@ -612,6 +612,21 @@ select.input {
 .product-card:hover { box-shadow: 0 0 0 1px var(--separator), 0 6px 20px rgba(0, 0, 0, 0.08); }
 .product-card:active { transform: scale(0.98); }
 .product-card.selected { box-shadow: 0 0 0 2px var(--accent); }
+.product-toggle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
 .product-card img,
 .product-card .thumb-fallback {
   width: 100%;

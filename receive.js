@@ -14,6 +14,8 @@
   const DRAFT_KEY = "bar-restock-delivery-draft-v1"; // in-progress delivery { id, startedAt, items, pending }
   const DELIVERIES_KEY = "bar-restock-deliveries-v1"; // finished deliveries, newest first
   const LOTS_CLEARED_KEY = "bar-restock-lots-cleared-v1"; // { "<deliveryId>:<itemIndex>": ISO time cleared }
+  const version = document.querySelector('meta[name="app-version"]')?.content;
+  const asset = (path) => !window.BarRestockNative && version ? `${path}?v=${version}` : path;
   const DECODER_JS = "vendor/zxing-wasm/zxing-reader.iife.js";
   const DECODER_WASM = "vendor/zxing-wasm/zxing_reader.wasm";
   const FORMATS = ["EAN13", "EAN8", "UPCA", "UPCE", "ITF", "Code128", "QRCode", "DataMatrix", "DataBar", "DataBarExp"];
@@ -41,6 +43,7 @@
       track: null,
       torchOn: false,
       starting: false,
+      cameraRequest: 0,
       decoderPromise: null,
       loopTimer: null,
       decoding: false,
@@ -129,6 +132,7 @@
       const base = cleanItem(p);
       if (!base) return null;
       return Object.assign(base, {
+        qty: strictInt(p.qty, 1, Number.MAX_SAFE_INTEGER) || base.qty,
         cartons: clampInt(p.cartons, 1, QTY_MAX) || 1,
         packSize: clampInt(p.packSize, 1, PACK_MAX) || 1,
         code: typeof p.code === "string" ? p.code.slice(0, 200) : "",
@@ -142,10 +146,18 @@
       });
     }
 
-    function saveDraft() {
-      if (api.saveJson(DRAFT_KEY, rx.draft)) return true;
-      rx.draft = loadDraft();
-      return false;
+    async function changeDraft(change) {
+      return api.withStorageLock(() => {
+        if (!api.roleId()) return false;
+        const next = loadDraft();
+        if (change(next) === false) {
+          rx.draft = next;
+          return false;
+        }
+        if (!api.saveJson(DRAFT_KEY, next)) return false;
+        rx.draft = next;
+        return true;
+      });
     }
 
     function loadDeliveries() {
@@ -159,6 +171,18 @@
       const n = Math.floor(Number(v));
       if (v === "" || v === null || v === undefined || !Number.isFinite(n)) return null;
       return Math.min(max, Math.max(min, n));
+    }
+
+    function strictInt(v, min, max) {
+      const n = Number(v);
+      return v !== "" && v !== null && v !== undefined && Number.isSafeInteger(n) && n >= min && n <= max ? n : null;
+    }
+
+    function readQuantity(input, max = QTY_MAX) {
+      const qty = input && strictInt(input.value, 1, max);
+      if (input) input.setAttribute("aria-invalid", qty ? "false" : "true");
+      if (!qty) api.showToast(`Enter a whole number from 1 to ${max}`);
+      return qty;
     }
 
     function validIsoDate(s) {
@@ -264,7 +288,7 @@
       rx.decoderPromise = new Promise((resolve, reject) => {
         const ready = () => {
           try {
-            const wasmUrl = new URL(DECODER_WASM, document.baseURI).href;
+            const wasmUrl = new URL(asset(DECODER_WASM), document.baseURI).href;
             // Never fetch the wasm from a CDN: point the loader at the vendored copy (precached by the SW).
             const p = window.ZXingWASM.prepareZXingModule({
               overrides: { locateFile: (path, prefix) => (path.endsWith(".wasm") ? wasmUrl : prefix + path) },
@@ -280,7 +304,7 @@
           return;
         }
         const s = document.createElement("script");
-        s.src = DECODER_JS;
+        s.src = asset(DECODER_JS);
         s.async = true;
         s.onload = ready;
         s.onerror = () => reject(new Error("decoder script failed to load"));
@@ -309,6 +333,7 @@
         return;
       }
       rx.starting = true;
+      const request = ++rx.cameraRequest;
       renderCamControls();
       setCamStatus("Starting camera…");
       const decoder = loadDecoder();
@@ -319,9 +344,9 @@
           audio: false,
           video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
         });
-        if (api.currentTab() !== "receive" || document.hidden || rx.view !== "scan") {
+        if (request !== rx.cameraRequest || !api.roleId() || api.currentTab() !== "receive" || document.hidden || rx.view !== "scan") {
           stream.getTracks().forEach((t) => t.stop());
-          setCamStatus("");
+          if (request === rx.cameraRequest) setCamStatus("");
           return;
         }
         rx.stream = stream;
@@ -329,14 +354,16 @@
         const video = $("#rxVideo");
         video.srcObject = stream;
         await video.play().catch(() => {});
+        if (request !== rx.cameraRequest || !rx.stream) return;
         stage = "decoder";
         setCamStatus("Loading scanner…");
         await decoder;
-        if (!rx.stream) return;
+        if (request !== rx.cameraRequest || !rx.stream) return;
         setCamStatus("");
         rx.seen.clear();
         scheduleScan(0);
       } catch (err) {
+        if (request !== rx.cameraRequest) return;
         stopCamera();
         const name = err && err.name;
         if (stage === "decoder") {
@@ -349,12 +376,14 @@
           setCamStatus("Couldn’t start the camera. Type the code below instead.", "warn");
         }
       } finally {
-        rx.starting = false;
+        if (request === rx.cameraRequest) rx.starting = false;
         renderCamControls();
       }
     }
 
     function stopCamera() {
+      ++rx.cameraRequest;
+      rx.starting = false;
       clearTimeout(rx.loopTimer);
       rx.loopTimer = null;
       if (rx.stream) rx.stream.getTracks().forEach((t) => t.stop());
@@ -421,7 +450,8 @@
       rx.loopTimer = null;
       const video = $("#rxVideo");
       if (!rx.stream || !video || rx.decoding) return;
-      const busy = !!rx.draft.pending || !!rx.sheet;
+      const request = rx.cameraRequest;
+      const busy = !!rx.draft.pending || !!rx.sheet || rx.finishing;
       if (video.readyState >= 2 && video.videoWidth) {
         rx.decoding = true;
         try {
@@ -440,7 +470,7 @@
             textMode: "HRI", // GS1 data arrives as "(01)…(17)…", which gs1.js parses
           });
           const hit = results.find((r) => r.isValid && r.text);
-          if (hit) onDecoded(hit, busy);
+          if (hit && request === rx.cameraRequest && rx.stream) await onDecoded(hit, busy);
         } catch (_) {
           // a bad frame is not fatal; try the next one
         } finally {
@@ -450,7 +480,7 @@
       if (rx.stream) scheduleScan(busy ? SCAN_EVERY_MS * 3 : SCAN_EVERY_MS);
     }
 
-    function onDecoded(hit, busy) {
+    async function onDecoded(hit, busy) {
       const now = Date.now();
       const last = rx.seen.get(hit.text) || 0;
       rx.seen.delete(hit.text);
@@ -458,14 +488,14 @@
       if (rx.seen.size > 50) rx.seen.delete(rx.seen.keys().next().value);
       // While an item waits for confirmation we only remember what's in view; and a code that was
       // seen less than ~2s ago (e.g. still in front of the camera) is not read again.
-      if (busy || now - last < REPEAT_MS) return;
-      handleCode(hit.text, { format: hit.format, symbologyIdentifier: hit.symbologyIdentifier, source: "camera" });
+      if (busy || !api.roleId() || rx.draft.pending || rx.sheet || rx.finishing || now - last < REPEAT_MS) return;
+      await handleCode(hit.text, { format: hit.format, symbologyIdentifier: hit.symbologyIdentifier, source: "camera" });
     }
 
     /* ---------- code handling ---------- */
 
-    function handleCode(text, meta) {
-      if (!api.roleId() || !api.catalogReady()) return false;
+    async function handleCode(text, meta) {
+      if (!api.roleId() || !api.catalogReady() || rx.finishing) return false;
       const parsed = GS1.parseCode(text, { format: meta.format, symbologyIdentifier: meta.symbologyIdentifier, now: new Date() });
       if (!parsed.key) {
         feedback(false);
@@ -476,8 +506,9 @@
       const link = rx.links[parsed.key];
       const p = link ? product(link.productId) : null;
       feedback(true);
-      if (link && p) setPending(buildPending(parsed, link, p, false));
-      else openUnknown(parsed, !!link && !p);
+      if (link && p) {
+        if (!await setPending(buildPending(parsed, link, p, false))) return false;
+      } else openUnknown(parsed, !!link && !p);
       return true;
     }
 
@@ -499,7 +530,7 @@
         uid: newId(),
         productId: p.id,
         name: p.name,
-        qty: Math.max(1, Math.min(QTY_MAX, qty)),
+        qty: Math.max(1, qty),
         cartons: Math.max(1, Math.min(QTY_MAX, cartons)),
         packSize: pack,
         date,
@@ -510,18 +541,23 @@
         batch: parsed.batch ? parsed.batch.slice(0, BATCH_MAX) : null,
         code: parsed.display.slice(0, 200),
         codes: [parsed.display.slice(0, 200)],
-        warnings: parsed.warnings.slice(0, 5),
+        warnings: parsed.warnings.slice(0, 5).concat(qty > QTY_MAX ? [`Label quantity exceeds ${QTY_MAX} units per line — check the quantity before adding.`] : []),
         oneOff: !!oneOff,
         fromCount: parsed.countSource,
         countValue: parsed.count,
       };
     }
 
-    function setPending(item) {
-      rx.draft.pending = item;
-      if (!rx.draft.startedAt) rx.draft.startedAt = new Date().toISOString();
+    async function setPending(item) {
+      if (!await changeDraft((next) => {
+        if (next.pending) {
+          api.showToast("Add or skip the scanned item first");
+          return false;
+        }
+        next.pending = item;
+        if (!next.startedAt) next.startedAt = new Date().toISOString();
+      })) return false;
       rx.lastFinished = null;
-      if (!saveDraft()) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -529,6 +565,7 @@
       if (card && window.matchMedia("(max-width: 899px)").matches) {
         card.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
+      return true;
     }
 
     /* ---------- unknown codes: link (manager) or pick once (staff) ---------- */
@@ -624,10 +661,10 @@
 
     function readPackSize() {
       const input = $("#rxPackSize");
-      return input ? clampInt(input.value, 1, PACK_MAX) : null;
+      return input ? strictInt(input.value, 2, PACK_MAX) : null;
     }
 
-    function saveLinkFromSheet() {
+    async function saveLinkFromSheet() {
       const s = rx.sheet;
       if (!s || !api.isManager()) return;
       const p = product(s.selected);
@@ -654,6 +691,7 @@
       if (!saveLinks()) return;
       const mode = s.mode;
       const parsed = s.parsed;
+      if (mode !== "edit-link" && !await setPending(buildPending(parsed, rx.links[key], p, false))) return;
       rx.sheet = null;
       api.closeSheet();
       if (mode === "edit-link") {
@@ -661,7 +699,6 @@
         renderLinks();
       } else {
         api.showToast(`Linked to ${p.name}`);
-        setPending(buildPending(parsed, rx.links[key], p, false));
       }
     }
 
@@ -674,14 +711,14 @@
       return parsed.display.slice(0, 200);
     }
 
-    function pickOnce(id) {
+    async function pickOnce(id) {
       const s = rx.sheet;
       const p = product(id);
       if (!s || !p) return;
       const parsed = s.parsed;
+      if (!await setPending(buildPending(parsed, null, p, true))) return;
       rx.sheet = null;
       api.closeSheet();
-      setPending(buildPending(parsed, null, p, true));
     }
 
     function openEditLink(key) {
@@ -710,9 +747,12 @@
       if (!box) return;
       const it = rx.draft.pending;
       const p = it ? product(it.productId) : null;
-      if (it && !p && api.catalogReady()) {
-        rx.draft.pending = null;
-        saveDraft();
+      if (it && !p) {
+        $("#rxIdle").hidden = true;
+        box.hidden = false;
+        box.innerHTML = `<p class="rx-warn">The pending product is unavailable. Check the product list, or skip this item.</p>
+          <button type="button" class="btn btn-ghost" data-rx-act="skip">Skip</button>`;
+        return;
       }
       $("#rxIdle").hidden = !!p;
       if (!p) {
@@ -777,67 +817,63 @@
         </div>`;
     }
 
-    function updatePending(change) {
-      const it = rx.draft.pending;
-      if (!it) return;
-      change(it);
-      it.cartons = clampInt(it.cartons, 1, QTY_MAX) || 1;
-      it.qty = clampInt(it.qty, 1, QTY_MAX) || 1;
-      return saveDraft();
+    async function updatePending(change) {
+      const uid = rx.draft.pending && rx.draft.pending.uid;
+      return changeDraft((next) => {
+        if (!next.pending || next.pending.uid !== uid) {
+          api.showToast("The scanned item changed — review it first");
+          return false;
+        }
+        change(next.pending);
+      });
     }
 
     function sameLine(a, b) {
-      return a.productId === b.productId && (a.date || null) === (b.date || null) && (a.batch || null) === (b.batch || null);
+      return a.productId === b.productId && (a.date || null) === (b.date || null) &&
+        (!a.date || a.dateKind === b.dateKind) && (a.batch || null) === (b.batch || null);
     }
 
-    function confirmPending() {
-      if (!api.roleId()) return;
-      const it = rx.draft.pending;
-      if (!it) return;
-      const qtyEl = $("#rxQty");
-      if (qtyEl) {
-        const q = clampInt(qtyEl.value, 1, QTY_MAX);
-        if (!q) {
-          api.showToast("Enter how many units arrived");
-          qtyEl.focus();
-          return;
+    async function confirmPending() {
+      if (!api.roleId() || rx.finishing) return;
+      const pending = rx.draft.pending;
+      if (!pending || !product(pending.productId)) return;
+      const qty = readQuantity($("#rxQty"));
+      if (!qty) return;
+      const cartons = $("#rxCartons");
+      if (cartons && !readQuantity(cartons, Math.floor(QTY_MAX / pending.packSize))) return;
+      const date = $("#rxDate").value;
+      const dateKind = $("#rxDateKind").value === "useBy" ? "useBy" : "bestBefore";
+      let added;
+      if (!await changeDraft((next) => {
+        const it = next.pending;
+        if (!it || it.uid !== pending.uid) return false;
+        it.qty = qty;
+        it.date = validIsoDate(date) ? date : null;
+        it.dateKind = dateKind;
+        const merged = next.items.find((x) => sameLine(x, it) && x.qty + qty <= QTY_MAX);
+        if (merged) {
+          merged.qty += qty;
+          if (it.code && !merged.codes.includes(it.code)) merged.codes.push(it.code);
+        } else {
+          next.items.unshift({ uid: it.uid, productId: it.productId, name: it.name,
+            qty, date: it.date, dateKind, batch: it.batch, codes: it.code ? [it.code] : [] });
         }
-        it.qty = q;
-      }
-      const dateEl = $("#rxDate");
-      if (dateEl) it.date = validIsoDate(dateEl.value) ? dateEl.value : null;
-      const kindEl = $("#rxDateKind");
-      if (kindEl) it.dateKind = kindEl.value === "useBy" ? "useBy" : "bestBefore";
-      const merged = rx.draft.items.find((x) => sameLine(x, it));
-      if (merged) {
-        merged.qty = Math.min(QTY_MAX, merged.qty + it.qty);
-        if (it.code && !merged.codes.includes(it.code)) merged.codes.push(it.code);
-        if (it.date) merged.dateKind = it.dateKind;
-      } else {
-        rx.draft.items.unshift({
-          uid: it.uid,
-          productId: it.productId,
-          name: it.name,
-          qty: it.qty,
-          date: it.date,
-          dateKind: it.dateKind,
-          batch: it.batch,
-          codes: it.code ? [it.code] : [],
-        });
-      }
-      const name = productName(it);
-      rx.draft.pending = null;
-      if (!saveDraft()) return;
+        added = { ...it };
+        next.pending = null;
+      })) return;
       renderPending();
       renderDraft();
       renderCamControls();
-      api.showToast(merged ? `${name}: now ${merged.qty}` : `Added ${it.qty} × ${name}`);
+      api.showToast(`Added ${added.qty} × ${productName(added)}`);
     }
 
-    function skipPending() {
-      if (!api.roleId()) return;
-      rx.draft.pending = null;
-      if (!saveDraft()) return;
+    async function skipPending() {
+      if (!api.roleId() || rx.finishing) return;
+      const uid = rx.draft.pending && rx.draft.pending.uid;
+      if (!await changeDraft((next) => {
+        if (!next.pending || next.pending.uid !== uid) return false;
+        next.pending = null;
+      })) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -921,47 +957,52 @@
       renderCamControls();
     }
 
-    function saveEditItem() {
-      const s = rx.sheet;
-      const it = s && itemByUid(s.uid);
-      if (!it) return;
-      const qty = clampInt($("#rxEditQty").value, 1, QTY_MAX);
-      if (!qty) {
-        api.showToast("Enter a quantity of 1 or more");
-        return;
-      }
+    async function saveEditItem() {
+      if (!api.roleId() || rx.finishing || !rx.sheet) return;
+      const uid = rx.sheet.uid;
+      const qty = readQuantity($("#rxEditQty"));
+      if (!qty) return;
       const date = $("#rxEditDate").value;
-      it.qty = qty;
-      it.date = validIsoDate(date) ? date : null;
-      it.dateKind = $("#rxEditKind").value === "useBy" ? "useBy" : "bestBefore";
-      it.batch = $("#rxEditBatch").value.trim().slice(0, BATCH_MAX) || null;
-      // Editing can make two lines identical: merge them.
-      const twin = rx.draft.items.find((x) => x !== it && sameLine(x, it));
-      if (twin) {
-        twin.qty = Math.min(QTY_MAX, twin.qty + it.qty);
-        twin.codes = Array.from(new Set(twin.codes.concat(it.codes))).slice(0, 20);
-        rx.draft.items = rx.draft.items.filter((x) => x !== it);
-      }
-      if (!saveDraft()) return;
+      const values = { qty, date: validIsoDate(date) ? date : null,
+        dateKind: $("#rxEditKind").value === "useBy" ? "useBy" : "bestBefore",
+        batch: $("#rxEditBatch").value.trim().slice(0, BATCH_MAX) || null };
+      if (!await changeDraft((next) => {
+        const it = next.items.find((x) => x.uid === uid);
+        if (!it) return false;
+        Object.assign(it, values);
+        const twin = next.items.find((x) => x !== it && sameLine(x, it) && x.qty + qty <= QTY_MAX);
+        if (twin) {
+          twin.qty += qty;
+          twin.codes = Array.from(new Set(twin.codes.concat(it.codes))).slice(0, 20);
+          next.items = next.items.filter((x) => x !== it);
+        }
+      })) return;
       rx.sheet = null;
       api.closeSheet();
       renderDraft();
     }
 
-    function removeItem(uid) {
-      const it = itemByUid(uid);
-      if (!it) return;
-      rx.draft.items = rx.draft.items.filter((x) => x.uid !== uid);
-      if (!saveDraft()) return;
+    async function removeItem(uid) {
+      if (!api.roleId() || rx.finishing) return false;
+      let removed;
+      if (!await changeDraft((next) => {
+        removed = next.items.find((x) => x.uid === uid);
+        if (!removed) return false;
+        next.items = next.items.filter((x) => x.uid !== uid);
+      })) return false;
       renderDraft();
-      api.showToast(`Removed ${productName(it)}`);
+      api.showToast(`Removed ${productName(removed)}`);
+      return true;
     }
 
-    function discardDraft() {
-      if (!rx.draft.items.length) return;
+    async function discardDraft() {
+      if (!api.roleId() || rx.finishing || !rx.draft.items.length) return;
+      const id = rx.draft.id;
       if (!confirm("Discard this delivery? Nothing has been added to stock yet.")) return;
-      rx.draft = emptyDraft();
-      if (!saveDraft()) return;
+      if (!await changeDraft((next) => {
+        if (next.id !== id) return false;
+        Object.assign(next, emptyDraft());
+      })) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -1345,7 +1386,7 @@
       setView(rx.view);
     }
 
-    function onManual(e) {
+    async function onManual(e) {
       e.preventDefault();
       const input = $("#rxManual");
       const value = input.value.trim();
@@ -1361,38 +1402,43 @@
       }
       api.setFieldError(input, err, null);
       prepareAudio();
-      if (handleCode(value.slice(0, 400), { source: "manual" })) input.value = "";
+      if (await handleCode(value.slice(0, 400), { source: "manual" })) input.value = "";
     }
 
     /* ---------- events ---------- */
 
-    function onPanelClick(e) {
-      if (!api.roleId()) return;
+    async function onPanelClick(e) {
+      if (!api.roleId() || rx.finishing) return;
       const btn = e.target.closest("[data-rx-act]");
       if (!btn || btn.disabled) return;
       const act = btn.dataset.rxAct;
       const li = btn.closest("[data-uid]");
       const linkLi = btn.closest("[data-key]");
-      if (act === "confirm") confirmPending();
-      else if (act === "skip") skipPending();
-      else if (act === "cartons-inc" || act === "cartons-dec") {
-        updatePending((it) => {
-          it.cartons = Math.max(1, (clampInt($("#rxCartons").value, 1, QTY_MAX) || it.cartons) + (act === "cartons-inc" ? 1 : -1));
-          it.qty = it.cartons * it.packSize;
-        });
-        renderPending();
-      } else if (act === "qty-inc" || act === "qty-dec") {
-        updatePending((it) => {
-          it.qty = Math.max(1, (clampInt($("#rxQty").value, 1, QTY_MAX) || it.qty) + (act === "qty-inc" ? 1 : -1));
-        });
+      if (act === "confirm") await confirmPending();
+      else if (act === "skip") await skipPending();
+      else if (["cartons-inc", "cartons-dec", "qty-inc", "qty-dec"].includes(act)) {
+        const cartons = act.startsWith("cartons");
+        const max = cartons ? Math.floor(QTY_MAX / rx.draft.pending.packSize) : QTY_MAX;
+        const input = $(cartons ? "#rxCartons" : "#rxQty");
+        const value = readQuantity(input, max);
+        if (!value) return;
+        const qty = Math.max(1, value + (act.endsWith("inc") ? 1 : -1));
+        if (qty > max) { api.showToast(`Maximum ${max} per line`); return; }
+        if (!await updatePending((it) => {
+          if (cartons) { it.cartons = qty; it.qty = qty * it.packSize; }
+          else it.qty = qty;
+        })) return;
         renderPending();
       } else if ((act === "item-inc" || act === "item-dec") && li) {
-        const it = itemByUid(li.dataset.uid);
-        if (!it) return;
-        it.qty = Math.min(QTY_MAX, Math.max(1, it.qty + (act === "item-inc" ? 1 : -1)));
-        if (!saveDraft()) return;
+        if (!await changeDraft((next) => {
+          const it = next.items.find((x) => x.uid === li.dataset.uid);
+          if (!it) return false;
+          const qty = Math.max(1, it.qty + (act === "item-inc" ? 1 : -1));
+          if (qty > QTY_MAX) { api.showToast(`Maximum ${QTY_MAX} per line`); return false; }
+          it.qty = qty;
+        })) return;
         renderDraft();
-      } else if (act === "item-remove" && li) removeItem(li.dataset.uid);
+      } else if (act === "item-remove" && li) await removeItem(li.dataset.uid);
       else if (act === "edit-item" && li) openEditItem(li.dataset.uid);
       else if (act === "open-delivery") openDelivery(btn.dataset.id);
       else if (act === "view-last" && rx.lastFinished) {
@@ -1403,27 +1449,24 @@
       else if (act === "link-delete" && linkLi) deleteLink(linkLi.dataset.key);
     }
 
-    function onPanelChange(e) {
+    async function onPanelChange(e) {
+      if (!api.roleId() || rx.finishing) return;
       const t = e.target;
-      if (t.id === "rxCartons") {
-        updatePending((it) => {
-          it.cartons = clampInt(t.value, 1, QTY_MAX) || 1;
-          it.qty = it.cartons * it.packSize;
-        });
-        syncPendingQuantity();
-      } else if (t.id === "rxQty") {
-        updatePending((it) => {
-          it.qty = clampInt(t.value, 1, QTY_MAX) || 1;
-        });
-        syncPendingQuantity();
+      if (t.id === "rxCartons" || t.id === "rxQty") {
+        const cartons = t.id === "rxCartons";
+        const max = cartons ? Math.floor(QTY_MAX / rx.draft.pending.packSize) : QTY_MAX;
+        const value = readQuantity(t, max);
+        if (!value) return;
+        // Reflect carton arithmetic before the blur click reaches Add; persistence is queued.
+        if (cartons) $("#rxQty").value = value * rx.draft.pending.packSize;
+        if (await updatePending((it) => {
+          if (cartons) { it.cartons = value; it.qty = value * it.packSize; }
+          else it.qty = value;
+        })) syncPendingQuantity();
       } else if (t.id === "rxDate") {
-        updatePending((it) => {
-          it.date = validIsoDate(t.value) ? t.value : null;
-        });
+        await updatePending((it) => { it.date = validIsoDate(t.value) ? t.value : null; });
       } else if (t.id === "rxDateKind") {
-        updatePending((it) => {
-          it.dateKind = t.value === "useBy" ? "useBy" : "bestBefore";
-        });
+        await updatePending((it) => { it.dateKind = t.value === "useBy" ? "useBy" : "bestBefore"; });
       }
     }
 
@@ -1444,11 +1487,11 @@
       if (cartonsDec) cartonsDec.disabled = it.cartons <= 1;
     }
 
-    function onSheetClick(e) {
-      if (!rx.sheet) return;
+    async function onSheetClick(e) {
+      if (!api.roleId() || rx.finishing || !rx.sheet) return;
       const pick = e.target.closest("[data-rpick]");
       if (pick) {
-        if (rx.sheet.mode === "pick") pickOnce(pick.dataset.rpick);
+        if (rx.sheet.mode === "pick") await pickOnce(pick.dataset.rpick);
         else if (rx.sheet.mode === "link" || rx.sheet.mode === "edit-link") {
           rx.sheet.selected = pick.dataset.rpick;
           renderPickerResults();
@@ -1465,12 +1508,13 @@
       }
       const act = e.target.closest("[data-rx-act]");
       if (!act) return;
-      if (act.dataset.rxAct === "link-save") saveLinkFromSheet();
+      if (act.dataset.rxAct === "link-save") await saveLinkFromSheet();
       else if (act.dataset.rxAct === "sheet-remove" && rx.sheet.mode === "edit-item") {
         const uid = rx.sheet.uid;
-        rx.sheet = null;
-        api.closeSheet();
-        removeItem(uid);
+        if (await removeItem(uid)) {
+          rx.sheet = null;
+          api.closeSheet();
+        }
       }
     }
 

@@ -96,22 +96,30 @@
       return database;
     }
 
+    async function withDatabaseLock(run) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction("mutex", "readwrite");
+        let result;
+        transaction.objectStore("mutex").get("lock").onsuccess = () => {
+          try { result = run(); } catch (_) { transaction.abort(); }
+        };
+        transaction.oncomplete = () => resolve(result);
+        transaction.onabort = transaction.onerror = () => reject(transaction.error || new Error("Storage locking failed"));
+      });
+    }
+
     async function withLock(change) {
       const run = () => recover() ? change() : false;
       try {
-        if (locks) return await locks.request(LOCK_NAME, run);
-        // Older Safari has IndexedDB but no Web Locks. A readwrite transaction
-        // serializes its synchronous localStorage operation across tabs too.
-        const db = await openDatabase();
-        return await new Promise((resolve, reject) => {
-          const transaction = db.transaction("mutex", "readwrite");
-          let result;
-          transaction.objectStore("mutex").get("lock").onsuccess = () => {
-            try { result = run(); } catch (_) { transaction.abort(); }
-          };
-          transaction.oncomplete = () => resolve(result);
-          transaction.onabort = transaction.onerror = () => reject(transaction.error || new Error("Storage locking failed"));
+        if (locks) return await locks.request(LOCK_NAME, () => {
+          // A browser-process transaction also lets pending localStorage updates
+          // reach this tab before it reads counts. A Web Lock alone can be granted
+          // before another renderer's storage notification arrives.
+          return idb ? withDatabaseLock(run) : run();
         });
+        // Older Safari serializes through the same IndexedDB transaction.
+        return await withDatabaseLock(run);
       } catch (_) {
         fail();
         return false;

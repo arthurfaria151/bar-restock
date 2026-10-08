@@ -29,6 +29,8 @@
     },
   ];
   const native = window.BarRestockNative;
+  const version = document.querySelector('meta[name="app-version"]')?.content;
+  const asset = (path) => !native && version ? `${path}?v=${version}` : path;
   const state = {
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
@@ -435,6 +437,7 @@
   function syncCard(card, id) {
     const qty = state.selection[id] || 0;
     card.classList.toggle("selected", qty > 0);
+    card.querySelector(".product-toggle")?.setAttribute("aria-pressed", qty > 0 ? "true" : "false");
     const dot = card.querySelector(".selected-dot");
     const val = card.querySelector(".qty-val");
     if (dot) dot.textContent = qty > 0 ? String(qty) : "";
@@ -486,7 +489,7 @@
       return `<div class="thumb-fallback" aria-hidden="true">${letter}</div>`;
     }
     const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
-    return `<img src="thumbs/${p.id}.jpg" alt="" loading="lazy"${wh} />`;
+    return `<img src="${asset(`thumbs/${p.id}.jpg`)}" alt="" loading="lazy"${wh} />`;
   }
 
   function buildLowEmail(products) {
@@ -666,8 +669,10 @@
         card.dataset.id = p.id;
         card.innerHTML = `
           <span class="selected-dot"></span>
-          ${thumbMarkup(p)}
-          <div class="name">${escapeHtml(p.name)}</div>
+          <button type="button" class="product-toggle" aria-label="Select ${escapeHtml(p.name)}" aria-pressed="false">
+            ${thumbMarkup(p)}
+            <span class="name">${escapeHtml(p.name)}</span>
+          </button>
           <div class="qty-row">
             <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">${ICON("minus")}</button>
             <span class="qty-val">1</span>
@@ -1753,11 +1758,17 @@
   // blocks sign-in; the error shows in the visible panel with a Retry button.
   async function loadCatalog() {
     try {
-      const res = await fetch("catalog.json", { cache: "no-cache" });
+      const res = await fetch(asset("catalog.json"), { cache: "no-cache" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (!Array.isArray(data)) throw new Error("catalog is not a list");
-      state.catalog = data.filter((p) => p && typeof p.id === "string" && p.name);
+      if (!Array.isArray(data) || !data.length) throw new Error("catalog is empty or is not a list");
+      const ids = new Set();
+      for (const p of data) {
+        if (!p || typeof p.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,119}$/.test(p.id) ||
+            typeof p.name !== "string" || !p.name.trim() || ids.has(p.id)) throw new Error("catalog contains invalid or duplicate products");
+        ids.add(p.id);
+      }
+      state.catalog = data;
       state.catalogError = null;
     } catch (err) {
       state.catalogError = String(err);
@@ -2067,7 +2078,7 @@
     await loadCatalog();
     if (!native && "serviceWorker" in navigator) {
       try {
-        await navigator.serviceWorker.register("./sw.js");
+        await navigator.serviceWorker.register(asset("./sw.js"), { updateViaCache: "none" });
       } catch (_) {}
     }
   }
