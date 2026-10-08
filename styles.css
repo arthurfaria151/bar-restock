@@ -1646,7 +1646,7 @@ button.shelf-slot:active .slot-thumb { transform: scale(0.96); }
 .handout-session, .handout-entry-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .handout-session { margin-bottom: 16px; color: var(--text-2); }
 #handoutStatus { margin: 12px 0; }
-.handout-login { max-width: 520px; }
+.handout-login { max-width: 520px; padding: 20px; }
 .handout-login .field { margin: 16px 0; }
 .handout-day { margin-bottom: 20px; }
 .handout-day p { color: var(--text-2); margin: 8px 0 16px; }
@@ -1655,6 +1655,6 @@ button.shelf-slot:active .slot-thumb { transform: scale(0.96); }
 .handout-entry-head span { font-size: var(--fs-small); color: var(--text-2); }
 .handout-entry-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; margin: 16px 0; }
 .handout-entry-actions { display: flex; gap: 8px; }
-.handout-editor { margin: 20px 0; }
-.handout-editor textarea { margin-top: 10px; }
+.handout-editor { margin: 20px 0; padding: 20px; }
+.handout-editor textarea { margin-top: 10px; font: inherit; }
 .handout-history { margin-top: 32px; }

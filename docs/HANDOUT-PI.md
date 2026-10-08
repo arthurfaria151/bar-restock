@@ -56,11 +56,11 @@ curl --fail http://127.0.0.1:8787/health
 curl --fail https://handout.guarasolutions.com/health
 ```
 
-Both health checks should return `{"ok":true}`. Then set the public API URL
-in `handout-config.js` to `https://handout.guarasolutions.com`, run
-`npm run version:web`, commit and deploy. The committed default intentionally
-has no endpoint until installation and HTTPS reachability are verified;
-Handout then shows a connection notice instead of a device-only imitation.
+Both health checks should return `{"ok":true}`. `handout-config.js` connects
+the website to `https://handout.guarasolutions.com`. If the hostname changes,
+update that public URL, run `npm run version:web`, commit and deploy.
+The Handout uses shared server storage; the rest of the app's stock and shelf
+features continue to use device storage.
 
 ## Add another user
 
@@ -98,9 +98,11 @@ session secret revokes them all. The service reads accounts when starting.
   draft on screen. A retry of the same save identifier commits once. Drafts
   are not described as saved until the server confirms them.
 
-The Pi was not reachable from the Codex cloud workspace at the supplied private,
-incomplete address `192.168.114`. Installation and public reachability must be
-completed on the Pi before the website's shared service can be activated.
+Pi installation was confirmed on 8 October 2026: the service health check
+returned `{"ok":true}`, the existing tunnel configuration validated and the
+Handout DNS record was created. SSH to the Pi’s private LAN address remains
+unavailable from the cloud workspace. Public cloud verification requires
+`handout.guarasolutions.com` in the environment’s network allowlist.
 
 ## Development
 

@@ -52,5 +52,6 @@ test('server failures keep the composer draft, and viewing accounts cannot edit'
  const viewer=await context.newPage();await signIn(viewer,service,'viewer');await expect(viewer.locator('#handoutComposer')).toBeHidden();
 });
 test('an unconnected venue shows Handout without claiming shared saves',async({page})=> {
+ await page.route('**/handout-config.js*',route=>route.fulfill({contentType:'text/javascript',body:'window.BarRestockHandoutConfig={apiBase:""};'}));
  await page.addInitScript(()=>sessionStorage.setItem('bar-restock-role-v1','admin'));await page.goto('/#handout');await expect(page.locator('#handoutUnavailable')).toBeVisible();await expect(page.locator('#handoutComposer')).toBeHidden();await expect(page.locator('#handoutLogin')).toBeHidden();
 });
