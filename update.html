@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Update Bar Restock</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+    main { width: min(100%, 460px); }
+    h1 { font-size: 2rem; }
+    p { line-height: 1.6; }
+    button { font: inherit; padding: 14px 24px; background: #007aff; color: white; border: 0; border-radius: 24px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #status { min-height: 3em; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Update Bar Restock</h1>
+    <p>Refresh the app to show the latest pages, including Shelves and Receive.</p>
+    <p>Your saved stock, photos, categories and delivery history stay on this browser.</p>
+    <button id="update" type="button">Update and open Shelves</button>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    const button = document.querySelector('#update');
+    const status = document.querySelector('#status');
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      status.textContent = 'Checking for the latest version…';
+      try {
+        if (!navigator.onLine) throw new Error('Connect to the internet before updating.');
+        const base = new URL('./', location.href);
+        // An uncached path verifies connectivity even if an old worker falls back
+        // to a cached index page when its network request fails.
+        const probe = new URL('update.html', base);
+        probe.searchParams.set('fresh', String(Date.now()));
+        const connected = await fetch(probe, { cache: 'reload' });
+        if (!connected.ok) throw new Error('Check your internet connection and try again.');
+        const fresh = new URL('index.html', base);
+        fresh.searchParams.set('refresh', String(Date.now()));
+        const response = await fetch(fresh, { cache: 'reload' });
+        if (!response.ok) throw new Error('The update could not be downloaded.');
+        const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const version = html.querySelector('meta[name="app-version"]')?.content;
+        if (!/^[a-f0-9]{12}$/.test(version || '') || !html.querySelector('[data-tab="shelves"]') || !html.querySelector('[data-tab="receive"]')) {
+          throw new Error('The latest version is unavailable. Check your connection and try again.');
+        }
+        status.textContent = 'Opening the updated app…';
+        if ('serviceWorker' in navigator) {
+          const script = new URL('sw.js', base);
+          for (const registration of await navigator.serviceWorker.getRegistrations()) {
+            const worker = registration.active || registration.waiting || registration.installing;
+            if (registration.scope === base.href && worker && new URL(worker.scriptURL).pathname === script.pathname) {
+              if (!await registration.unregister()) throw new Error('The old app could not be refreshed. Try again.');
+            }
+          }
+        }
+        if ('caches' in window) {
+          for (const name of await caches.keys()) {
+            if (name.startsWith('bar-restock-')) await caches.delete(name);
+          }
+        }
+        base.searchParams.set('release', version);
+        base.hash = 'shelves';
+        location.replace(base.href);
+      } catch (error) {
+        status.textContent = error.message || 'Couldn’t update. Check your connection and try again.';
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

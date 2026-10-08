@@ -1,6 +1,12 @@
 # Bar Restock
 
 The website is hosted at [topd.guarasolutions.com](https://topd.guarasolutions.com).
+If an older browser session is missing Shelves or Receive, open
+[the update page](https://topd.guarasolutions.com/update.html). It downloads and
+checks the current HTML, removes this app's old worker/cache, and opens Shelves.
+It preserves localStorage and sessionStorage, including stock, photos and history.
+Direct links such as `/#shelves` select that page after sign-in.
+
 Serve the repository root to run the website; it needs no server-side build.
 `npm run build` prepares the separate native iPad bundle in `www/`.
 

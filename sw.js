@@ -1,4 +1,4 @@
-const VERSION = "b96b9952d312";
+const VERSION = "46d0170c870d";
 const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",

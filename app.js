@@ -824,6 +824,11 @@
       tab = allowed.includes("stock") ? "stock" : allowed[0];
     }
     state.tab = tab;
+    if (!native) {
+      const url = new URL(location.href);
+      url.hash = tab;
+      history.replaceState(null, "", url);
+    }
     if (receive && tab !== "receive") receive.onTabChange(tab); // stop the camera before the panel hides
     document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -1717,11 +1722,11 @@
     roleLabel.textContent = ROLES[state.role].label;
     btnLogout.hidden = false;
     const allowed = ROLES[state.role].tabs;
-    if (!allowed.includes(state.tab)) {
-      switchTab(allowed.includes("stock") ? "stock" : allowed[0]);
-    } else if (state.tab === "stock") {
-      renderStock(); // refresh edit controls for the new role
-    }
+    const requested = !native ? location.hash.slice(1) : "";
+    if (allowed.includes(requested)) switchTab(requested);
+    else if (!allowed.includes(state.tab)) switchTab(allowed.includes("stock") ? "stock" : allowed[0]);
+    else switchTab(state.tab);
+
   }
 
   function signIn(roleId, pin) {
@@ -2019,6 +2024,10 @@
     bindShelves();
     bindReceive();
     bindChrome();
+    window.addEventListener("hashchange", () => {
+      const requested = location.hash.slice(1);
+      if (state.role && ALL_TABS.includes(requested)) switchTab(requested);
+    });
 
   }
 

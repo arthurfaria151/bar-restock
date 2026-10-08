@@ -519,3 +519,51 @@ test('use-by and best-before lines keep their separate date meanings', async ({ 
   await expect.poll(async () => (await stored(page, keys.draft)).items.length).toBe(2);
   expect((await stored(page, keys.draft)).items.map(line => line.dateKind).sort()).toEqual(['bestBefore', 'useBy']);
 });
+
+test('Shelves direct link opens after sign-in and survives reload', async ({ page }) => {
+  await page.goto('/?release=direct-link#shelves');
+  await page.locator('#btnLoginBartender').click();
+  await expect(page.locator('#panel-shelves')).toBeVisible();
+  await expect(page.locator('#shelvesRoot .shelf-level')).toHaveCount(2);
+  await page.reload();
+  await expect(page.locator('#panel-shelves')).toBeVisible();
+  await page.goto('/#par');
+  await expect(page.locator('#panel-stock')).toBeVisible();
+  await expect(page.locator('#panel-par')).not.toBeVisible();
+});
+
+test('update page removes stale app caches and preserves inventory and other apps', async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: 'allow' });
+  const page = await context.newPage();
+  const values = { [keys.stock]: { [p.id]: 12 }, [keys.history]: [{ id: 'saved-delivery', items: [] }],
+    [keys.custom]: [{ id: 'custom-photo', name: 'Saved photo', category: 'Other', photo: 'data:image/png;base64,iVBORw0KGgo=' }] };
+  await setup(page, values);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await page.evaluate(async () => {
+    await caches.open('another-app-cache');
+    const cache = await caches.open('bar-restock-obsolete');
+    await cache.put('./old.js', new Response('old code'));
+  });
+  await page.goto('/update.html');
+  await page.locator('#update').click();
+  await expect(page).toHaveURL(/\?release=[a-f0-9]{12}#shelves$/);
+  await expect(page.locator('#panel-shelves')).toBeVisible();
+  for (const [key, value] of Object.entries(values)) expect(await stored(page, key)).toEqual(value);
+  const caches = await page.evaluate(() => window.caches.keys());
+  expect(caches).toContain('another-app-cache');
+  expect(caches).not.toContain('bar-restock-obsolete');
+  await context.close();
+});
+
+test('failed update leaves existing app caches and stock intact', async ({ page }) => {
+  await setup(page, { [keys.stock]: { [p.id]: 12 } });
+  await page.evaluate(async () => { const cache = await caches.open('bar-restock-obsolete'); await cache.put('./old.js', new Response('old code')); });
+  await page.route('**/index.html?refresh=*', route => route.fulfill({ status: 503, body: 'Unavailable' }));
+  await page.goto('/update.html');
+  await page.locator('#update').click();
+  await expect(page.locator('#status')).toContainText('could not be downloaded');
+  await expect(page.locator('#update')).toBeEnabled();
+  expect(await stored(page, keys.stock)).toEqual({ [p.id]: 12 });
+  expect(await page.evaluate(() => caches.keys())).toContain('bar-restock-obsolete');
+});
