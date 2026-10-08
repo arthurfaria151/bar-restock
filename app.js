@@ -6,13 +6,17 @@
   const PAR_KEY = "bar-restock-par-v1";
   const REMINDED_KEY = "bar-restock-reminded-v1";
   const EMAIL_TO = "arthurfaria@guarasolutions.com";
-  const CATEGORIES = ["Fridge", "Bar Shelves", "Other"];
+  const CATEGORIES = ["Fridge", "Bar Shelves", "Other"]; // built-ins, never renamed or deleted
+  const CATEGORIES_KEY = "bar-restock-categories-v1"; // admin-created categories, in creation order
+  const CATEGORY_MAX = 40;
   const state = {
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
     loading: true, // catalog.json not loaded yet (UI shows skeletons)
     pendingPhoto: null, // resized data URL chosen in the Add product form
     custom: [], // user-added products
+    categories: [], // user-created category names (after the built-ins)
+    renamingCategory: null, // custom category being renamed inline on the Products tab
     hidden: [], // static catalog ids removed locally
     selection: {}, // id -> restock qty
     stock: {}, // id -> on-hand qty
@@ -77,6 +81,19 @@
     state.hidden = Array.isArray(hidden) ? hidden : [];
     state.par = loadMap(PAR_KEY);
     state.reminded = loadMap(REMINDED_KEY);
+    state.categories = loadCategories();
+  }
+
+  // Older saved state has no categories key: that simply means "no custom categories".
+  function loadCategories() {
+    const raw = loadJson(CATEGORIES_KEY, []);
+    const out = [];
+    if (!Array.isArray(raw)) return out;
+    for (const v of raw) {
+      const name = cleanCategoryName(v);
+      if (name && !categoryExists(name, out)) out.push(name);
+    }
+    return out;
   }
 
   const saveSelection = () => saveJson(STORAGE_KEY, state.selection);
@@ -85,6 +102,241 @@
   const saveHidden = () => saveJson(HIDDEN_KEY, state.hidden);
   const savePar = () => saveJson(PAR_KEY, state.par);
   const saveReminded = () => saveJson(REMINDED_KEY, state.reminded);
+  const saveCategories = () => saveJson(CATEGORIES_KEY, state.categories);
+
+  // Built-ins first in their fixed order, then custom categories in creation order.
+  function allCategories() {
+    return CATEGORIES.concat(state.categories);
+  }
+
+  function cleanCategoryName(name) {
+    return typeof name === "string" ? name.trim().replace(/\s+/g, " ").slice(0, CATEGORY_MAX) : "";
+  }
+
+  // Case-insensitive match against the built-ins plus `custom` (defaults to the saved list).
+  function categoryExists(name, custom) {
+    const lower = name.toLowerCase();
+    return CATEGORIES.concat(custom || state.categories).some((c) => c.toLowerCase() === lower);
+  }
+
+  function isCustomCategory(name) {
+    return state.categories.includes(name);
+  }
+
+  // Every product that uses the category: static catalog (including locally removed ones) and hand-added.
+  function productsInCategory(name) {
+    return state.catalog.concat(state.custom).filter((p) => p.category === name);
+  }
+
+  function categoryNameError(name, ignore) {
+    if (!name) return "Enter a category name.";
+    const others = ignore ? state.categories.filter((c) => c !== ignore) : state.categories;
+    if (categoryExists(name, others)) return "That category already exists.";
+    return null;
+  }
+
+  // Returns an error message, or null when the category was created.
+  function createCategory(rawName) {
+    if (!canEditCatalog()) return "Only an admin can add categories.";
+    const name = cleanCategoryName(rawName);
+    const error = categoryNameError(name);
+    if (error) return error;
+    state.categories.push(name);
+    if (!saveCategories()) {
+      state.categories.pop();
+      return "Couldn’t save the category.";
+    }
+    fillCategorySelect(name);
+    renderCategoryManager();
+    showToast(`Category “${name}” added`);
+    return null;
+  }
+
+  function renameCategory(oldName, rawName) {
+    if (!canEditCatalog() || !isCustomCategory(oldName)) return "Built-in categories can’t be renamed.";
+    const name = cleanCategoryName(rawName);
+    if (name === oldName) return null;
+    const error = categoryNameError(name, oldName);
+    if (error) return error;
+    if (state.catalog.some((p) => p.category === oldName)) {
+      return "Built-in catalog products use this category, so it can’t be renamed here.";
+    }
+    const prevCategories = state.categories.slice();
+    const prevCustom = state.custom.map((p) => p.category);
+    state.categories = state.categories.map((c) => (c === oldName ? name : c));
+    state.custom.forEach((p) => {
+      if (p.category === oldName) p.category = name;
+    });
+    if (!saveCategories() || !saveCustom()) {
+      state.categories = prevCategories;
+      state.custom.forEach((p, i) => (p.category = prevCustom[i]));
+      saveCategories();
+      saveCustom();
+      return "Couldn’t save the new name.";
+    }
+    const select = $("#newProductCategory");
+    fillCategorySelect(select.value === oldName ? name : select.value);
+    refreshCategoryViews();
+    showToast(`Renamed to “${name}”`);
+    return null;
+  }
+
+  function deleteCategory(name) {
+    if (!canEditCatalog() || !isCustomCategory(name)) return;
+    const n = productsInCategory(name).length;
+    if (n) {
+      showToast(`“${name}” still has ${n} product${n === 1 ? "" : "s"}`);
+      return;
+    }
+    if (!confirm(`Delete the category “${name}”?`)) return;
+    state.categories = state.categories.filter((c) => c !== name);
+    saveCategories();
+    fillCategorySelect();
+    refreshCategoryViews();
+    showToast("Category deleted");
+  }
+
+  function refreshCategoryViews() {
+    renderProducts();
+    renderStock();
+    if (state.tab === "par") renderPar();
+    if (state.tab === "restock") renderRestock();
+  }
+
+  // Category dropdown on the Add product form. The trailing "New category…" option
+  // (empty value, so it can't clash with a name) is only offered to roles that edit the catalog.
+  function fillCategorySelect(selected) {
+    const select = $("#newProductCategory");
+    const keep = selected !== undefined ? selected : select.value;
+    const opts = allCategories().map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`);
+    if (canEditCatalog()) opts.push('<option value="">New category…</option>');
+    select.innerHTML = opts.join("");
+    const valid = allCategories().includes(keep) || (keep === "" && canEditCatalog());
+    select.value = valid ? keep : CATEGORIES[0];
+    select.dataset.last = select.value || select.dataset.last || CATEGORIES[0];
+    showNewCategoryRow(select.value === "");
+  }
+
+  function showNewCategoryRow(show) {
+    const row = $("#newCategoryRow");
+    const input = $("#newCategoryName");
+    const wasHidden = row.hidden;
+    row.hidden = !show;
+    if (!show) {
+      input.value = "";
+      setFieldError(input, $("#newCategoryError"), null);
+    } else if (wasHidden) {
+      input.focus();
+    }
+  }
+
+  function onCategoryChange() {
+    const select = $("#newProductCategory");
+    if (select.value === "") {
+      if (!canEditCatalog()) {
+        select.value = select.dataset.last || CATEGORIES[0];
+        return;
+      }
+      showNewCategoryRow(true);
+    } else {
+      select.dataset.last = select.value;
+      showNewCategoryRow(false);
+    }
+  }
+
+  // Returns true when the category was created (and is now selected).
+  function submitNewCategory() {
+    const input = $("#newCategoryName");
+    const error = createCategory(input.value);
+    setFieldError(input, $("#newCategoryError"), error);
+    if (error) {
+      input.focus();
+      return false;
+    }
+    return true;
+  }
+
+  function cancelNewCategory() {
+    const select = $("#newProductCategory");
+    select.value = select.dataset.last || CATEGORIES[0];
+    showNewCategoryRow(false);
+    select.focus();
+  }
+
+  // Products tab: rename / delete custom categories (admin only).
+  function renderCategoryManager() {
+    const box = $("#categoryManager");
+    const list = $("#categoryList");
+    const show = canEditCatalog() && !state.loading && state.categories.length > 0;
+    box.hidden = !show;
+    if (!show) {
+      list.innerHTML = "";
+      return;
+    }
+    list.innerHTML = "";
+    for (const name of state.categories) {
+      const n = productsInCategory(name).length;
+      const li = document.createElement("li");
+      li.className = "category-item";
+      li.dataset.category = name;
+      if (state.renamingCategory === name) {
+        li.innerHTML = `
+          <input class="input" type="text" maxlength="${CATEGORY_MAX}" value="${escapeHtml(name)}" aria-label="New name for ${escapeHtml(name)}" enterkeyhint="done" autocomplete="off" />
+          <div class="actions">
+            <button type="button" class="btn btn-primary btn-sm" data-act="save">Save</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="cancel">Cancel</button>
+          </div>
+          <p class="field-error" role="alert" hidden></p>`;
+      } else {
+        li.innerHTML = `
+          <div class="info">
+            <div class="name">${escapeHtml(name)}</div>
+            <div class="cat">${n} product${n === 1 ? "" : "s"}</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-act="rename">Rename</button>
+            <button type="button" class="btn btn-danger btn-sm" data-act="delete"${n ? ` disabled title="Move or delete its products first"` : ""}>${ICON("trash")}Delete</button>
+          </div>`;
+      }
+      list.appendChild(li);
+    }
+    const editing = list.querySelector("input");
+    if (editing) {
+      editing.focus();
+      editing.select();
+    }
+  }
+
+  function onCategoryListClick(e) {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const li = btn.closest(".category-item");
+    const name = li.dataset.category;
+    const act = btn.dataset.act;
+    if (act === "rename") {
+      state.renamingCategory = name;
+      renderCategoryManager();
+    } else if (act === "cancel") {
+      state.renamingCategory = null;
+      renderCategoryManager();
+    } else if (act === "save") {
+      saveRename(li, name);
+    } else if (act === "delete") {
+      deleteCategory(name);
+    }
+  }
+
+  function saveRename(li, name) {
+    const input = li.querySelector("input");
+    const error = renameCategory(name, input.value);
+    if (error) {
+      setFieldError(input, li.querySelector(".field-error"), error);
+      input.focus();
+      return;
+    }
+    state.renamingCategory = null;
+    renderCategoryManager();
+  }
 
   // Drop restock entries whose product no longer exists (e.g. removed from catalog.json),
   // so badges and totals match the visible list.
@@ -102,9 +354,10 @@
   }
 
   function groupByCategory(items) {
-    return CATEGORIES.map((title) => ({
+    const cats = allCategories();
+    return cats.map((title) => ({
       title,
-      items: items.filter((p) => (CATEGORIES.includes(p.category) ? p.category : "Other") === title),
+      items: items.filter((p) => (cats.includes(p.category) ? p.category : "Other") === title),
     })).filter((g) => g.items.length);
   }
 
@@ -368,6 +621,7 @@
       }
       productsRoot.appendChild(grid);
     }
+    renderCategoryManager();
   }
 
   function renderRestock() {
@@ -389,37 +643,43 @@
     const order = effectiveCatalog().map((p) => p.id);
     ids.sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
-    const ul = document.createElement("ul");
-    ul.className = "restock-list";
-    for (const id of ids) {
-      const p = productById(id);
-      if (!p) continue;
-      const qty = state.selection[id];
-      const li = document.createElement("li");
-      li.className = "restock-item";
-      li.innerHTML = `
-        ${thumbMarkup(p, 64)}
-        <div class="info">
-          <div class="name">${escapeHtml(p.name)}</div>
-          <div class="cat">${escapeHtml(p.category)}</div>
-        </div>
-        <div class="qty-row">
-          <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">${ICON("minus")}</button>
-          <span class="qty-val">${qty}</span>
-          <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">${ICON("plus")}</button>
-        </div>
-      `;
-      li.querySelectorAll("[data-act]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const cur = state.selection[id] || 0;
-          if (btn.dataset.act === "inc") setQty(id, cur + 1);
-          else setQty(id, cur - 1);
-        });
-      });
-      ul.appendChild(li);
-    }
     restockRoot.innerHTML = "";
-    restockRoot.appendChild(ul);
+    const products = ids.map(productById).filter(Boolean);
+    for (const g of groupByCategory(products)) {
+      const title = document.createElement("h3");
+      title.className = "section-title";
+      title.textContent = `${g.title} (${g.items.length})`;
+      restockRoot.appendChild(title);
+      const ul = document.createElement("ul");
+      ul.className = "restock-list";
+      for (const p of g.items) {
+        const id = p.id;
+        const qty = state.selection[id];
+        const li = document.createElement("li");
+        li.className = "restock-item";
+        li.innerHTML = `
+          ${thumbMarkup(p, 64)}
+          <div class="info">
+            <div class="name">${escapeHtml(p.name)}</div>
+            <div class="cat">${escapeHtml(p.category)}</div>
+          </div>
+          <div class="qty-row">
+            <button type="button" class="qty-btn" data-act="dec" aria-label="Decrease">${ICON("minus")}</button>
+            <span class="qty-val">${qty}</span>
+            <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">${ICON("plus")}</button>
+          </div>
+        `;
+        li.querySelectorAll("[data-act]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const cur = state.selection[id] || 0;
+            if (btn.dataset.act === "inc") setQty(id, cur + 1);
+            else setQty(id, cur - 1);
+          });
+        });
+        ul.appendChild(li);
+      }
+      restockRoot.appendChild(ul);
+    }
   }
 
   function buildListText() {
@@ -508,7 +768,7 @@
     if (effectiveCatalog().some((p) => p.name.toLowerCase() === lower)) {
       return "That product already exists.";
     }
-    const cat = CATEGORIES.includes(category) ? category : "Other";
+    const cat = allCategories().includes(category) ? category : "Other";
     const product = { id: slugify(clean), name: clean, category: cat, custom: true };
     if (state.pendingPhoto) product.image = state.pendingPhoto;
     state.custom.push(product);
@@ -576,6 +836,7 @@
     const editable = canEditCatalog();
     $("#addProductForm").hidden = !editable;
     $("#heroAddProduct").hidden = !editable;
+    fillCategorySelect();
     const restoreBtn = $("#btnRestoreHidden");
     restoreBtn.hidden = !editable || !state.hidden.length;
     restoreBtn.textContent = `Restore removed (${state.hidden.length})`;
@@ -761,6 +1022,7 @@
     const loginScreen = $("#loginScreen");
     const roleLabel = $("#roleLabel");
     const btnLogout = $("#btnLogout");
+    renderCategoryManager();
     if (!state.role) {
       loginScreen.hidden = false;
       roleLabel.hidden = true;
@@ -950,8 +1212,32 @@
       if (e.target.closest("[data-retry]")) loadCatalog();
     });
     $("#btnRestoreHidden").addEventListener("click", restoreHidden);
-    const catSelect = $("#newProductCategory");
-    catSelect.innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    fillCategorySelect(CATEGORIES[0]);
+    $("#newProductCategory").addEventListener("change", onCategoryChange);
+    $("#btnCreateCategory").addEventListener("click", submitNewCategory);
+    $("#btnCancelCategory").addEventListener("click", cancelNewCategory);
+    $("#newCategoryName").addEventListener("keydown", (e) => {
+      // Enter here creates the category instead of submitting the product form.
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitNewCategory();
+      } else if (e.key === "Escape") {
+        cancelNewCategory();
+      }
+    });
+    $("#newCategoryName").addEventListener("input", (e) => setFieldError(e.target, $("#newCategoryError"), null));
+    $("#categoryList").addEventListener("click", onCategoryListClick);
+    $("#categoryList").addEventListener("keydown", (e) => {
+      if (e.target.tagName !== "INPUT") return;
+      const li = e.target.closest(".category-item");
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveRename(li, li.dataset.category);
+      } else if (e.key === "Escape") {
+        state.renamingCategory = null;
+        renderCategoryManager();
+      }
+    });
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => switchTab(btn.dataset.tab));
     });
@@ -960,6 +1246,15 @@
     $("#addProductForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const input = $("#newProductName");
+      if ($("#newProductCategory").value === "") {
+        // "New category…" is still open: create it first, then add the product to it.
+        if (!input.value.trim()) {
+          setFieldError(input, $("#addProductError"), "Enter a product name.");
+          input.focus();
+          return;
+        }
+        if (!submitNewCategory()) return;
+      }
       const error = addCustomProduct(input.value, $("#newProductCategory").value);
       setFieldError(input, $("#addProductError"), error);
       if (!error) input.value = "";
