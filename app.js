@@ -1815,36 +1815,65 @@
   }
 
 
-  /*
-   * Login (static PWA — the PIN is in the client, not a real security boundary).
-   *   Bartender: no PIN, signs in with one tap (Stock + Restock only).
-   *   Admin:     PIN 1001, full app.
-   * Session only: role id is kept in sessionStorage so a refresh stays signed in
-   * for this tab. A new tab or browser session must sign in again.
-   */
-  const SESSION_KEY = "bar-restock-role-v1";
+  // One personal PIN session, issued by the venue server, also authorizes Handout.
+  const SESSION_KEY = "bar-restock-session-v2";
+  let authSession = null, expiryTimer = null, authGeneration = 0;
+  const authBase = (window.BarRestockHandoutConfig?.apiBase || '').replace(/\/$/,'');
   const ROLES = {
     admin: {
       label: "Admin",
-      pin: "1001",
       tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
-      pin: null, // no PIN: one-tap sign-in
       tabs: ["stock", "receive", "restock", "shelves", "checklist", "procedures", "handout"],
       editCatalog: false, // count stock and receive deliveries; cannot add or remove products or link barcodes
     },
   };
   const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"];
 
-  function readSessionRole() {
+  function setSession(session) {
+    clearTimeout(expiryTimer);
+    authSession = session;
     try {
-      const id = sessionStorage.getItem(SESSION_KEY);
-      if (id && ROLES[id]) return id;
+      sessionStorage.removeItem('bar-restock-role-v1');
+      sessionStorage.removeItem('bar-restock-handout-session-v1');
+      if (session) sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      else sessionStorage.removeItem(SESSION_KEY);
     } catch (_) {}
-    return null;
+    if (session) expiryTimer = setTimeout(() => signOut(true), Math.max(0,session.user.expiresAt-Date.now()));
+    applyRole(session?.user.role || null);
+  }
+
+  async function authRequest(path, options = {}) {
+    if (!authBase) throw new Error('The venue PIN server is not configured.');
+    const response = await fetch(authBase+path, {...options, cache:'no-store',signal:AbortSignal.timeout(10000),
+      headers:{'Content-Type':'application/json', ...(authSession ? {Authorization:'Bearer '+authSession.token} : {})}});
+    const result = await response.json();
+    if (!response.ok) {
+      const error = new Error(response.status===401 ? 'Incorrect PIN. Please try again.' : result.error || 'Sign-in unavailable.');
+      error.status=response.status;throw error;
+    }
+    return result;
+  }
+
+  async function restoreSession() {
+    const generation=++authGeneration;
+    let saved;
+    try {saved=JSON.parse(sessionStorage.getItem(SESSION_KEY));} catch (_) {}
+    if (!saved?.token || !ROLES[saved.user?.role] || !(saved.user.expiresAt>Date.now())) {setSession(null);return;}
+    authSession=saved;
+    const button=$('#loginForm button[type=submit]');button.disabled=true;
+    try {
+      const result=await authRequest('/api/session');
+      if(generation===authGeneration) setSession({token:saved.token,user:result.user});
+    } catch(error) {
+      if(generation!==authGeneration) return;
+      // An already verified, unexpired session keeps device-local work usable offline.
+      if(!error.status && !navigator.onLine) setSession(saved);
+      else {setSession(null);setFieldError($('#loginPin'),$('#loginError'),error.status===401?'Your session ended. Enter your PIN.':'Cannot reach the venue server. Try again when connected.');}
+    } finally {button.disabled=false;}
   }
 
   function applyRole(roleId) {
@@ -1883,7 +1912,7 @@
     loginScreen.hidden = true;
     updateModalState();
     roleLabel.hidden = false;
-    roleLabel.textContent = ROLES[state.role].label;
+    roleLabel.textContent = authSession.user.name + " · " + ROLES[state.role].label;
     btnLogout.hidden = false;
     const allowed = ROLES[state.role].tabs;
     const requested = !native ? location.hash.slice(1) : "";
@@ -1893,35 +1922,21 @@
 
   }
 
-  function signIn(roleId, pin) {
-    const role = ROLES[roleId];
-    if (!role || (role.pin !== null && String(pin || "").trim() !== role.pin)) return false;
-    try {
-      sessionStorage.setItem(SESSION_KEY, roleId);
-    } catch (_) {}
-    applyRole(roleId);
-    return true;
+  async function signIn(pin) {
+    ++authGeneration;
+    const result=await authRequest('/api/login',{method:'POST',body:JSON.stringify({pin})});
+    if(!result.token || !ROLES[result.user?.role] || !(result.user.expiresAt>Date.now())) throw new Error('The venue server needs updating before PIN sign-in.');
+    setSession(result);
   }
 
-  function signOut() {
-    if (handout && !handout.canSignOut()) return;
-    try {
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch (_) {}
-    applyRole(null);
-    showLoginStep("choice");
-  }
-
-  // Sign-in screen has two steps: the Bartender/Admin choice, then the Admin PIN form.
-  function showLoginStep(step) {
-    const pin = $("#loginPin");
-    $("#loginChoice").hidden = step !== "choice";
-    $("#loginForm").hidden = step !== "pin";
-    $("#btnLoginAdmin").setAttribute("aria-expanded", step === "pin" ? "true" : "false");
-    pin.value = "";
-    setFieldError(pin, $("#loginError"), null);
-    if (step === "pin") pin.focus();
-    else $("#btnLoginBartender").focus();
+  function signOut(force=false) {
+    if (!force && handout && !handout.canSignOut()) return;
+    ++authGeneration;
+    if (!force) handout?.discardDrafts();
+    setSession(null);
+    $('#loginPin').value='';
+    setFieldError($('#loginPin'),$('#loginError'),force ? 'Your session ended. Enter your PIN.' : null);
+    $('#loginPin').focus();
   }
 
   // Fetch the catalog. Listeners are already bound, so a failure here never
@@ -2159,29 +2174,16 @@
       state.bannerDismissed = true;
       lowBanner.hidden = true;
     });
-    $("#btnLogout").addEventListener("click", signOut);
-    $("#btnLoginBartender").addEventListener("click", () => signIn("bartender"));
-    $("#btnLoginAdmin").addEventListener("click", () => showLoginStep("pin"));
-    $("#btnLoginBack").addEventListener("click", () => {
-      showLoginStep("choice");
-      $("#btnLoginAdmin").focus();
-    });
-    $("#loginForm").addEventListener("submit", (e) => {
+    $("#btnLogout").addEventListener("click", () => signOut());
+    $("#loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const pinEl = $("#loginPin");
-      const err = $("#loginError");
-      const pin = pinEl.value;
-      if (!pin.trim()) {
-        setFieldError(pinEl, err, "Enter your PIN.");
-        pinEl.focus();
-        return;
-      }
-      if (!signIn("admin", pin)) {
-        setFieldError(pinEl, err, "Wrong PIN.");
-        pinEl.select();
-        return;
-      }
-      showLoginStep("choice");
+      const pinEl=$("#loginPin"), err=$("#loginError"), button=e.target.querySelector('button[type=submit]');
+      if(button.disabled) return;
+      if(!/^[0-9]{6,12}$/.test(pinEl.value)) {setFieldError(pinEl,err,"Enter your personal PIN (6–12 digits).");pinEl.focus();return;}
+      button.disabled=true;setFieldError(pinEl,err,null);
+      try {await signIn(pinEl.value);pinEl.value='';}
+      catch(error) {setFieldError(pinEl,err,error.status ? error.message : 'Cannot reach the venue server. Check your connection and try again.');pinEl.select();}
+      finally {button.disabled=false;}
     });
     $("#newProductPhoto").addEventListener("change", onPhotoChosen);
     $("#btnRemovePhoto").addEventListener("click", clearPendingPhoto);
@@ -2190,7 +2192,7 @@
     bindReceive();
     binder = window.BarRestockBinder({ escapeHtml, asset, loadJson, saveJson,
       withStorageLock: storage.withLock, showToast, roleId: () => state.role });
-    handout = window.BarRestockHandout({ escapeHtml, roleId: () => state.role });
+    handout = window.BarRestockHandout({ escapeHtml, roleId: () => state.role, session: () => authSession, onAuthRequired: () => signOut(true) });
     bindChrome();
     window.addEventListener("hashchange", () => {
       const requested = location.hash.slice(1);
@@ -2252,8 +2254,9 @@
       if (state.tab === "shelves") renderShelves();
       updateLowBanner();
     });
-    // Apply the session role before any await so restricted tabs never flash.
-    applyRole(readSessionRole());
+    // Keep the app locked until the saved personal session is checked.
+    applyRole(null);
+    restoreSession();
     await loadCatalog();
     if (!native && "serviceWorker" in navigator) {
       try {

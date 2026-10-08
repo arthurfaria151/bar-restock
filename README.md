@@ -14,7 +14,9 @@ pre-batching training requirements, with 15 original procedure pages available
 offline. See [binder coverage and pending sources](docs/BINDER.md). Both roles
 can use these pages; `/#checklist` and `/#procedures` open them directly.
 
-Handout has a separate Raspberry Pi server for shared notes and daily archives
+Each person signs in once with their personal PIN; Handout opens with that same
+session. PINs and permissions are managed on the venue Raspberry Pi.
+Handout uses the Raspberry Pi server for shared notes and daily archives
 at 02:00 Brisbane time. See [Pi installation and connection](docs/HANDOUT-PI.md).
 It requires the Pi service and a verified public HTTPS endpoint before activation.
 

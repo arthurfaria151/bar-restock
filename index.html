@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="app-version" content="a679b06de0e9" />
+  <meta name="app-version" content="e35c5f1590a1" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,11 +11,11 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
-  <link rel="manifest" href="manifest.webmanifest?v=a679b06de0e9" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=a679b06de0e9" />
-  <link rel="icon" type="image/png" href="icon-192.png?v=a679b06de0e9" />
+  <link rel="manifest" href="manifest.webmanifest?v=e35c5f1590a1" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=e35c5f1590a1" />
+  <link rel="icon" type="image/png" href="icon-192.png?v=e35c5f1590a1" />
   <title>Bar Restock</title>
-  <link rel="stylesheet" href="styles.css?v=a679b06de0e9" />
+  <link rel="stylesheet" href="styles.css?v=e35c5f1590a1" />
 </head>
 <body>
   <!-- Line icon set (Lucide-style, 24×24, 2px stroke). Use: <svg class="icon"><use href="#i-name"/></svg> -->
@@ -57,36 +57,13 @@
     <div class="login-wrap">
       <header class="hero hero-login reveal">
         <h1 class="hero-title">Bar Restock.</h1>
-        <p class="hero-sub">Choose how you’re signing in.</p>
+        <p class="hero-sub">Enter your personal PIN to open the app.</p>
       </header>
-      <div class="card login-card reveal" id="loginChoice">
-        <button type="button" class="role-choice" id="btnLoginBartender">
-          <span class="role-choice-icon"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg></span>
-          <span class="role-choice-text">
-            <strong>Bartender</strong>
-            <span>Count stock, receive deliveries, update the restock list and check the shelf layout. No PIN needed.</span>
-          </span>
-          <svg class="icon role-choice-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
-        </button>
-        <button type="button" class="role-choice" id="btnLoginAdmin" aria-expanded="false" aria-controls="loginForm">
-          <span class="role-choice-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
-          <span class="role-choice-text">
-            <strong>Admin</strong>
-            <span>Full app: products, par levels and the catalog. PIN required.</span>
-          </span>
-          <svg class="icon role-choice-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
-        </button>
-      </div>
-      <form id="loginForm" class="card login-card" autocomplete="off" novalidate hidden>
-        <div class="login-form-head">
-          <button type="button" class="icon-btn" id="btnLoginBack" aria-label="Back to sign-in options">
-            <svg class="icon icon-flip" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <h2 class="card-title">Admin sign in</h2>
-        </div>
+      <form id="loginForm" class="card login-card" autocomplete="off" novalidate>
+        <h2 class="card-title">Sign in</h2>
         <div class="field">
           <label class="field-label" for="loginPin">PIN</label>
-          <input id="loginPin" class="input login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off" enterkeyhint="go" required aria-describedby="loginError" />
+          <input id="loginPin" class="input login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="Your PIN" autocomplete="off" enterkeyhint="go" required aria-describedby="loginError" />
           <p id="loginError" class="field-error" role="alert" hidden></p>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Sign in</button>
@@ -436,9 +413,8 @@
       <header class="hero reveal hero-compact"><h2 class="hero-title" id="h-handout">Handout.</h2><p class="hero-sub">A shared handover for the team. Each business day is archived at 2:00 am Brisbane time.</p></header>
       <div class="section binder-content">
         <p id="handoutUnavailable" class="binder-note">The shared Handout is being connected. It will be available here when the venue server is ready.</p>
-        <div class="handout-session"><span id="handoutIdentity"></span><span id="handoutConnection" role="status" aria-live="polite"></span><button id="handoutSignOut" type="button" class="btn btn-ghost btn-sm" hidden>Sign out of Handout</button></div>
+        <div class="handout-session"><span id="handoutIdentity"></span><span id="handoutConnection" role="status" aria-live="polite"></span></div>
         <p id="handoutStatus" role="status" aria-live="polite"></p>
-        <form id="handoutLogin" class="card handout-login" hidden><h3>Sign in to the shared Handout</h3><p>Use your personal Handout account.</p><div class="field"><label class="field-label" for="handoutUsername">Username</label><input id="handoutUsername" class="input" autocomplete="username" required maxlength="80" /></div><div class="field"><label class="field-label" for="handoutPassword">Password</label><input id="handoutPassword" class="input" type="password" autocomplete="current-password" required maxlength="256" /></div><button type="submit" class="btn btn-primary">Sign in</button></form>
         <div id="handoutShared" hidden>
           <div class="handout-day"><h3 id="handoutDate"></h3><p id="handoutClose"></p><button id="handoutBack" type="button" class="btn btn-secondary btn-sm" hidden>Back to today</button><button id="handoutDownload" type="button" class="btn btn-secondary btn-sm" hidden>Download handout file</button></div>
           <div id="handoutEntries"></div>
@@ -464,13 +440,13 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="storage.js?v=a679b06de0e9"></script>
-  <script src="gs1.js?v=a679b06de0e9"></script>
-  <script src="receive.js?v=a679b06de0e9"></script>
-  <script src="binder-data.js?v=a679b06de0e9"></script>
-  <script src="binder.js?v=a679b06de0e9"></script>
-  <script src="handout-config.js?v=a679b06de0e9"></script>
-  <script src="handout.js?v=a679b06de0e9"></script>
-  <script src="app.js?v=a679b06de0e9"></script>
+  <script src="storage.js?v=e35c5f1590a1"></script>
+  <script src="gs1.js?v=e35c5f1590a1"></script>
+  <script src="receive.js?v=e35c5f1590a1"></script>
+  <script src="binder-data.js?v=e35c5f1590a1"></script>
+  <script src="binder.js?v=e35c5f1590a1"></script>
+  <script src="handout-config.js?v=e35c5f1590a1"></script>
+  <script src="handout.js?v=e35c5f1590a1"></script>
+  <script src="app.js?v=e35c5f1590a1"></script>
 </body>
 </html>

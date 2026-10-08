@@ -2,8 +2,9 @@
 
 The static website at topd.guarasolutions.com uses the Pi as its shared Handout
 server. Named accounts can edit shared notes; all authorised accounts can view
-live updates and historical files. The app's existing Admin/Bartender selector
-is separate from these personal server accounts.
+live updates and historical files. Each person signs into the whole app with
+one personal PIN. The same session opens Handout automatically; there is no
+username field or second login. The server assigns each person's permissions.
 
 Business days use **Australia/Brisbane**, ending at **02:00 the following
 morning**. For example, 8 October's handout closes at 02:00 on 9 October AEST
@@ -29,9 +30,9 @@ If the checkout already exists, use `git pull --ff-only` inside it instead of
 cloning again. The installer requires 64-bit Raspberry Pi OS if Node 24 is not
 already installed. It uses an existing Node 24+ or installs a separate,
 checksum-verified official Node runtime for this service. It does not replace
-the Node runtime used by other apps. It prompts locally for the first Handout
-username, display name and password; passwords do not go into the repository
-or website. It installs the `bar-handout` systemd service on loopback port 8787.
+the Node runtime used by other apps. It prompts locally for your display name
+and a personal PIN, creating the first administrator. PINs do not go into
+the repository or website. It installs the `bar-handout` systemd service on loopback port 8787.
 
 The installer adds `handout.guarasolutions.com` to the existing
 `/etc/cloudflared/config.yml`, routes it to `http://127.0.0.1:8787`, validates
@@ -62,23 +63,38 @@ update that public URL, run `npm run version:web`, commit and deploy.
 The Handout uses shared server storage; the rest of the app's stock and shelf
 features continue to use device storage.
 
-## Add another user
+## Update an existing account to PIN sign-in
 
-Run locally on the Pi. The password is read without echo and passed on stdin.
+After pulling this release and rerunning the installer, migrate the existing
+Arthur account without changing its identity or Handout history:
 
 ```bash
-read -rsp 'New Handout password (12+ characters): ' handout_password
-printf '\n'
-printf '%s' "$handout_password" | sudo /opt/bar-handout-node/bin/node /opt/bar-handout/backend/add-user.mjs /var/lib/bar-handout/users.json sam 'Sam' edit
-unset handout_password
-sudo chown barhandout:barhandout /var/lib/bar-handout/users.json
-sudo systemctl restart bar-handout
+sudo bash scripts/set-staff-pin.sh arthur admin
 ```
 
-Use `view` instead of `edit` for an account that only reads. For password changes
-or removal, stop the service, update the users file using the provisioning tool
-and restart. Existing session tokens expire after 12 hours; replacing the
-session secret revokes them all. The service reads accounts when starting.
+Enter and confirm your PIN privately in the Pi terminal. Choose 6–12 digits.
+The command checks uniqueness, stores only a salted hash, and restarts the
+service. It removes password login for the migrated account. Update the Pi
+before publishing the PIN-only website.
+
+## Add another person or change their PIN
+
+```bash
+sudo bash scripts/set-staff-pin.sh sam bartender 'Sam'
+```
+
+The first argument is an internal account ID used only during provisioning;
+staff never enter it to sign in. Use `admin` for a person who manages products,
+par levels and shelves. Both roles can edit the shared Handout. Repeating the
+command changes that person's PIN and preserves their account identity.
+Duplicate PINs are rejected. Existing read-only Handout permissions are kept
+when an account is migrated.
+
+Sessions last up to 12 hours and expire together across the app and Handout.
+Changing a PIN invalidates that person's existing tokens. A new sign-in needs
+a connection to the Pi; an already verified, unexpired tab session supports
+device-local work when offline. Shared Handout needs a connection to save.
+Replacing the session secret revokes all tokens. Accounts load on service start.
 
 ## Persistence and operations
 
@@ -87,9 +103,9 @@ session secret revokes them all. The service reads accounts when starting.
   write; previously closed handouts cannot be edited.
 - Archive files: `/var/lib/bar-handout/archives/handout-YYYY-MM-DD.md`.
   Authenticated users can view them and download copies in the website.
-- Secrets: `/etc/bar-handout.env`, root-readable; users contain salted password
+- Secrets: `/etc/bar-handout.env`, root-readable; users contain salted PIN
   hashes in `/var/lib/bar-handout/users.json`.
-- Logs: `journalctl -u bar-handout --no-pager`. The service logs no passwords,
+- Logs: `journalctl -u bar-handout --no-pager`. The service logs no PINs, passwords,
   session tokens or note contents.
 - Back up the archive directory and use SQLite's `.backup` command for a live
   database backup; copying only the `.sqlite` file during writes can omit WAL

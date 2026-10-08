@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+async function mockVenue(page) {
+  await page.route('https://handout.guarasolutions.com/api/**',async route=> {
+    const request=route.request(),path=new URL(request.url()).pathname;
+    const role=path==='/api/login' ? (request.postDataJSON().pin==='271828'?'bartender':'admin') : request.headers().authorization?.replace('Bearer test-','');
+    const user={id:role,name:role==='admin'?'Arthur':'Sam',role,canEdit:true,expiresAt:Date.now()+43200000};
+    const value=path==='/api/login'?{token:'test-'+role,user}:path==='/api/session'?{user}:path==='/api/archives'?{archives:[]}:{date:'2026-10-08',entries:[],user,closeHour:2,closeMinute:0};
+    await route.fulfill({contentType:'application/json',body:JSON.stringify(value)});
+  });
+  await page.addInitScript(()=> {
+    const original=Storage.prototype.setItem;
+    Storage.prototype.setItem=function(key,value) {
+      if(this===sessionStorage && key==='bar-restock-role-v1') {
+        original.call(this,'bar-restock-session-v2',JSON.stringify({token:'test-'+value,user:{id:value,name:value==='admin'?'Arthur':'Sam',role:value,canEdit:true,expiresAt:Date.now()+43200000}}));
+      }
+      return original.call(this,key,value);
+    };
+  });
+}
+test.beforeEach(async({page})=>mockVenue(page));
+
 const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url), 'utf8'));
 const p = catalog[0];
 const second = catalog[1];
@@ -20,6 +40,7 @@ function draft(items = [item()], pending = null) {
 }
 
 async function setup(page, values = {}, role = 'admin') {
+  await mockVenue(page);
   await page.addInitScript(({ values, role }) => {
     if (!localStorage.getItem('__regression_seeded')) {
       for (const [key, value] of Object.entries(values)) localStorage.setItem(key, JSON.stringify(value));
@@ -205,7 +226,7 @@ test('signed-out keyboard focus stays in login and edit handlers reject changes'
   });
   expect(await stored(page, keys.custom)).toBeNull();
   await expect(page.locator('#panel-products')).toHaveClass('panel active');
-  await page.locator('#btnLoginBartender').click();
+  await page.locator('#loginPin').fill('271828');await page.locator('#loginForm button[type=submit]').click();
   await expect(page.locator('#addProductForm')).toBeHidden();
   await expect(page.locator('#stockRoot [data-act=del]')).toHaveCount(0);
 });
@@ -522,7 +543,7 @@ test('use-by and best-before lines keep their separate date meanings', async ({ 
 
 test('Shelves direct link opens after sign-in and survives reload', async ({ page }) => {
   await page.goto('/?release=direct-link#shelves');
-  await page.locator('#btnLoginBartender').click();
+  await page.locator('#loginPin').fill('271828');await page.locator('#loginForm button[type=submit]').click();
   await expect(page.locator('#panel-shelves')).toBeVisible();
   await expect(page.locator('#shelvesRoot .shelf-level')).toHaveCount(3);
   await page.reload();

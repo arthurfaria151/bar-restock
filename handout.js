@@ -3,17 +3,16 @@
   window.BarRestockHandout = function (api) {
     const $ = s => document.querySelector(s);
     const base = (window.BarRestockHandoutConfig?.apiBase || '').replace(/\/$/,'');
-    const SESSION = 'bar-restock-handout-session-v1';
     let session = null, current = null, controller = null, retry = null, active = false;
     let edit = null, archive = null, before = null, requestBusy = false;
-    try { session = JSON.parse(sessionStorage.getItem(SESSION)); } catch {}
+
     function status(message) { $('#handoutStatus').textContent = message; }
     function connection(message) { $('#handoutConnection').textContent = message; }
     async function request(path,options = {}) {
       const response = await fetch(base+path,{...options,cache:'no-store',headers:{'Content-Type':'application/json',...(session ? {Authorization:`Bearer ${session.token}`} : {}),...options.headers}});
       const value = await response.json();
       if(!response.ok) {
-        if(response.status===401 && path!=='/api/login') signOut(false);
+        if(response.status===401 && path!=='/api/login') api.onAuthRequired();
         const error = new Error(value.error || 'Handout connection failed');error.value=value;error.status=response.status;throw error;
       }
       return value;
@@ -21,11 +20,9 @@
     function stop() {controller?.abort();controller=null;clearTimeout(retry);retry=null;}
     function render() {
       $('#handoutUnavailable').hidden = !!base;
-      $('#handoutLogin').hidden = !base || !!session;
       $('#handoutShared').hidden = !base || !session;
       $('#handoutComposer').hidden = !session || current?.user?.canEdit===false || !!archive;
       $('#handoutEditForm').hidden = !edit || !!archive || !session || current?.user?.canEdit===false;
-      $('#handoutSignOut').hidden = !session;
       $('#handoutIdentity').textContent = session ? session.user.name : '';
       if(!current || !session) return;
       const day=archive || current;
@@ -50,7 +47,7 @@
       const signal=controller.signal;
       try {
         const response=await fetch(base+'/api/events',{headers:{Authorization:`Bearer ${session.token}`},signal,cache:'no-store'});
-        if(response.status===401) {signOut(false);return;}
+        if(response.status===401) {api.onAuthRequired();return;}
         if(!response.ok || !response.body) throw new Error('Live connection unavailable');
         connection('Live');
         const reader=response.body.getReader();const decoder=new TextDecoder();let buffer='';
@@ -86,7 +83,7 @@
       $('#handoutArchiveEmpty').hidden=!!$('#handoutArchiveList').children.length;
     }
     function signOut(clearDraft=true) {
-      stop();session=null;sessionStorage.removeItem(SESSION);archive=null;
+      stop();session=null;archive=null;
       if(clearDraft) {edit=null;$('#handoutText').value='';$('#handoutEditForm').hidden=true;}
       current=null;connection('Signed out');render();
     }
@@ -102,14 +99,6 @@
         status(error.value?.error==='NOTE_CHANGED' ? 'This note changed. Your draft is kept. Review the live note or add your draft as a new note.' : error.value?.error==='DAY_CLOSED' ? 'The previous day is archived. Your draft is kept; add it to today’s handout.' : error.message+' — your draft is kept.');return false;
       } finally {requestBusy=false;$('#handoutShared').querySelectorAll('button[type=submit],textarea').forEach(b=>b.disabled=false);}
     }
-    $('#handoutLogin').addEventListener('submit',async e=> {
-      e.preventDefault();if(!api.roleId()) return;
-      const button=$('#handoutLogin button');button.disabled=true;
-      try {
-        const result=await request('/api/login',{method:'POST',body:JSON.stringify({username:$('#handoutUsername').value,password:$('#handoutPassword').value})});
-        session=result;sessionStorage.setItem(SESSION,JSON.stringify(session));$('#handoutPassword').value='';status('');await open();
-      } catch(error) {status(error.message);} finally {button.disabled=false;}
-    });
     let composerMutation=null;
     $('#handoutComposer').addEventListener('submit',async e=> {
       e.preventDefault();const text=$('#handoutText').value;
@@ -161,15 +150,12 @@
         else {const link=document.createElement('a');const url=URL.createObjectURL(new Blob([text],{type:'text/markdown'}));link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
       } catch(error) {status(error.message);}
     });
-    $('#handoutSignOut').addEventListener('click',()=> {
-      if(($('#handoutText').value || edit) && !confirm('Sign out and discard unsaved handout drafts?')) return;
-      signOut();
-    });
     render();
     return {
       onTabChange(tab) {active=tab==='handout';if(active) open();else stop();},
       canSignOut() {return !($('#handoutText').value || edit) || confirm('Sign out and discard unsaved handout drafts?');},
-      onRoleChange() {if(!api.roleId()){active=false;$('#handoutPassword').value='';signOut();}},
+      discardDrafts() {edit=null;$('#handoutText').value='';$('#handoutEditText').value='';composerMutation=null;},
+      onRoleChange() {if(!api.roleId()){active=false;signOut(false);} else {session=api.session();render();}},
     };
   };
 })();

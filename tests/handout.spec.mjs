@@ -6,13 +6,13 @@ import { createHandoutServer } from '../handout-server/server.mjs';
 import { HandoutStore } from '../handout-server/store.mjs';
 import { passwordHash } from '../handout-server/auth.mjs';
 const salt=Buffer.alloc(16,2).toString('base64url');
-const password='browser-test-password';
-const hash=await passwordHash(password,salt);
+const pins={arthur:'314159',sam:'271828',viewer:'161803'};
+const hashes=Object.fromEntries(await Promise.all(Object.entries(pins).map(async([id,pin])=>[id,await passwordHash(pin,salt)])));
 const test=base.extend({
  service: async ({},use)=> {
   const directory=mkdtempSync(join(tmpdir(),'handout-browser-'));
   const store=new HandoutStore(directory);let time=Date.parse('2026-10-08T15:00:00Z');
-  const env={HANDOUT_SESSION_SECRET:'browser-test-session-secret-at-least-32-characters',HANDOUT_ALLOWED_ORIGINS:'http://127.0.0.1:4173',HANDOUT_USERS_JSON:JSON.stringify([{id:'arthur',name:'Arthur',canEdit:true},{id:'sam',name:'Sam',canEdit:true},{id:'viewer',name:'Viewer',canEdit:false}].map(user=>({...user,salt,passwordHash:hash})))};
+  const env={HANDOUT_SESSION_SECRET:'browser-test-session-secret-at-least-32-characters',HANDOUT_ALLOWED_ORIGINS:'http://127.0.0.1:4173',HANDOUT_USERS_JSON:JSON.stringify([{id:'arthur',name:'Arthur',canEdit:true},{id:'sam',name:'Sam',canEdit:true},{id:'viewer',name:'Viewer',canEdit:false}].map(user=>({...user,pinSalt:salt,pinHash:hashes[user.id],role:user.id==='arthur'?'admin':'bartender'})))};
   const {server,publish}=createHandoutServer({env,store,now:()=>time});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   await use({base:'http://127.0.0.1:'+server.address().port,store,roll(){time=Date.parse('2026-10-08T16:00:00Z');publish();}});
   server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.close();rmSync(directory,{recursive:true,force:true});
@@ -20,8 +20,7 @@ const test=base.extend({
 });
 async function signIn(page,service,username='arthur') {
  await page.route('**/handout-config.js*',route=>route.fulfill({contentType:'text/javascript',body:'window.BarRestockHandoutConfig='+JSON.stringify({apiBase:service.base})+';'}));
- await page.addInitScript(()=>sessionStorage.setItem('bar-restock-role-v1','bartender'));
- await page.goto('/#handout');await page.locator('#handoutUsername').fill(username);await page.locator('#handoutPassword').fill(password);await page.locator('#handoutLogin button').click();
+ await page.goto('/#handout');await page.locator('#loginPin').fill(pins[username]);await page.locator('#loginForm button[type=submit]').click();
  await expect(page.locator('#handoutConnection')).toHaveText('Live');
 }
 async function add(page,text) {
@@ -51,7 +50,25 @@ test('server failures keep the composer draft, and viewing accounts cannot edit'
  await page.locator('#handoutText').fill('Do not lose this draft');await page.locator('#handoutComposer button').click();await expect(page.locator('#handoutStatus')).toContainText('draft is kept');await expect(page.locator('#handoutText')).toHaveValue('Do not lose this draft');
  const viewer=await context.newPage();await signIn(viewer,service,'viewer');await expect(viewer.locator('#handoutComposer')).toBeHidden();
 });
-test('an unconnected venue shows Handout without claiming shared saves',async({page})=> {
+test('a missing venue connection keeps the app locked with a useful sign-in error',async({page})=> {
  await page.route('**/handout-config.js*',route=>route.fulfill({contentType:'text/javascript',body:'window.BarRestockHandoutConfig={apiBase:""};'}));
- await page.addInitScript(()=>sessionStorage.setItem('bar-restock-role-v1','admin'));await page.goto('/#handout');await expect(page.locator('#handoutUnavailable')).toBeVisible();await expect(page.locator('#handoutComposer')).toBeHidden();await expect(page.locator('#handoutLogin')).toBeHidden();
+ await page.goto('/#handout');await page.locator('#loginPin').fill('314159');await page.locator('#loginForm button[type=submit]').click();
+ await expect(page.locator('#loginScreen')).toBeVisible();await expect(page.locator('#loginError')).toContainText('Cannot reach');
+});
+test('one PIN opens the whole app and Handout, survives reload, and logs out together',async({page,service})=> {
+ await signIn(page,service);await expect(page.locator('#roleLabel')).toHaveText('Arthur · Admin');
+ await expect(page.locator('input[autocomplete=username]')).toHaveCount(0);await expect(page.locator('#handoutLogin')).toHaveCount(0);
+ await page.reload();await expect(page.locator('#handoutConnection')).toHaveText('Live');
+ await page.locator('#btnLogout').click();await expect(page.locator('#loginScreen')).toBeVisible();
+ expect(await page.evaluate(()=>sessionStorage.getItem('bar-restock-session-v2'))).toBeNull();
+ await page.locator('#loginPin').fill('271828');await page.locator('#loginForm button[type=submit]').click();
+ await expect(page.locator('#handoutConnection')).toHaveText('Live');await expect(page.locator('#roleLabel')).toHaveText('Sam · Bartender');
+ await expect(page.locator('[data-tab=products]')).toBeHidden();
+});
+test('wrong PIN and forged old role cannot unlock the app',async({page,service})=> {
+ await page.route('**/handout-config.js*',route=>route.fulfill({contentType:'text/javascript',body:'window.BarRestockHandoutConfig='+JSON.stringify({apiBase:service.base})+';'}));
+ await page.addInitScript(()=>sessionStorage.setItem('bar-restock-role-v1','admin'));
+ await page.goto('/');await expect(page.locator('#loginScreen')).toBeVisible();
+ await page.locator('#loginPin').fill('999999');await page.locator('#loginForm button[type=submit]').click();
+ await expect(page.locator('#loginError')).toContainText('Incorrect PIN');await expect(page.locator('#loginScreen')).toBeVisible();
 });
