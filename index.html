@@ -151,6 +151,11 @@
             <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
           </div>
         </div>
+        <div id="categoryManager" class="card category-manager" hidden>
+          <h3 class="card-title">Your categories</h3>
+          <p class="summary">Fridge, Bar Shelves and Other are built in and can’t be changed. A category can be deleted once nothing is in it.</p>
+          <ul id="categoryList" class="category-list"></ul>
+        </div>
       </div>
     </section>
 
@@ -188,7 +193,7 @@
             <div class="field">
               <label class="field-label" for="newProductCategory">Category</label>
               <select id="newProductCategory" class="input">
-                <!-- Options are filled from CATEGORIES in app.js -->
+                <!-- Options are filled from allCategories() in app.js -->
               </select>
             </div>
             <button type="submit" class="btn btn-primary add-product-submit">
@@ -196,6 +201,18 @@
               Add product
             </button>
           </div>
+          <div id="newCategoryRow" class="new-category" hidden>
+            <div class="field field-grow">
+              <label class="field-label" for="newCategoryName">New category name</label>
+              <input id="newCategoryName" class="input" type="text" placeholder="e.g. Cool room" maxlength="40" autocomplete="off" enterkeyhint="done" aria-describedby="newCategoryError" />
+            </div>
+            <button type="button" class="btn btn-secondary new-category-btn" id="btnCreateCategory">
+              <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+              Create category
+            </button>
+            <button type="button" class="btn btn-ghost new-category-btn" id="btnCancelCategory">Cancel</button>
+          </div>
+          <p id="newCategoryError" class="field-error" role="alert" hidden></p>
           <p id="addProductError" class="field-error" role="alert" hidden></p>
         </form>
         <div class="list-toolbar">
