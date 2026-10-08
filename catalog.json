@@ -474,5 +474,138 @@
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
     "notes": "? Far right back"
+  },
+  {
+    "id": "jack-daniels-old-no7",
+    "name": "Jack Daniel's Old No.7 Tennessee Whiskey",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "40% 700mL"
+  },
+  {
+    "id": "jagermeister",
+    "name": "J\u00e4germeister",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "35% 700mL"
+  },
+  {
+    "id": "fireball",
+    "name": "Fireball Cinnamon Whisky",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "Cinnamon flavoured whisky; 33% 700mL"
+  },
+  {
+    "id": "greenside-vodka",
+    "name": "Greenside Premium Tasmanian Vodka",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "37% 700mL"
+  },
+  {
+    "id": "yella-dry-gin",
+    "name": "Yella Dry Gin",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "37% 700mL"
+  },
+  {
+    "id": "el-jimador-blanco",
+    "name": "el Jimador Tequila Blanco",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "100% agave azul; 38% 700mL"
+  },
+  {
+    "id": "benchmark-bourbon",
+    "name": "McAfee's Benchmark Old No.8 Bourbon",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "Kentucky straight bourbon; 37% 700mL"
+  },
+  {
+    "id": "bundaberg-up-rum",
+    "name": "Bundaberg Rum Original Underproof",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "UP rum 37%; partly hidden behind Benchmark, size not readable"
+  },
+  {
+    "id": "johnnie-walker-red",
+    "name": "Johnnie Walker Red Label",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
+    "notes": "Blended Scotch whisky; size not readable"
+  },
+  {
+    "id": "glades-orange",
+    "name": "Glades Orange Cocktail Liqueur",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "? Far left, brand script 'Glades' partly obscured; 700mL"
+  },
+  {
+    "id": "jameson",
+    "name": "Jameson Irish Whiskey",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Triple distilled"
+  },
+  {
+    "id": "kraken-black-spiced",
+    "name": "Kraken Black Spiced Rum",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "40% 700mL"
+  },
+  {
+    "id": "bartenders-best-lime",
+    "name": "Bartender's Best Lime Juice",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Australian grown; non-alcoholic 750mL"
+  },
+  {
+    "id": "bartenders-best-lemon",
+    "name": "Bartender's Best Lemon Juice",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Australian grown; non-alcoholic 750mL"
+  },
+  {
+    "id": "angostura-bitters",
+    "name": "Angostura Aromatic Bitters",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "? Yellow cap, paper wrapper turned away; 'ANGOS\u2026' visible"
+  },
+  {
+    "id": "barmans-choice-sugar-syrup",
+    "name": "Barman's Choice Sugar Syrup",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Authentic Batching Co. cocktail mixer; 750mL"
+  },
+  {
+    "id": "little-drippa",
+    "name": "Little Drippa Cold Drip Coffee",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "For cocktails, non-alcoholic; keep refrigerated"
+  },
+  {
+    "id": "cascade-raspberry-cordial",
+    "name": "Cascade Raspberry Cordial",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Raspberry flavour cordial"
+  },
+  {
+    "id": "cascade-lime-cordial",
+    "name": "Cascade Lime Cordial",
+    "category": "Bar Shelves",
+    "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
+    "notes": "Lime flavour cordial"
   }
 ]
