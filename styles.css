@@ -739,7 +739,7 @@ select.input {
 @media (max-width: 520px) {
   .stock-item { flex-wrap: wrap; row-gap: var(--s-3); }
   .stock-item .info { flex: 1 1 calc(100% - 72px); }
-  .stock-item .stock-actions { flex: 1 1 100%; justify-content: space-between; padding-left: 72px; }
+  .stock-item .stock-actions { flex: 1 1 100%; min-width: 0; flex-wrap: wrap; justify-content: space-between; padding-left: min(72px, 15vw); }
 }
 
 /* ==========================================================================

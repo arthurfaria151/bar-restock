@@ -1,9 +1,10 @@
-const CACHE = "bar-restock-v12";
+const CACHE = "bar-restock-v13";
 const SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./storage.js",
   "./gs1.js",
   "./receive.js",
   "./vendor/zxing-wasm/zxing-reader.iife.js",
@@ -16,7 +17,7 @@ const SHELL = [
 ];
 // App code and data: try the network first so updates arrive without a cache bump.
 // The vendored decoder (vendor/…) is cache-first: it only changes with a CACHE bump.
-const FRESH = ["/", "/index.html", "/app.js", "/gs1.js", "/receive.js", "/styles.css", "/catalog.json"];
+const FRESH = ["/", "/index.html", "/app.js", "/storage.js", "/gs1.js", "/receive.js", "/styles.css", "/catalog.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

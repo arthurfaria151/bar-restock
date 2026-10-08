@@ -1,0 +1,37 @@
+name: iPad app
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator-build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run ios:sync
+      - run: npm run check:native
+      - name: Build iPad simulator app
+        run: |
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/App/build CODE_SIGNING_ALLOWED=NO build
+      - name: Package simulator app
+        run: ditto -c -k --keepParent ios/App/build/Build/Products/Debug-iphonesimulator/App.app BarRestock-Simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BarRestock-Simulator
+          path: BarRestock-Simulator.zip

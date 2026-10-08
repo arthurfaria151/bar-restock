@@ -73,8 +73,8 @@
       if (!validLinkKey(key) || !v || typeof v !== "object") return null;
       if (typeof v.productId !== "string" || !v.productId) return null;
       const kind = v.kind === "carton" ? "carton" : "unit";
-      const pack = kind === "carton" ? clampInt(v.packSize, 1, PACK_MAX) : 1;
-      if (!pack) return null;
+      const pack = kind === "carton" ? Number(v.packSize) : 1;
+      if (!Number.isInteger(pack) || pack < (kind === "carton" ? 2 : 1) || pack > PACK_MAX) return null;
       return {
         productId: v.productId.slice(0, 120),
         kind,
@@ -84,7 +84,11 @@
       };
     }
 
-    const saveLinks = () => api.saveJson(LINKS_KEY, rx.links);
+    function saveLinks() {
+      if (api.saveJson(LINKS_KEY, rx.links)) return true;
+      rx.links = loadLinks();
+      return false;
+    }
 
     function newId() {
       return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -138,7 +142,11 @@
       });
     }
 
-    const saveDraft = () => api.saveJson(DRAFT_KEY, rx.draft);
+    function saveDraft() {
+      if (api.saveJson(DRAFT_KEY, rx.draft)) return true;
+      rx.draft = loadDraft();
+      return false;
+    }
 
     function loadDeliveries() {
       const raw = api.loadJson(DELIVERIES_KEY, []);
@@ -293,6 +301,7 @@
     }
 
     async function startCamera() {
+      if (!api.roleId() || !api.catalogReady()) return;
       if (rx.stream || rx.starting) return;
       prepareAudio(); // must happen inside the tap for iOS
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -456,6 +465,7 @@
     /* ---------- code handling ---------- */
 
     function handleCode(text, meta) {
+      if (!api.roleId() || !api.catalogReady()) return false;
       const parsed = GS1.parseCode(text, { format: meta.format, symbologyIdentifier: meta.symbologyIdentifier, now: new Date() });
       if (!parsed.key) {
         feedback(false);
@@ -511,7 +521,7 @@
       rx.draft.pending = item;
       if (!rx.draft.startedAt) rx.draft.startedAt = new Date().toISOString();
       rx.lastFinished = null;
-      saveDraft();
+      if (!saveDraft()) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -700,7 +710,7 @@
       if (!box) return;
       const it = rx.draft.pending;
       const p = it ? product(it.productId) : null;
-      if (it && !p) {
+      if (it && !p && api.catalogReady()) {
         rx.draft.pending = null;
         saveDraft();
       }
@@ -773,7 +783,7 @@
       change(it);
       it.cartons = clampInt(it.cartons, 1, QTY_MAX) || 1;
       it.qty = clampInt(it.qty, 1, QTY_MAX) || 1;
-      saveDraft();
+      return saveDraft();
     }
 
     function sameLine(a, b) {
@@ -781,6 +791,7 @@
     }
 
     function confirmPending() {
+      if (!api.roleId()) return;
       const it = rx.draft.pending;
       if (!it) return;
       const qtyEl = $("#rxQty");
@@ -816,7 +827,7 @@
       }
       const name = productName(it);
       rx.draft.pending = null;
-      saveDraft();
+      if (!saveDraft()) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -824,8 +835,9 @@
     }
 
     function skipPending() {
+      if (!api.roleId()) return;
       rx.draft.pending = null;
-      saveDraft();
+      if (!saveDraft()) return;
       renderPending();
       renderDraft();
       renderCamControls();
@@ -930,7 +942,7 @@
         twin.codes = Array.from(new Set(twin.codes.concat(it.codes))).slice(0, 20);
         rx.draft.items = rx.draft.items.filter((x) => x !== it);
       }
-      saveDraft();
+      if (!saveDraft()) return;
       rx.sheet = null;
       api.closeSheet();
       renderDraft();
@@ -940,7 +952,7 @@
       const it = itemByUid(uid);
       if (!it) return;
       rx.draft.items = rx.draft.items.filter((x) => x.uid !== uid);
-      saveDraft();
+      if (!saveDraft()) return;
       renderDraft();
       api.showToast(`Removed ${productName(it)}`);
     }
@@ -949,14 +961,16 @@
       if (!rx.draft.items.length) return;
       if (!confirm("Discard this delivery? Nothing has been added to stock yet.")) return;
       rx.draft = emptyDraft();
-      saveDraft();
+      if (!saveDraft()) return;
       renderPending();
       renderDraft();
       renderCamControls();
     }
 
-    function finishDelivery() {
-      if (rx.finishing) return;
+    async function finishDelivery() {
+      if (rx.finishing || !api.roleId() || !api.catalogReady()) return;
+      const snapshot = JSON.stringify(rx.draft);
+      const draftId = rx.draft.id;
       const items = rx.draft.items.filter((it) => product(it.productId));
       const dropped = rx.draft.items.length - items.length;
       if (!items.length) return;
@@ -967,47 +981,56 @@
       if (!confirm(msg)) return;
       // Guard against a second tap (or another tab) committing the same draft twice.
       rx.finishing = true;
+      renderDraft();
       try {
-        const latest = loadDeliveries();
-        if (latest.some((d) => d.id === rx.draft.id)) {
-          api.showToast("This delivery was already saved");
-          rx.deliveries = latest;
-          rx.draft = emptyDraft();
-          saveDraft();
-          return;
-        }
-        const record = {
-          id: rx.draft.id,
-          at: new Date().toISOString(),
-          startedAt: rx.draft.startedAt,
-          receivedBy: api.roleLabel(),
-          role: api.roleId(),
-          units,
-          items: items.map((it) => ({
-            productId: it.productId,
-            name: productName(it),
-            qty: it.qty,
-            date: it.date,
-            dateKind: it.dateKind,
-            batch: it.batch,
-            code: it.codes[0] || null,
-            codes: it.codes,
-          })),
-        };
-        const next = [record].concat(latest).slice(0, MAX_DELIVERIES);
-        if (!api.saveJson(DELIVERIES_KEY, next)) return; // nothing is committed if the record can't be saved
-        rx.deliveries = next;
-        rx.draft = emptyDraft();
-        saveDraft();
-        const changes = {};
-        for (const it of items) changes[it.productId] = (changes[it.productId] || 0) + it.qty;
-        api.addStock(changes);
-        rx.lastFinished = { id: record.id, units };
-        stopCamera();
-        setCamStatus("");
-        renderPending();
-        renderDatesCard();
-        api.showToast(`Delivery saved — ${plural(units, "unit")} added to stock`);
+        await api.withStorageLock(() => {
+          if (!api.roleId()) return false;
+          const latest = loadDeliveries();
+          if (latest.some((d) => d.id === draftId)) {
+            api.showToast("This delivery was already saved");
+            rx.deliveries = latest;
+            rx.draft = loadDraft();
+            return false;
+          }
+          if (JSON.stringify(loadDraft()) !== snapshot) {
+            rx.draft = loadDraft();
+            renderPending();
+            api.showToast("Delivery changed in another tab — review it before finishing");
+            return false;
+          }
+          const record = {
+            id: rx.draft.id,
+            at: new Date().toISOString(),
+            startedAt: rx.draft.startedAt,
+            receivedBy: api.roleLabel(),
+            role: api.roleId(),
+            units,
+            items: items.map((it) => ({
+              productId: it.productId,
+              name: productName(it),
+              qty: it.qty,
+              date: it.date,
+              dateKind: it.dateKind,
+              batch: it.batch,
+              code: it.codes[0] || null,
+              codes: it.codes,
+            })),
+          };
+          const next = [record].concat(latest).slice(0, MAX_DELIVERIES);
+          const draft = emptyDraft();
+          const changes = {};
+          for (const it of items) changes[it.productId] = (changes[it.productId] || 0) + it.qty;
+          if (!api.addStock(changes, { [DELIVERIES_KEY]: next, [DRAFT_KEY]: draft })) return false;
+          rx.deliveries = next;
+          rx.draft = draft;
+          rx.lastFinished = { id: record.id, units };
+          stopCamera();
+          setCamStatus("");
+          renderPending();
+          renderDatesCard();
+          api.showToast(`Delivery saved — ${plural(units, "unit")} added to stock`);
+          return true;
+        });
       } finally {
         rx.finishing = false;
         renderDraft();
@@ -1098,7 +1121,7 @@
       const p = product(l.productId);
       if (!confirm(`Delete the link for ${codeLabel(key, l)}${p ? ` (${p.name})` : ""}? Scanning it will ask for a product again.`)) return;
       delete rx.links[key];
-      saveLinks();
+      if (!saveLinks()) return;
       renderLinks();
       api.showToast("Link deleted");
     }
@@ -1108,6 +1131,21 @@
       const data = { app: "bar-restock", type: "barcode-links", version: 1, exportedAt: new Date().toISOString(), links: rx.links };
       const json = JSON.stringify(data, null, 2) + "\n";
       const name = `bar-restock-barcodes-${todayIso()}.json`;
+      if (window.BarRestockNative) {
+        const button = $("#rxExport");
+        button.disabled = true;
+        try {
+          const result = await window.BarRestockNative.shareJsonFile({
+            name, contents: json, title: "Bar Restock barcode links",
+          });
+          if (result !== null) api.showToast("Barcode links exported");
+        } catch (_) {
+          api.showToast("Couldn’t export barcode links — try again");
+        } finally {
+          button.disabled = !Object.keys(rx.links).length;
+        }
+        return;
+      }
       try {
         const file = new File([json], name, { type: "application/json" });
         if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
@@ -1271,7 +1309,10 @@
       if (!api.isManager()) return;
       rx.cleared = api.loadMap(LOTS_CLEARED_KEY);
       rx.cleared[key] = new Date().toISOString();
-      api.saveJson(LOTS_CLEARED_KEY, rx.cleared);
+      if (!api.saveJson(LOTS_CLEARED_KEY, rx.cleared)) {
+        rx.cleared = api.loadMap(LOTS_CLEARED_KEY);
+        return;
+      }
       renderDatesCard();
       api.showToast("Lot cleared");
     }
@@ -1326,6 +1367,7 @@
     /* ---------- events ---------- */
 
     function onPanelClick(e) {
+      if (!api.roleId()) return;
       const btn = e.target.closest("[data-rx-act]");
       if (!btn || btn.disabled) return;
       const act = btn.dataset.rxAct;
@@ -1348,7 +1390,7 @@
         const it = itemByUid(li.dataset.uid);
         if (!it) return;
         it.qty = Math.min(QTY_MAX, Math.max(1, it.qty + (act === "item-inc" ? 1 : -1)));
-        saveDraft();
+        if (!saveDraft()) return;
         renderDraft();
       } else if (act === "item-remove" && li) removeItem(li.dataset.uid);
       else if (act === "edit-item" && li) openEditItem(li.dataset.uid);
@@ -1368,12 +1410,12 @@
           it.cartons = clampInt(t.value, 1, QTY_MAX) || 1;
           it.qty = it.cartons * it.packSize;
         });
-        renderPending();
+        syncPendingQuantity();
       } else if (t.id === "rxQty") {
         updatePending((it) => {
           it.qty = clampInt(t.value, 1, QTY_MAX) || 1;
         });
-        renderPending();
+        syncPendingQuantity();
       } else if (t.id === "rxDate") {
         updatePending((it) => {
           it.date = validIsoDate(t.value) ? t.value : null;
@@ -1383,6 +1425,23 @@
           it.dateKind = t.value === "useBy" ? "useBy" : "bestBefore";
         });
       }
+    }
+
+    // Keep the original Add button mounted while a quantity input blurs on a
+    // tap. Replacing it here would discard the click that follows change.
+    function syncPendingQuantity() {
+      const it = rx.draft.pending;
+      if (!it) return;
+      const cartons = $("#rxCartons");
+      const qty = $("#rxQty");
+      if (cartons) cartons.value = it.cartons;
+      if (qty) qty.value = it.qty;
+      const add = document.querySelector('#rxConfirm [data-rx-act="confirm"] span');
+      if (add) add.textContent = `Add ${plural(it.qty, "unit")}`;
+      const qtyDec = document.querySelector('#rxConfirm [data-rx-act="qty-dec"]');
+      const cartonsDec = document.querySelector('#rxConfirm [data-rx-act="cartons-dec"]');
+      if (qtyDec) qtyDec.disabled = it.qty <= 1;
+      if (cartonsDec) cartonsDec.disabled = it.cartons <= 1;
     }
 
     function onSheetClick(e) {
@@ -1475,6 +1534,14 @@
       window.addEventListener("pagehide", stopCamera);
       // Keep in sync when another tab changes links, the draft or deliveries.
       window.addEventListener("storage", (e) => {
+        if (localStorage.getItem(api.transactionKey)) return;
+        if (e.key === api.transactionKey || e.key === null) {
+          rx.links = loadLinks();
+          rx.draft = loadDraft();
+          if (api.currentTab() === "receive") render();
+          renderDatesCard();
+          return;
+        }
         if (e.key === LINKS_KEY) rx.links = loadLinks();
         if (e.key === DRAFT_KEY) {
           rx.draft = loadDraft();

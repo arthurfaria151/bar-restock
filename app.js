@@ -28,11 +28,14 @@
         "cascade-lime-cordial"],
     },
   ];
+  const native = window.BarRestockNative;
   const state = {
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
     loading: true, // catalog.json not loaded yet (UI shows skeletons)
     pendingPhoto: null, // resized data URL chosen in the Add product form
+    photoLoading: false,
+    photoVersion: 0, // ignore conversions superseded by another choice/remove/sign-out
     custom: [], // user-added products
     categories: [], // user-created category names (after the built-ins)
     renamingCategory: null, // custom category being renamed inline on the Products tab
@@ -66,6 +69,13 @@
   const lowBanner = $("#lowBanner");
   const lowBannerDetail = $("#lowBannerDetail");
   const lowBannerTitle = $("#lowBannerTitle");
+  // Access storage inside guarded operations: some browsers throw even when
+  // reading window.localStorage while cookies/storage are disabled.
+  const storage = window.BarRestockStorage({
+    getItem: (key) => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+    removeItem: (key) => localStorage.removeItem(key),
+  }, showToast);
 
   function loadJson(key, fallback) {
     try {
@@ -82,13 +92,7 @@
 
   // Writes never throw: a full or blocked storage must not leave the UI half-updated.
   function saveJson(key, value, quiet) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (_) {
-      if (!quiet) showToast("Couldn’t save — storage is full or blocked");
-      return false;
-    }
+    return storage.save(key, value, quiet);
   }
 
   function loadSelection() {
@@ -119,11 +123,6 @@
     return out;
   }
 
-  const saveSelection = () => saveJson(STORAGE_KEY, state.selection);
-  const saveStock = () => saveJson(STOCK_KEY, state.stock);
-  const saveCustom = () => saveJson(CUSTOM_KEY, state.custom);
-  const saveHidden = () => saveJson(HIDDEN_KEY, state.hidden);
-  const savePar = () => saveJson(PAR_KEY, state.par);
   const saveReminded = () => saveJson(REMINDED_KEY, state.reminded);
   const saveCategories = () => saveJson(CATEGORIES_KEY, state.categories);
 
@@ -175,7 +174,7 @@
     return null;
   }
 
-  function renameCategory(oldName, rawName) {
+  async function renameCategory(oldName, rawName) {
     if (!canEditCatalog() || !isCustomCategory(oldName)) return "Built-in categories can’t be renamed.";
     const name = cleanCategoryName(rawName);
     if (name === oldName) return null;
@@ -184,19 +183,16 @@
     if (state.catalog.some((p) => p.category === oldName)) {
       return "Built-in catalog products use this category, so it can’t be renamed here.";
     }
-    const prevCategories = state.categories.slice();
-    const prevCustom = state.custom.map((p) => p.category);
-    state.categories = state.categories.map((c) => (c === oldName ? name : c));
-    state.custom.forEach((p) => {
-      if (p.category === oldName) p.category = name;
+    const saved = await storage.withLock(() => {
+      if (!canEditCatalog()) return false;
+      const categories = loadCategories().map((c) => c === oldName ? name : c);
+      const custom = loadJson(CUSTOM_KEY, []).map((p) => p.category === oldName ? { ...p, category: name } : p);
+      if (!storage.batch({ [CATEGORIES_KEY]: categories, [CUSTOM_KEY]: custom })) return false;
+      state.categories = categories;
+      state.custom = custom;
+      return true;
     });
-    if (!saveCategories() || !saveCustom()) {
-      state.categories = prevCategories;
-      state.custom.forEach((p, i) => (p.category = prevCustom[i]));
-      saveCategories();
-      saveCustom();
-      return "Couldn’t save the new name.";
-    }
+    if (!saved) return "Couldn’t save the new name.";
     const select = $("#newProductCategory");
     fillCategorySelect(select.value === oldName ? name : select.value);
     refreshCategoryViews();
@@ -212,8 +208,9 @@
       return;
     }
     if (!confirm(`Delete the category “${name}”?`)) return;
-    state.categories = state.categories.filter((c) => c !== name);
-    saveCategories();
+    const categories = state.categories.filter((c) => c !== name);
+    if (!saveJson(CATEGORIES_KEY, categories)) return;
+    state.categories = categories;
     fillCategorySelect();
     refreshCategoryViews();
     showToast("Category deleted");
@@ -349,9 +346,9 @@
     }
   }
 
-  function saveRename(li, name) {
+  async function saveRename(li, name) {
     const input = li.querySelector("input");
-    const error = renameCategory(name, input.value);
+    const error = await renameCategory(name, input.value);
     if (error) {
       setFieldError(input, li.querySelector(".field-error"), error);
       input.focus();
@@ -364,16 +361,18 @@
   // Drop restock entries whose product no longer exists (e.g. removed from catalog.json),
   // so badges and totals match the visible list.
   function pruneSelection() {
+    if (state.loading || state.catalogError) return;
     const ids = new Set(effectiveCatalog().map((p) => p.id));
+    const next = { ...state.selection };
     let changed = false;
     for (const id of Object.keys(state.selection)) {
       const q = Number(state.selection[id]);
       if (!ids.has(id) || !Number.isFinite(q) || q <= 0) {
-        delete state.selection[id];
+        delete next[id];
         changed = true;
       }
     }
-    if (changed) saveSelection();
+    if (changed && saveJson(STORAGE_KEY, next)) state.selection = next;
   }
 
   function groupByCategory(items) {
@@ -385,7 +384,7 @@
   }
 
   function canEditCatalog() {
-    return !state.role || ROLES[state.role].editCatalog;
+    return !!state.role && ROLES[state.role].editCatalog;
   }
 
   function effectiveCatalog() {
@@ -409,12 +408,15 @@
   }
 
   function setQty(id, qty) {
+    if (!state.role) return;
+    const next = { ...loadMap(STORAGE_KEY) };
     if (qty <= 0) {
-      delete state.selection[id];
+      delete next[id];
     } else {
-      state.selection[id] = qty;
+      next[id] = qty;
     }
-    saveSelection();
+    if (!saveJson(STORAGE_KEY, next)) return;
+    state.selection = next;
     updateBadges();
     // Refresh only the affected card if on products, else full restock
     const card = productsRoot.querySelector(`[data-id="${id}"]`);
@@ -516,8 +518,27 @@
       `mailto:${encodeURIComponent(EMAIL_TO)}` +
       `?subject=${encodeURIComponent(subject)}` +
       `&body=${encodeURIComponent(body)}`;
-    // Navigate to the mailto: URL so iPad Mail opens reliably
-    window.location.href = url;
+    if (native) {
+      return native.openMailto(url);
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  async function prepareReminder(products) {
+    if (!native) {
+      markReminded(products.map((p) => p.id));
+      openMailto(products);
+      showToast("Email reminder ready");
+      return;
+    }
+    try {
+      await openMailto(products);
+      markReminded(products.map((p) => p.id));
+      showToast("Email reminder ready");
+    } catch (_) {
+      showToast("Couldn’t open Mail — check that a mail app is installed");
+    }
   }
 
   function markReminded(ids) {
@@ -568,46 +589,56 @@
       state.bannerDismissed = false;
       const p = productById(id);
       if (p && !state.reminded[id]) {
-        markReminded([id]);
-        openMailto([p]);
-        showToast("Email reminder ready");
+        prepareReminder([p]);
       }
     }
     updateLowBanner();
     if (state.tab === "par") renderPar();
   }
 
-  // Delivery commit: add several products' quantities in one save. changes: { id: unitsToAdd }
-  function addStock(changes) {
+  // Caller holds the shared lock. Stock, history and the cleared draft commit together.
+  function addStock(changes, values) {
+    if (!state.role) return false;
+    const nextStock = loadMap(STOCK_KEY);
     const moved = [];
     for (const [id, add] of Object.entries(changes)) {
       const n = Math.floor(Number(add));
       if (!productById(id) || !Number.isFinite(n) || n <= 0) continue;
-      const prev = stockQty(id);
-      state.stock[id] = prev + n;
+      const prev = countOf(nextStock, id);
+      nextStock[id] = prev + n;
       moved.push([id, prev, prev + n]);
     }
-    if (!moved.length) return;
-    saveStock();
+    if (!moved.length || !storage.batch({ ...values, [STOCK_KEY]: nextStock })) return false;
+    state.stock = nextStock;
     for (const [id, prev, next] of moved) afterStockChange(id, prev, next);
     if (state.tab === "stock") renderStock();
+    return true;
   }
 
-  function setStock(id, qty) {
-    const prev = stockQty(id);
-    const next = Math.max(0, Math.floor(qty));
-    if (next <= 0) delete state.stock[id];
-    else state.stock[id] = next;
-    saveStock();
-    afterStockChange(id, prev, next);
-    if (state.tab === "stock") renderStock();
+  async function changeStock(id, delta) {
+    await storage.withLock(() => {
+      if (!state.role || !productById(id)) return false;
+      const stock = loadMap(STOCK_KEY);
+      const prev = countOf(stock, id);
+      const next = Math.max(0, prev + delta);
+      if (next <= 0) delete stock[id];
+      else stock[id] = next;
+      if (!saveJson(STOCK_KEY, stock)) return false;
+      state.stock = stock;
+      afterStockChange(id, prev, next);
+      if (state.tab === "stock") renderStock();
+      return true;
+    });
   }
 
   function setPar(id, qty) {
+    if (!canEditCatalog()) return;
     const next = Math.max(0, Math.floor(qty));
-    if (next <= 0) delete state.par[id];
-    else state.par[id] = next;
-    savePar();
+    const par = loadMap(PAR_KEY);
+    if (next <= 0) delete par[id];
+    else par[id] = next;
+    if (!saveJson(PAR_KEY, par)) return;
+    state.par = par;
     // If raised above current stock threshold (stock now above par), clear reminded
     if (parQty(id) === 0 || stockQty(id) > parQty(id)) {
       clearReminded(id);
@@ -739,6 +770,15 @@
 
   async function copyList() {
     const text = buildListText();
+    if (native) {
+      try {
+        await native.copyText(text);
+        showToast("List copied");
+      } catch (_) {
+        showToast("Copy failed — try Share");
+      }
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
       showToast("List copied");
@@ -761,9 +801,10 @@
 
   async function shareList() {
     const text = buildListText();
-    if (!navigator.share) return;
+    if (!native && !navigator.share) return;
     try {
-      await navigator.share({ title: "Bar Restock", text });
+      if (native) await native.shareText({ title: "Bar Restock", text });
+      else await navigator.share({ title: "Bar Restock", text });
     } catch (e) {
       // AbortError means the user closed the share sheet; anything else is a real failure.
       if (e && e.name !== "AbortError") showToast("Share failed — try Copy list");
@@ -771,6 +812,7 @@
   }
 
   function switchTab(tab) {
+    if (!state.role) return;
     const allowed = state.role ? ROLES[state.role].tabs : null;
     if (allowed && !allowed.includes(tab)) {
       // Bartenders (and any future limited role) cannot open Products or Par.
@@ -804,7 +846,8 @@
   // Returns an error message for the form, or null when the product was added.
   function addCustomProduct(name, category) {
     const clean = String(name || "").trim().replace(/\s+/g, " ");
-    if (!canEditCatalog()) return null;
+    if (!canEditCatalog()) return "Sign in as Admin to add products.";
+    if (state.photoLoading) return "Wait for the photo to finish loading.";
     if (!clean) return "Enter a product name.";
     const lower = clean.toLowerCase();
     if (effectiveCatalog().some((p) => p.name.toLowerCase() === lower)) {
@@ -813,40 +856,43 @@
     const cat = allCategories().includes(category) ? category : "Other";
     const product = { id: slugify(clean), name: clean, category: cat, custom: true };
     if (state.pendingPhoto) product.image = state.pendingPhoto;
-    state.custom.push(product);
-    if (!saveJson(CUSTOM_KEY, state.custom, true)) {
+    const custom = state.custom.concat(product);
+    let withoutPhoto = false;
+    if (!saveJson(CUSTOM_KEY, custom, true)) {
       // Photos are the bulky part; fall back to saving the product without one.
+      if (!product.image) return "Couldn’t save — storage is full or blocked.";
       delete product.image;
-      if (saveCustom()) showToast("Storage is full — saved without the photo");
+      if (!saveJson(CUSTOM_KEY, custom, true)) return "Couldn’t save — storage is full or blocked.";
+      withoutPhoto = true;
     }
+    state.custom = custom;
     clearPendingPhoto();
     renderProducts();
     renderStock();
     if (state.tab === "par") renderPar();
-    showToast("Product added");
+    showToast(withoutPhoto ? "Product added without the photo — storage is full" : "Product added");
     return null;
   }
 
-  function deleteProduct(id) {
+  async function deleteProduct(id) {
     const p = productById(id);
     if (!p || !canEditCatalog()) return;
     if (!confirm(`Remove “${p.name}” from the catalog?`)) return;
-    if (p.custom) {
-      state.custom = state.custom.filter((c) => c.id !== id);
-      saveCustom();
-    } else if (!state.hidden.includes(id)) {
-      state.hidden.push(id);
-      saveHidden();
-    }
-    delete state.stock[id];
-    saveStock();
-    delete state.par[id];
-    savePar();
-    clearReminded(id);
-    if (state.selection[id]) {
-      delete state.selection[id];
-      saveSelection();
-    }
+    const saved = await storage.withLock(() => {
+      if (!canEditCatalog()) return false;
+      const values = {};
+      if (p.custom) values[CUSTOM_KEY] = loadJson(CUSTOM_KEY, []).filter((c) => c.id !== id);
+      else values[HIDDEN_KEY] = Array.from(new Set(loadJson(HIDDEN_KEY, []).concat(id)));
+      for (const key of [STOCK_KEY, PAR_KEY, REMINDED_KEY, STORAGE_KEY]) {
+        values[key] = loadMap(key);
+        delete values[key][id];
+      }
+      if (!storage.batch(values)) return false;
+      loadSelection();
+      loadStockState();
+      return true;
+    });
+    if (!saved) return;
     renderProducts();
     if (state.tab === "restock") renderRestock();
     renderStock();
@@ -859,8 +905,8 @@
     if (!state.hidden.length || !canEditCatalog()) return;
     const n = state.hidden.length;
     if (!confirm(`Bring back ${n} removed catalog product${n === 1 ? "" : "s"}?`)) return;
+    if (!saveJson(HIDDEN_KEY, [])) return;
     state.hidden = [];
-    saveHidden();
     renderProducts();
     renderStock();
     updateLowBanner();
@@ -935,8 +981,8 @@
         li.querySelectorAll("[data-act]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const act = btn.dataset.act;
-            if (act === "inc") setStock(p.id, stockQty(p.id) + 1);
-            else if (act === "dec") setStock(p.id, stockQty(p.id) - 1);
+            if (act === "inc") changeStock(p.id, 1);
+            else if (act === "dec") changeStock(p.id, -1);
             else deleteProduct(p.id);
           });
         });
@@ -1255,13 +1301,13 @@
       }
       case "slot-remove": {
         let name = "";
-        editShelves((layout) => {
+        const saved = editShelves((layout) => {
           const s = levelById(layout, levelId).slots;
           const p = productById(s[si] && s[si].id);
           name = p ? p.name : "";
           s.splice(si, 1);
         });
-        showToast(name ? `Removed ${name}` : "Removed");
+        if (saved) showToast(name ? `Removed ${name}` : "Removed");
         break;
       }
       case "facings-inc":
@@ -1325,10 +1371,12 @@
       return;
     }
     const id = levelEl.dataset.level;
-    state.shelfRenaming = null;
-    editShelves((layout) => {
+    if (editShelves((layout) => {
       levelById(layout, id).name = name;
-    });
+    })) {
+      state.shelfRenaming = null;
+      renderShelves();
+    }
   }
 
   function onAddLevel(e) {
@@ -1343,10 +1391,10 @@
       input.focus();
       return;
     }
-    editShelves((layout) => {
+    const saved = editShelves((layout) => {
       layout.levels.push({ id: newLevelId(new Set(layout.levels.map((l) => l.id))), name, slots: [] });
     });
-    showToast(`Added “${name}”`);
+    if (saved) showToast(`Added “${name}”`);
   }
 
   function cssEscape(v) {
@@ -1361,15 +1409,62 @@
 
   /* Sheet: one dialog reused for product details and the product picker. */
   let sheetReturnFocus = null;
+  let sheetReturnSelector = null;
   let sheetPickerLevel = null;
+
+  function activeModal() {
+    if (!$("#sheetBackdrop").hidden) return $("#sheet");
+    if (!$("#loginScreen").hidden) return $("#loginScreen");
+    return null;
+  }
+
+  function modalControls(modal) {
+    return Array.from(modal.querySelectorAll('button, input, select, textarea, a[href], [tabindex="0"]'))
+      .filter((el) => !el.disabled && el.getClientRects().length && !el.closest("[hidden]"));
+  }
+
+  function updateModalState() {
+    const blocked = !!activeModal();
+    for (const el of document.querySelectorAll("#appHeader, #main, .skip-link")) {
+      el.inert = blocked;
+      if (blocked) el.setAttribute("aria-hidden", "true");
+      else el.removeAttribute("aria-hidden");
+    }
+  }
+
+  function bindModalFocus() {
+    document.addEventListener("focusin", (e) => {
+      const modal = activeModal();
+      if (modal && !modal.contains(e.target)) modalControls(modal)[0]?.focus();
+    });
+    document.addEventListener("keydown", (e) => {
+      const modal = activeModal();
+      if (!modal || e.key !== "Tab") return;
+      const controls = modalControls(modal);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first) { e.preventDefault(); return; }
+      if (!modal.contains(document.activeElement) || (e.shiftKey && document.activeElement === first) || (!e.shiftKey && document.activeElement === last)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    });
+  }
 
   function openSheet(title, html) {
     const backdrop = $("#sheetBackdrop");
     $("#sheetTitle").textContent = title;
     $("#sheetBody").innerHTML = html;
-    if (backdrop.hidden) sheetReturnFocus = document.activeElement;
+    if (backdrop.hidden) {
+      sheetReturnFocus = document.activeElement;
+      const level = sheetReturnFocus.closest("[data-level]");
+      sheetReturnSelector = sheetReturnFocus.id ? `#${cssEscape(sheetReturnFocus.id)}` :
+        level && sheetReturnFocus.dataset.act ? `[data-level="${cssEscape(level.dataset.level)}"] [data-act="${cssEscape(sheetReturnFocus.dataset.act)}"]` : null;
+    }
     backdrop.hidden = false;
+    updateModalState();
     document.documentElement.style.overflow = "hidden";
+    $("#btnSheetClose").focus();
   }
 
   function closeSheet() {
@@ -1379,9 +1474,13 @@
     $("#sheetBody").innerHTML = "";
     sheetPickerLevel = null;
     document.documentElement.style.overflow = "";
+    updateModalState();
     if (receive) receive.onSheetClosed();
-    if (sheetReturnFocus && document.contains(sheetReturnFocus)) sheetReturnFocus.focus({ preventScroll: true });
+    const target = sheetReturnFocus && document.contains(sheetReturnFocus) ? sheetReturnFocus :
+      (sheetReturnSelector && $(sheetReturnSelector)) || document.querySelector(`.tab-btn[data-tab="${state.tab}"]`);
+    if (target) target.focus({ preventScroll: true });
     sheetReturnFocus = null;
+    sheetReturnSelector = null;
   }
 
   function showProductDetail(id, levelId, si) {
@@ -1484,9 +1583,7 @@
   function resetShelves() {
     if (!canEditShelves()) return;
     if (!confirm("Reset the shelves to the default layout from the shelf photos? Your changes to the layout will be lost.")) return;
-    try {
-      localStorage.removeItem(SHELVES_KEY);
-    } catch (_) {}
+    if (!saveJson(SHELVES_KEY, null)) return;
     state.shelves = null;
     state.shelfRenaming = null;
     renderShelves();
@@ -1600,6 +1697,9 @@
     if (receive) receive.onRoleChange();
     if (!state.role) {
       loginScreen.hidden = false;
+      clearPendingPhoto();
+      updateModalState();
+      modalControls(loginScreen)[0]?.focus();
       roleLabel.hidden = true;
       roleLabel.textContent = "";
       btnLogout.hidden = true;
@@ -1607,6 +1707,7 @@
     }
     document.body.classList.add("role-" + state.role);
     loginScreen.hidden = true;
+    updateModalState();
     roleLabel.hidden = false;
     roleLabel.textContent = ROLES[state.role].label;
     btnLogout.hidden = false;
@@ -1645,6 +1746,7 @@
     pin.value = "";
     setFieldError(pin, $("#loginError"), null);
     if (step === "pin") pin.focus();
+    else $("#btnLoginBartender").focus();
   }
 
   // Fetch the catalog. Listeners are already bound, so a failure here never
@@ -1683,8 +1785,16 @@
       e.target.value = "";
       return;
     }
+    const version = ++state.photoVersion;
+    state.pendingPhoto = null;
+    state.photoLoading = true;
+    $("#addProductForm button[type=submit]").disabled = true;
+    $("#photoBtnText").textContent = "Loading image…";
+    $("#btnRemovePhoto").hidden = false;
     try {
-      state.pendingPhoto = await resizePhoto(file);
+      const photo = await resizePhoto(file);
+      if (version !== state.photoVersion) return;
+      state.pendingPhoto = photo;
       setFieldError(null, err, null);
       const preview = $("#newProductPreview");
       preview.src = state.pendingPhoto;
@@ -1692,8 +1802,14 @@
       $("#btnRemovePhoto").hidden = false;
       $("#photoBtnText").textContent = "Change image";
     } catch (_) {
+      if (version !== state.photoVersion) return;
       clearPendingPhoto();
       setFieldError(null, err, "Couldn’t read that image. Try a JPG or PNG.");
+    } finally {
+      if (version === state.photoVersion) {
+        state.photoLoading = false;
+        $("#addProductForm button[type=submit]").disabled = false;
+      }
     }
   }
 
@@ -1722,7 +1838,10 @@
   }
 
   function clearPendingPhoto() {
+    ++state.photoVersion;
     state.pendingPhoto = null;
+    state.photoLoading = false;
+    $("#addProductForm button[type=submit]").disabled = false;
     $("#newProductPhoto").value = "";
     const preview = $("#newProductPreview");
     preview.hidden = true;
@@ -1764,6 +1883,7 @@
       window.scrollTo(0, 0);
     });
     $("#heroAddProduct").addEventListener("click", () => {
+      if (!canEditCatalog()) return;
       const form = $("#addProductForm");
       form.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
       $("#newProductName").focus({ preventScroll: true });
@@ -1839,21 +1959,19 @@
     });
     $("#newProductName").addEventListener("input", (e) => setFieldError(e.target, $("#addProductError"), null));
     $("#btnClear").addEventListener("click", () => {
-      if (!selectedCount()) return;
+      if (!state.role || !selectedCount()) return;
       if (!confirm("Clear the restock list?")) return;
+      if (!saveJson(STORAGE_KEY, {})) return;
       state.selection = {};
-      saveSelection();
       renderProducts();
       renderRestock();
       updateBadges();
       showToast("Cleared");
     });
-    $("#btnSendReminder").addEventListener("click", () => {
+    $("#btnSendReminder").addEventListener("click", async () => {
       const targets = getLowProducts();
       if (!targets.length) return;
-      markReminded(targets.map((p) => p.id));
-      openMailto(targets);
-      showToast("Email reminder ready");
+      await prepareReminder(targets);
       updateLowBanner();
     });
     $("#btnDismissBanner").addEventListener("click", () => {
@@ -1906,6 +2024,9 @@
       loadJson,
       loadMap,
       saveJson,
+      saveBatch: storage.batch,
+      withStorageLock: storage.withLock,
+      transactionKey: storage.journalKey,
       showToast,
       setFieldError,
       openSheet,
@@ -1917,20 +2038,34 @@
       addStock,
       isManager: canEditCatalog,
       currentTab: () => state.tab,
-      roleId: () => state.role || "admin",
-      roleLabel: () => (state.role ? ROLES[state.role].label : "Admin"),
+      catalogReady: () => !state.loading && !state.catalogError,
+      roleId: () => state.role,
+      roleLabel: () => (state.role ? ROLES[state.role].label : "Signed out"),
     });
   }
 
   async function init() {
+    await storage.withLock(() => true);
     loadSelection();
     loadStockState();
-    if (navigator.share) btnShare.hidden = false;
+    if (native || navigator.share) btnShare.hidden = false;
     bindEvents();
+    bindModalFocus();
+    window.addEventListener("storage", (e) => {
+      if ((e.key && !e.key.startsWith("bar-restock-")) || localStorage.getItem(storage.journalKey)) return;
+      loadSelection();
+      loadStockState();
+      renderProducts();
+      if (state.tab === "stock") renderStock();
+      if (state.tab === "par") renderPar();
+      if (state.tab === "restock") renderRestock();
+      if (state.tab === "shelves") renderShelves();
+      updateLowBanner();
+    });
     // Apply the session role before any await so restricted tabs never flash.
     applyRole(readSessionRole());
     await loadCatalog();
-    if ("serviceWorker" in navigator) {
+    if (!native && "serviceWorker" in navigator) {
       try {
         await navigator.serviceWorker.register("./sw.js");
       } catch (_) {}

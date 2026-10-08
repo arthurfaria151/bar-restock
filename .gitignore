@@ -1,0 +1,13 @@
+node_modules/
+www/
+.DS_Store
+test-results/
+playwright-report/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/App/DerivedData/
+ios/App/build/
+ios/App/**/xcuserdata/
+ios/App/**/.build/
+ios/App/**/Package.resolved

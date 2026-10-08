@@ -1,0 +1,8 @@
+{
+  "appId": "com.barrestock.app",
+  "appName": "Bar Restock",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never"
+  }
+}

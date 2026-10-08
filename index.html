@@ -52,7 +52,7 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <div id="loginScreen" class="login-screen">
+  <div id="loginScreen" class="login-screen" role="dialog" aria-modal="true" aria-label="Sign in">
     <div class="login-wrap">
       <header class="hero hero-login reveal">
         <h1 class="hero-title">Bar Restock.</h1>
@@ -93,7 +93,7 @@
     </div>
   </div>
 
-  <header class="app-header" id="appHeader">
+  <header class="app-header" id="appHeader" inert>
     <div class="nav-inner">
       <span class="brand">Bar Restock</span>
       <span id="headerBadge" class="badge empty" aria-label="Units on restock list">0</span>
@@ -153,7 +153,7 @@
     </button>
   </div>
 
-  <main id="main">
+  <main id="main" inert>
     <section id="panel-products" class="panel active" role="tabpanel" aria-labelledby="h-products">
       <header class="hero reveal">
         <h2 class="hero-title" id="h-products">Build tonight’s restock.</h2>
@@ -407,6 +407,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="storage.js"></script>
   <script src="gs1.js"></script>
   <script src="receive.js"></script>
   <script src="app.js"></script>

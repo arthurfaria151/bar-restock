@@ -1,0 +1,30 @@
+{
+  "name": "bar-restock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bar Restock native iPad app and static web interface",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build-native.mjs",
+    "test": "node --test native/*.test.js tests/*.test.mjs",
+    "check:native": "node scripts/check-native.mjs",
+    "ios:sync": "npm run build && cap sync ios",
+    "ios:open": "npm run ios:sync && cap open ios",
+    "test:web": "playwright test"
+  },
+  "dependencies": {
+    "@capacitor/app-launcher": "8.0.1",
+    "@capacitor/clipboard": "8.0.1",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "@playwright/test": "^1.58.2",
+    "esbuild": "0.28.2"
+  }
+}
