@@ -11,5 +11,5 @@ printf '%s' "$staff_pin" | /opt/bar-handout-node/bin/node /opt/bar-handout/backe
 unset staff_pin staff_confirmation
 chown barhandout:barhandout /var/lib/bar-handout/users.json
 systemctl restart bar-handout
-curl --fail --silent http://127.0.0.1:8787/health
+curl --fail --silent --show-error --retry 5 --retry-connrefused --retry-delay 1 http://127.0.0.1:8787/health
 echo
