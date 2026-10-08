@@ -24,6 +24,12 @@ The Capacitor iOS project bundles the interface and catalog inside the app.
 Clipboard, sharing, email handoff, and barcode-link file exports use native
 iPad APIs.
 
+Shelves uses a three-tier black display with a searchable product tray below.
+Admin can drag bottles onto levels, move them between levels, or reorder them.
+Selecting a product and choosing “Place here” also works without dragging.
+Assignments save on this device; the original two-level layout gains an empty
+middle tier while retaining its products and facings.
+
 Admin can manage custom products and categories, arrange shelf levels and
 product facings, set minimum stock, and link barcodes to units or cartons.
 Bartender can count stock, receive deliveries, update restock lists, and view

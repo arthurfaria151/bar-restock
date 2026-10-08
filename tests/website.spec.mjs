@@ -524,7 +524,7 @@ test('Shelves direct link opens after sign-in and survives reload', async ({ pag
   await page.goto('/?release=direct-link#shelves');
   await page.locator('#btnLoginBartender').click();
   await expect(page.locator('#panel-shelves')).toBeVisible();
-  await expect(page.locator('#shelvesRoot .shelf-level')).toHaveCount(2);
+  await expect(page.locator('#shelvesRoot .shelf-level')).toHaveCount(3);
   await page.reload();
   await expect(page.locator('#panel-shelves')).toBeVisible();
   await page.goto('/#par');
@@ -703,4 +703,154 @@ test('checklists and all binder source photos are available offline', async ({ b
   await page.locator('.binder-originals > summary').click();
   await expect.poll(() => page.locator('.binder-originals img').evaluateAll(images => images.every(i => i.complete && i.naturalWidth > 0))).toBe(true);
   await context.close();
+});
+
+function emptyDisplay() {
+  return { levels: ['top', 'middle', 'bottom'].map(id => ({ id, name: `${id} shelf`, slots: [] })) };
+}
+async function pointerDrag(page, source, target) {
+  await source.scrollIntoViewIfNeeded();
+  const a = await source.boundingBox();
+  const b = await target.boundingBox();
+  if (!a || !b) throw new Error('Missing drag geometry');
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 });
+  await expect(page.locator('.shelf-drop-active')).toBeVisible();
+  await page.mouse.up();
+}
+
+test('original two-level layouts expand to three without losing saved products', async ({ page }) => {
+  const original = { levels: [{ id: 'top', name: 'Top', slots: [{ id: p.id, facings: 4 }] }, { id: 'bottom', name: 'Bottom', slots: [{ id: second.id, facings: 2 }] }] };
+  await setup(page, { [keys.shelves]: original });
+  await tab(page, 'shelves');
+  await expect(page.locator('.shelf-level')).toHaveCount(3);
+  await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
+  await expect(page.locator('[data-level=bottom] .shelf-slot')).toHaveCount(1);
+  expect(await stored(page, keys.shelves)).toEqual(original);
+  await page.locator('#btnShelvesEdit').click();
+  await page.locator('[data-level=top] [data-shelf-drag]').click();
+  await page.locator('[data-level=middle] .shelf-place').click();
+  await expect(page.locator('[data-level=middle] .shelf-slot')).toHaveCount(1);
+  const saved = await stored(page, keys.shelves);
+  expect(saved.levels[1].slots).toEqual([{ id: p.id, facings: 4 }]);
+  expect(saved.levels[2].slots).toEqual(original.levels[1].slots);
+});
+
+test('mouse drag adds a tray product, moves it between tiers and persists after reload', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1800 });
+  await setup(page, { [keys.shelves]: emptyDisplay() });
+  await tab(page, 'shelves');
+  await pointerDrag(page, page.locator(`[data-tray-product="${p.id}"]`), page.locator('[data-level=middle] .shelf-row'));
+  await expect(page.locator('[data-level=middle] .shelf-slot')).toHaveCount(1);
+  await pointerDrag(page, page.locator('[data-level=middle] [data-shelf-drag]'), page.locator('[data-level=top] .shelf-row'));
+  await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
+  await expect(page.locator('[data-level=middle] .shelf-slot')).toHaveCount(0);
+  await expect(page.locator('.shelf-drag-ghost')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
+  expect((await stored(page, keys.shelves)).levels[0].slots).toEqual([{ id: p.id, facings: 1 }]);
+});
+
+test('touch pointer drag places a product on the bottom tier', async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, viewport: { width: 1024, height: 1800 } });
+  const page = await context.newPage();
+  await setup(page, { [keys.shelves]: emptyDisplay() });
+  await tab(page, 'shelves');
+  const source = await page.locator(`[data-tray-product="${p.id}"]`).boundingBox();
+  const target = await page.locator('[data-level=bottom] .shelf-row').boundingBox();
+  const client = await context.newCDPSession(page);
+  const start = { x: source.x + source.width/2, y: source.y + source.height/2 };
+  const end = { x: target.x + target.width/2, y: target.y + target.height/2 };
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [start] });
+  for (let i = 1; i <= 10; i++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: start.x+(end.x-start.x)*i/10, y: start.y+(end.y-start.y)*i/10 }] });
+  await expect(page.locator('[data-level=bottom]')).toHaveClass(/shelf-drop-active/);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('[data-level=bottom] .shelf-slot')).toHaveCount(1);
+  await expect(page.locator('.shelf-drag-ghost')).toHaveCount(0);
+  await context.close();
+});
+
+test('failed drag save leaves the old shelf arrangement intact', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1800 });
+  const layout = emptyDisplay();
+  await setup(page, { [keys.shelves]: layout });
+  await tab(page, 'shelves');
+  await blockWrites(page, keys.shelves);
+  await pointerDrag(page, page.locator(`[data-tray-product="${p.id}"]`), page.locator('[data-level=middle] .shelf-row'));
+  await expect(page.locator('#toast')).toContainText('Couldn’t save');
+  await expect(page.locator('.shelf-slot')).toHaveCount(0);
+  expect(await stored(page, keys.shelves)).toEqual(layout);
+});
+
+test('tray search and keyboard placement work; duplicate placement preserves both levels', async ({ page }) => {
+  await setup(page, { [keys.shelves]: emptyDisplay() });
+  await tab(page, 'shelves');
+  await page.locator('#shelfTraySearch').fill(p.name);
+  await expect(page.locator('[data-tray-product]:visible')).toHaveCount(1);
+  await page.locator(`[data-tray-product="${p.id}"]`).focus();
+  await page.keyboard.press('Enter');
+  await page.locator('[data-level=top] .shelf-place').click();
+  await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
+  await page.locator(`[data-tray-product="${p.id}"]`).click();
+  await page.locator('[data-level=top] .shelf-place').click();
+  await expect(page.locator('#toast')).toContainText('already on this shelf');
+  expect((await stored(page, keys.shelves)).levels[0].slots).toHaveLength(1);
+});
+
+test('bartenders view the shelf display and tray without editing controls', async ({ page }) => {
+  await setup(page, { [keys.shelves]: emptyDisplay() }, 'bartender');
+  await tab(page, 'shelves');
+  await expect(page.locator('.shelf-level')).toHaveCount(3);
+  await expect(page.locator('[data-shelf-drag]')).toHaveCount(0);
+  await expect(page.locator('.shelf-place')).toHaveCount(0);
+  await page.locator(`[data-tray-product="${p.id}"]`).click();
+  await expect(page.locator('#sheet')).toBeVisible();
+  expect((await stored(page, keys.shelves)).levels.every(l => !l.slots.length)).toBe(true);
+});
+
+test('drag reordering retains facings and Escape cancels a drag without saving', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1800 });
+  const layout = emptyDisplay();
+  layout.levels[0].slots = [{ id: p.id, facings: 3 }, { id: second.id, facings: 2 }];
+  await setup(page, { [keys.shelves]: layout });
+  await tab(page, 'shelves');
+  const start = await page.locator(`[data-level=top] [data-shelf-drag="${p.id}"]`).boundingBox();
+  const end = await page.locator(`[data-level=top] [data-id="${second.id}"]`).boundingBox();
+  await page.mouse.move(start.x+start.width/2,start.y+start.height/2);
+  await page.mouse.down();
+  await page.mouse.move(end.x+end.width-4,end.y+end.height/2,{steps:10});
+  await expect(page.locator('[data-level=top]')).toHaveClass(/shelf-drop-active/);
+  await page.mouse.up();
+  await expect.poll(async () => (await stored(page, keys.shelves)).levels[0].slots[0].id).toBe(second.id);
+  expect((await stored(page, keys.shelves)).levels[0].slots).toEqual([{ id: second.id, facings: 2 }, { id: p.id, facings: 3 }]);
+  const saved = await stored(page, keys.shelves);
+  await page.waitForTimeout(260);
+  const tray = await page.locator(`[data-tray-product="${p.id}"]`).boundingBox();
+  await page.mouse.move(tray.x+20,tray.y+20);
+  await page.mouse.down();
+  await page.mouse.move(tray.x+50,tray.y-50,{steps:5});
+  await expect(page.locator('.shelf-drag-ghost')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  await expect(page.locator('.shelf-drag-ghost')).toHaveCount(0);
+  expect(await stored(page, keys.shelves)).toEqual(saved);
+});
+
+test('dragging near the top scrolls from the bottom tray to the upper tier', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 700 });
+  await setup(page, { [keys.shelves]: emptyDisplay() });
+  await tab(page, 'shelves');
+  const product = page.locator(`[data-tray-product="${p.id}"]`);
+  await product.scrollIntoViewIfNeeded();
+  const start = await product.boundingBox();
+  await page.mouse.move(start.x+start.width/2,start.y+start.height/2);
+  await page.mouse.down();
+  await page.mouse.move(500,70,{steps:10});
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  const target = await page.locator('[data-level=top] .shelf-row').boundingBox();
+  await page.mouse.move(target.x+target.width/2,target.y+target.height/2,{steps:8});
+  await expect(page.locator('[data-level=top]')).toHaveClass(/shelf-drop-active/);
+  await page.mouse.up();
+  await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
 });

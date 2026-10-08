@@ -20,6 +20,7 @@
       slots: ["jack-daniels-old-no7", "jagermeister", "fireball", "greenside-vodka", "yella-dry-gin",
         "el-jimador-blanco", "benchmark-bourbon", "bundaberg-up-rum", "johnnie-walker-red"],
     },
+    { id: "middle", name: "Middle shelf · Liqueurs", slots: [] },
     {
       id: "bottom",
       name: "Bottom shelf · Mixers",
@@ -823,6 +824,7 @@
       // Bartenders (and any future limited role) cannot open Products or Par.
       tab = allowed.includes("stock") ? "stock" : allowed[0];
     }
+    if (tab !== "shelves") cancelShelfDrag();
     state.tab = tab;
     if (!native) {
       const url = new URL(location.href);
@@ -1104,6 +1106,10 @@
       }
       levels.push({ id, name: cleanShelfName(l.name) || "Shelf", slots });
     }
+    // Expand the original two-level cabinet without losing its assignments.
+    if (levels.length === 2 && levels[0].id === "top" && levels[1].id === "bottom") {
+      levels.splice(1, 0, { id: "middle", name: "Middle shelf · Liqueurs", slots: [] });
+    }
     return { levels };
   }
 
@@ -1161,7 +1167,140 @@
     return null;
   }
 
+  let shelfSelected = null;
+  let shelfTrayQuery = "";
+  let shelfDrag = null;
+  let shelfSuppressClick = false;
+
+  function filterShelfTray() {
+    const query = shelfTrayQuery.trim().toLowerCase();
+    document.querySelectorAll('[data-tray-product]').forEach(button => {
+      const p = productById(button.dataset.trayProduct);
+      button.hidden = !!query && !`${p?.name || ""} ${p?.category || ""}`.toLowerCase().includes(query);
+    });
+  }
+
+  function selectShelfProduct(id, from) {
+    if (!canEditShelves()) return;
+    shelfSelected = { id, from };
+    state.shelfEdit = true;
+    renderShelves();
+    // Keyboard placement works without having to drag.
+    document.querySelector('.shelf-place:not(:disabled)')?.focus();
+  }
+
+  async function placeShelfProduct(id, from, target, anchor = null, after = false) {
+    if (!canEditShelves() || !productById(id)) return;
+    let duplicate = false;
+    const saved = await storage.withLock(() => {
+      if (!canEditShelves()) return false;
+      state.shelves = loadShelves();
+      return editShelves(layout => {
+        const destination = levelById(layout, target);
+        const origin = from ? levelById(layout, from) : null;
+        if (!destination || (from && !origin)) return false;
+        const existing = destination.slots.find(slot => slot.id === id);
+        if (existing && from !== target) { duplicate = true; return false; }
+        const moving = origin?.slots.find(slot => slot.id === id);
+        if (from && !moving) return false;
+        if (anchor === id && from === target) return false;
+        if (origin) origin.slots = origin.slots.filter(slot => slot.id !== id);
+        const index = anchor ? destination.slots.findIndex(slot => slot.id === anchor) : -1;
+        destination.slots.splice(index < 0 ? destination.slots.length : index + (after ? 1 : 0), 0, moving || { id, facings: 1 });
+      });
+    });
+    if (duplicate) showToast("That product is already on this shelf");
+    if (!saved) return;
+    shelfSelected = null;
+    renderShelves();
+    const placed = document.querySelector(`[data-level="${cssEscape(target)}"] [data-id="${cssEscape(id)}"]`);
+    placed?.classList.add('shelf-arrived');
+    placed?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    showToast(`${from ? "Moved" : "Placed"} ${productById(id)?.name || "product"}`);
+  }
+
+  function cancelShelfDrag() {
+    if (!shelfDrag) return;
+    cancelAnimationFrame(shelfDrag.frame);
+    shelfDrag.ghost?.remove();
+    shelfDrag.source.classList.remove('is-dragging');
+    document.querySelectorAll('.shelf-drop-active').forEach(el => el.classList.remove('shelf-drop-active'));
+    document.body.classList.remove('shelf-dragging');
+    shelfDrag = null;
+  }
+
+  function updateShelfDrag() {
+    const drag = shelfDrag;
+    if (!drag?.active) return;
+    drag.ghost.style.transform = `translate3d(${drag.x - 48}px, ${drag.y - 55}px, 0) rotate(-4deg) scale(1.06)`;
+    const hit = document.elementFromPoint(drag.x, drag.y);
+    const level = hit?.closest('#shelvesRoot [data-level]');
+    document.querySelectorAll('.shelf-drop-active').forEach(el => { if (el !== level) el.classList.remove('shelf-drop-active'); });
+    level?.classList.add('shelf-drop-active');
+    drag.target = level?.dataset.level || null;
+    const slot = hit?.closest('.shelf-slot');
+    drag.anchor = slot?.dataset.id || null;
+    drag.after = !!slot && drag.x > slot.getBoundingClientRect().left + slot.getBoundingClientRect().width / 2;
+    if (drag.y < 100) window.scrollBy(0, -12);
+    else if (drag.y > innerHeight - 85) window.scrollBy(0, 12);
+    const row = level?.querySelector('.shelf-row');
+    if (row) {
+      const rect = row.getBoundingClientRect();
+      if (drag.x < rect.left + 35) row.scrollLeft -= 10;
+      else if (drag.x > rect.right - 35) row.scrollLeft += 10;
+    }
+    drag.frame = requestAnimationFrame(updateShelfDrag);
+  }
+
+  function bindShelfDrag(root) {
+    root.addEventListener('pointerdown', e => {
+      const source = e.target.closest('[data-shelf-drag]');
+      if (!source || !canEditShelves() || state.loading || state.catalogError || e.button !== 0 || shelfDrag) return;
+      shelfDrag = { source, id: source.dataset.shelfDrag, from: source.closest('[data-level]')?.dataset.level || null,
+        pointer: e.pointerId, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, active: false };
+      source.setPointerCapture?.(e.pointerId);
+    });
+    document.addEventListener('pointermove', e => {
+      const drag = shelfDrag;
+      if (!drag || e.pointerId !== drag.pointer) return;
+      if (!canEditShelves() || state.tab !== 'shelves') { cancelShelfDrag(); return; }
+      drag.x = e.clientX; drag.y = e.clientY;
+      if (!drag.active && Math.hypot(drag.x-drag.startX, drag.y-drag.startY) > 7) {
+        drag.active = true;
+        drag.ghost = drag.source.cloneNode(true);
+        drag.ghost.classList.add('shelf-drag-ghost');
+        drag.ghost.setAttribute('aria-hidden', 'true');
+        drag.ghost.removeAttribute('id');
+        document.body.appendChild(drag.ghost);
+        drag.source.classList.add('is-dragging');
+        document.body.classList.add('shelf-dragging');
+        updateShelfDrag();
+      }
+      if (drag.active) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('pointerup', e => {
+      const drag = shelfDrag;
+      if (!drag || e.pointerId !== drag.pointer) return;
+      const active = drag.active;
+      const target = drag.target, anchor = drag.anchor, after = drag.after;
+      cancelShelfDrag();
+      if (!active) return;
+      shelfSuppressClick = true;
+      setTimeout(() => { shelfSuppressClick = false; }, 250);
+      if (target) placeShelfProduct(drag.id, drag.from, target, anchor, after);
+    });
+    document.addEventListener('pointercancel', cancelShelfDrag);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { cancelShelfDrag(); if (shelfSelected) { shelfSelected = null; renderShelves(); } }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.is-edit [data-shelf-drag]')) {
+        e.preventDefault(); selectShelfProduct(e.target.dataset.shelfDrag, e.target.closest('[data-level]').dataset.level);
+      }
+    });
+    window.addEventListener('blur', cancelShelfDrag);
+  }
+
   function renderShelves() {
+    cancelShelfDrag();
     const root = $("#shelvesRoot");
     if (!root) return;
     const editable = canEditShelves();
@@ -1174,8 +1313,8 @@
     editBtn.setAttribute("aria-pressed", editing ? "true" : "false");
     $("#btnShelvesReset").hidden = !editing;
     $("#shelvesSub").textContent = editing
-      ? "Add, rename and reorder shelves. Tap + to put a product on a shelf, use the arrows to move it, and − / + to set how many face the front."
-      : "Each shelf top to bottom, bottles left to right — just like the cabinet. Tap a bottle to see its stock and par.";
+      ? "Drag a product from the tray onto a shelf. Drag bottles between levels or left and right. You can also select a product and tap Place here."
+      : editable ? "Drag products from the tray onto the three shelf levels. Tap Edit layout for more controls." : "The bar’s shelf layout, top to bottom. Tap a bottle to see its stock and par.";
 
     if (state.loading) {
       root.innerHTML = SKELETON_ROWS;
@@ -1189,7 +1328,7 @@
     const map = productMap();
     const total = layout.levels.reduce((n, l) => n + visibleSlots(l, map).length, 0);
     const parts = [];
-    parts.push(`<div class="cabinet">
+    parts.push(`<div class="cabinet shelf-display">
       <div class="cabinet-label"><strong>Bar Shelves</strong><span>${layout.levels.length} shelf level${
         layout.levels.length === 1 ? "" : "s"} · ${total} product${total === 1 ? "" : "s"}</span></div>`);
     if (!layout.levels.length) {
@@ -1221,6 +1360,7 @@
         }
         parts.push(`</div>`);
       }
+      if (editable) parts.push(`<button type="button" class="shelf-place" data-act="tray-place" aria-label="Place selected product on ${escapeHtml(level.name)}"${shelfSelected ? "" : " disabled"}>Place here</button>`);
       parts.push(`<div class="shelf-bay"><div class="shelf-row">`);
       slots.forEach((sl, si) => {
         const p = map.get(sl.id);
@@ -1231,7 +1371,7 @@
           (low && !editing ? `<span class="slot-low">LOW</span>` : "");
         if (editing) {
           parts.push(`<div class="shelf-slot is-edit" data-slot="${si}" data-id="${escapeHtml(p.id)}">
-            <div class="slot-thumb">${thumbMarkup(p, 112)}</div>
+            <div class="slot-thumb" data-shelf-drag="${escapeHtml(p.id)}" role="button" tabindex="0" aria-label="Select ${nm} to move to another shelf">${thumbMarkup(p, 112)}</div>
             <div class="slot-name">${nm}</div>
             <div class="slot-controls">
               <button type="button" class="icon-btn" data-act="slot-left" aria-label="Move ${nm} left"${si === 0 ? " disabled" : ""}>${ICON("chevron-left")}</button>
@@ -1246,7 +1386,7 @@
           </div>`);
         } else {
           parts.push(`<button type="button" class="shelf-slot" data-slot="${si}" data-id="${escapeHtml(p.id)}" data-act="detail" aria-label="${nm}${sl.facings > 1 ? `, ${sl.facings} facings` : ""}${low ? ", low stock" : ""}">
-            <div class="slot-thumb">${thumbMarkup(p, 104)}${badges}</div>
+            <div class="slot-thumb"${editable ? ` data-shelf-drag="${escapeHtml(p.id)}"` : ""}>${thumbMarkup(p, 104)}${badges}</div>
             <div class="slot-name">${nm}</div>
           </button>`);
         }
@@ -1275,7 +1415,9 @@
     } else if (!state.shelves && editable) {
       parts.push(`<p class="shelves-note">This is the default layout from the shelf photos. Tap Edit layout to change it.</p>`);
     }
+    parts.push(`<section class="shelf-tray" aria-label="Product tray"><div class="shelf-tray-head"><div><h3>Product tray</h3><p id="shelfDragStatus" role="status" aria-live="polite">${shelfSelected ? `Selected ${escapeHtml(productById(shelfSelected.id)?.name || "product")} — choose Place here on a shelf.` : editable ? "Drag a bottle onto a level, or select it and choose Place here." : "Products available in the bar."}</p></div><label class="shelf-search"><span class="visually-hidden">Find a shelf product</span><input id="shelfTraySearch" class="input" type="search" placeholder="Find a product" value="${escapeHtml(shelfTrayQuery)}" /></label></div><div class="shelf-tray-products">${effectiveCatalog().map(p=>`<button type="button" class="shelf-tray-product" data-tray-product="${escapeHtml(p.id)}"${editable ? ` aria-pressed="${shelfSelected?.id === p.id}"` : ""} aria-label="${editable ? "Select" : "View"} ${escapeHtml(p.name)}"><span class="slot-thumb"${editable ? ` data-shelf-drag="${escapeHtml(p.id)}"` : ""}>${thumbMarkup(p, 80)}</span><span class="slot-name">${escapeHtml(p.name)}</span></button>`).join("")}</div></section>`);
     root.innerHTML = parts.join("");
+    filterShelfTray();
     const renameInput = root.querySelector("[data-rename-input]");
     if (renameInput) {
       renameInput.focus();
@@ -1284,6 +1426,20 @@
   }
 
   function onShelvesClick(e) {
+    if (shelfSuppressClick) { e.preventDefault(); e.stopPropagation(); return; }
+    const tray = e.target.closest('[data-tray-product]');
+    if (tray) {
+      if (canEditShelves()) selectShelfProduct(tray.dataset.trayProduct, null);
+      else showProductDetail(tray.dataset.trayProduct, null, -1);
+      return;
+    }
+    const placement = e.target.closest('[data-act="tray-place"]');
+    if (placement && shelfSelected) {
+      placeShelfProduct(shelfSelected.id, shelfSelected.from, placement.closest('[data-level]').dataset.level);
+      return;
+    }
+    const handle = e.target.closest('.is-edit [data-shelf-drag]');
+    if (handle && canEditShelves()) { selectShelfProduct(handle.dataset.shelfDrag, handle.closest('[data-level]').dataset.level); return; }
     const btn = e.target.closest("[data-act]");
     if (!btn || btn.disabled) return;
     const act = btn.dataset.act;
@@ -1604,6 +1760,7 @@
   function bindShelves() {
     const root = $("#shelvesRoot");
     root.addEventListener("click", onShelvesClick);
+    bindShelfDrag(root);
     root.addEventListener("submit", onAddLevel);
     root.addEventListener("keydown", (e) => {
       if (!e.target.matches("[data-rename-input]")) return;
@@ -1617,6 +1774,7 @@
       }
     });
     root.addEventListener("input", (e) => {
+      if (e.target.id === "shelfTraySearch") { shelfTrayQuery = e.target.value; filterShelfTray(); }
       if (e.target.id === "newShelfName") setFieldError(e.target, $("#newShelfError"), null);
       if (e.target.matches("[data-rename-input]")) {
         setFieldError(e.target, e.target.closest("[data-level]").querySelector(".field-error"), null);
@@ -1703,6 +1861,8 @@
     renderCategoryManager();
     state.shelfEdit = false;
     state.shelfRenaming = null;
+    shelfSelected = null;
+    cancelShelfDrag();
     closeSheet();
     if (state.tab === "shelves") renderShelves();
     if (receive) receive.onRoleChange();
