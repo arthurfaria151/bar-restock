@@ -577,6 +577,22 @@
     if (state.tab === "par") renderPar();
   }
 
+  // Delivery commit: add several products' quantities in one save. changes: { id: unitsToAdd }
+  function addStock(changes) {
+    const moved = [];
+    for (const [id, add] of Object.entries(changes)) {
+      const n = Math.floor(Number(add));
+      if (!productById(id) || !Number.isFinite(n) || n <= 0) continue;
+      const prev = stockQty(id);
+      state.stock[id] = prev + n;
+      moved.push([id, prev, prev + n]);
+    }
+    if (!moved.length) return;
+    saveStock();
+    for (const [id, prev, next] of moved) afterStockChange(id, prev, next);
+    if (state.tab === "stock") renderStock();
+  }
+
   function setStock(id, qty) {
     const prev = stockQty(id);
     const next = Math.max(0, Math.floor(qty));
@@ -761,6 +777,7 @@
       tab = allowed.includes("stock") ? "stock" : allowed[0];
     }
     state.tab = tab;
+    if (receive && tab !== "receive") receive.onTabChange(tab); // stop the camera before the panel hides
     document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach((b) => {
       const on = b.dataset.tab === tab;
@@ -772,6 +789,7 @@
     if (tab === "stock") renderStock();
     if (tab === "par") renderPar();
     if (tab === "shelves") renderShelves();
+    if (receive && tab === "receive") receive.onTabChange(tab);
   }
 
   function slugify(name) {
@@ -864,6 +882,7 @@
     const restoreBtn = $("#btnRestoreHidden");
     restoreBtn.hidden = !editable || !state.hidden.length;
     restoreBtn.textContent = `Restore removed (${state.hidden.length})`;
+    if (receive) receive.renderDatesCard();
 
     stockRoot.innerHTML = "";
     if (state.loading) {
@@ -1360,6 +1379,7 @@
     $("#sheetBody").innerHTML = "";
     sheetPickerLevel = null;
     document.documentElement.style.overflow = "";
+    if (receive) receive.onSheetClosed();
     if (sheetReturnFocus && document.contains(sheetReturnFocus)) sheetReturnFocus.focus({ preventScroll: true });
     sheetReturnFocus = null;
   }
@@ -1540,17 +1560,17 @@
     admin: {
       label: "Admin",
       pin: "1001",
-      tabs: ["products", "stock", "par", "restock", "shelves"],
+      tabs: ["products", "stock", "receive", "par", "restock", "shelves"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
       pin: null, // no PIN: one-tap sign-in
-      tabs: ["stock", "restock", "shelves"],
-      editCatalog: false, // count stock only; cannot add or remove products
+      tabs: ["stock", "receive", "restock", "shelves"],
+      editCatalog: false, // count stock and receive deliveries; cannot add or remove products or link barcodes
     },
   };
-  const ALL_TABS = ["products", "stock", "par", "restock", "shelves"];
+  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves"];
 
   function readSessionRole() {
     try {
@@ -1577,6 +1597,7 @@
     state.shelfRenaming = null;
     closeSheet();
     if (state.tab === "shelves") renderShelves();
+    if (receive) receive.onRoleChange();
     if (!state.role) {
       loginScreen.hidden = false;
       roleLabel.hidden = true;
@@ -1647,6 +1668,7 @@
     if (state.tab === "par") renderPar();
     if (state.tab === "restock") renderRestock();
     if (state.tab === "shelves") renderShelves();
+    if (receive) receive.onCatalogLoaded();
     updateLowBanner();
   }
 
@@ -1866,8 +1888,38 @@
     $("#btnRemovePhoto").addEventListener("click", clearPendingPhoto);
     $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
     bindShelves();
+    bindReceive();
     bindChrome();
 
+  }
+
+  /*
+   * Receive delivery (receive.js + gs1.js). Any signed-in role can receive; linking barcodes,
+   * editing links, import/export and clearing best-before lots are for Admin (canEditCatalog).
+   */
+  let receive = null;
+  function bindReceive() {
+    if (typeof window.BarRestockReceive !== "function" || !window.BarRestockGS1) return;
+    receive = window.BarRestockReceive({
+      ICON,
+      escapeHtml,
+      loadJson,
+      loadMap,
+      saveJson,
+      showToast,
+      setFieldError,
+      openSheet,
+      closeSheet,
+      thumbMarkup,
+      productById,
+      effectiveCatalog,
+      groupByCategory,
+      addStock,
+      isManager: canEditCatalog,
+      currentTab: () => state.tab,
+      roleId: () => state.role || "admin",
+      roleLabel: () => (state.role ? ROLES[state.role].label : "Admin"),
+    });
   }
 
   async function init() {

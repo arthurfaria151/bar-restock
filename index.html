@@ -42,6 +42,12 @@
     <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10M12 7v10M17 7v10"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-flash" viewBox="0 0 24 24"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><path d="M6 6h12M12 12v.01"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
   </svg>
 
   <a class="skip-link" href="#main">Skip to content</a>
@@ -57,7 +63,7 @@
           <span class="role-choice-icon"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg></span>
           <span class="role-choice-text">
             <strong>Bartender</strong>
-            <span>Count stock, update the restock list and check the shelf layout. No PIN needed.</span>
+            <span>Count stock, receive deliveries, update the restock list and check the shelf layout. No PIN needed.</span>
           </span>
           <svg class="icon role-choice-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
         </button>
@@ -104,6 +110,10 @@
           <button type="button" class="tab-btn" data-tab="stock" role="tab" aria-selected="false" aria-controls="panel-stock">
             <svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg>
             Stock
+          </button>
+          <button type="button" class="tab-btn" data-tab="receive" role="tab" aria-selected="false" aria-controls="panel-receive">
+            <svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg>
+            Receive
           </button>
           <button type="button" class="tab-btn" data-tab="par" role="tab" aria-selected="false" aria-controls="panel-par">
             <svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>
@@ -180,6 +190,7 @@
         </div>
       </header>
       <div class="section">
+        <div id="datesCard" class="card dates-card" role="region" aria-label="Best-before dates to watch" hidden></div>
         <form id="addProductForm" class="card add-product" novalidate>
           <h3 class="card-title">Add a product</h3>
           <div class="add-product-fields">
@@ -231,6 +242,99 @@
           <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreHidden" hidden>Restore removed</button>
         </div>
         <div id="stockRoot"></div>
+      </div>
+    </section>
+
+    <section id="panel-receive" class="panel" role="tabpanel" aria-labelledby="h-receive">
+      <header class="hero hero-compact reveal">
+        <h2 class="hero-title" id="h-receive">Receive a delivery.</h2>
+        <p class="hero-sub">Scan each bottle or carton, check the count and date, then finish to add it all to Stock.</p>
+        <div class="segmented rx-views" role="tablist" aria-label="Receive views">
+          <button type="button" class="seg active" role="tab" data-rx-view="scan" aria-selected="true">Scan</button>
+          <button type="button" class="seg" role="tab" data-rx-view="history" aria-selected="false">History</button>
+          <button type="button" class="seg" role="tab" data-rx-view="links" id="rxSegLinks" aria-selected="false" hidden>Barcodes</button>
+        </div>
+      </header>
+      <div class="section">
+        <div id="rxViewScan" class="rx-grid">
+          <div class="rx-col">
+            <div class="card rx-scanner">
+              <div id="rxViewport" class="rx-viewport">
+                <video id="rxVideo" playsinline muted autoplay disablepictureinpicture aria-label="Camera preview"></video>
+                <div class="rx-frame" aria-hidden="true"><span></span></div>
+                <div class="rx-placeholder">
+                  <svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg>
+                  <p>The camera only turns on when you tap Start, and switches off when you leave this screen.</p>
+                </div>
+              </div>
+              <div class="rx-cam-bar">
+                <button type="button" class="btn btn-primary" id="rxStart">
+                  <svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg>
+                  Start camera
+                </button>
+                <button type="button" class="btn btn-secondary" id="rxTorch" aria-pressed="false" hidden>
+                  <svg class="icon" aria-hidden="true"><use href="#i-flash"/></svg>
+                  <span>Light</span>
+                </button>
+                <button type="button" class="btn btn-ghost" id="rxStop" hidden>Stop camera</button>
+                <p id="rxHint" class="rx-hint" aria-live="polite"></p>
+              </div>
+              <p id="rxCamStatus" class="rx-cam-status" role="status" hidden></p>
+              <form id="rxManualForm" class="rx-manual" autocomplete="off" novalidate>
+                <label class="field-label" for="rxManual">Or type the barcode</label>
+                <div class="rx-manual-row">
+                  <input id="rxManual" class="input" type="text" inputmode="text" maxlength="400" placeholder="e.g. 9312345678907 or (01)…(17)…(10)…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-describedby="rxManualError" />
+                  <button type="submit" class="btn btn-secondary">Look up</button>
+                </div>
+                <p id="rxManualError" class="field-error" role="alert" hidden></p>
+              </form>
+            </div>
+          </div>
+          <div class="rx-col">
+            <div id="rxIdle" class="card rx-idle">
+              <svg class="icon" aria-hidden="true"><use href="#i-package"/></svg>
+              <div><strong>Ready to scan</strong>Scanned items appear here so you can check the quantity and date before adding them.</div>
+            </div>
+            <div id="rxConfirm" class="card rx-confirm" aria-live="polite" hidden></div>
+            <div class="card rx-draft-card">
+              <div class="rx-draft-head">
+                <div>
+                  <h3 class="card-title">This delivery</h3>
+                  <p id="rxDraftSummary" class="summary"></p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="rxDiscard" hidden>Discard</button>
+              </div>
+              <div id="rxDraft"></div>
+              <button type="button" class="btn btn-primary btn-block" id="rxFinish" disabled>
+                <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+                <span>Finish delivery</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="rxViewHistory" hidden>
+          <div class="list-toolbar"><p class="summary">Newest first. Tap a delivery to see what came in.</p></div>
+          <div id="rxHistory"></div>
+        </div>
+        <div id="rxViewLinks" hidden>
+          <div class="list-toolbar" id="rxLinksTools">
+            <p id="rxLinksSummary" class="summary"></p>
+            <div class="rx-links-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="rxExport">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>
+                Export JSON
+              </button>
+              <label class="btn btn-secondary btn-sm" for="rxImport">
+                <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+                Import JSON
+              </label>
+              <input id="rxImport" class="visually-hidden" type="file" accept="application/json,.json" />
+            </div>
+          </div>
+          <p id="rxImportResult" class="rx-import-result" role="status" hidden></p>
+          <div id="rxLinks"></div>
+          <p class="rx-links-note">Importing merges: links in the file are added, and where this device already has the same barcode the file’s version replaces it. Links for products that aren’t on this device are skipped.</p>
+        </div>
       </div>
     </section>
 
@@ -303,6 +407,8 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="gs1.js"></script>
+  <script src="receive.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
