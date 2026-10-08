@@ -842,6 +842,7 @@
     if (tab === "par") renderPar();
     if (tab === "shelves") renderShelves();
     if (receive && tab === "receive") receive.onTabChange(tab);
+    if (binder) binder.onTabChange(tab);
   }
 
   function slugify(name) {
@@ -1667,17 +1668,17 @@
     admin: {
       label: "Admin",
       pin: "1001",
-      tabs: ["products", "stock", "receive", "par", "restock", "shelves"],
+      tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
       pin: null, // no PIN: one-tap sign-in
-      tabs: ["stock", "receive", "restock", "shelves"],
+      tabs: ["stock", "receive", "restock", "shelves", "checklist", "procedures"],
       editCatalog: false, // count stock and receive deliveries; cannot add or remove products or link barcodes
     },
   };
-  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves"];
+  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures"];
 
   function readSessionRole() {
     try {
@@ -1705,6 +1706,7 @@
     closeSheet();
     if (state.tab === "shelves") renderShelves();
     if (receive) receive.onRoleChange();
+    if (binder) binder.onRoleChange();
     if (!state.role) {
       loginScreen.hidden = false;
       clearPendingPhoto();
@@ -2023,6 +2025,8 @@
     $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
     bindShelves();
     bindReceive();
+    binder = window.BarRestockBinder({ escapeHtml, asset, loadJson, saveJson,
+      withStorageLock: storage.withLock, showToast, roleId: () => state.role });
     bindChrome();
     window.addEventListener("hashchange", () => {
       const requested = location.hash.slice(1);
@@ -2036,6 +2040,7 @@
    * editing links, import/export and clearing best-before lots are for Admin (canEditCatalog).
    */
   let receive = null;
+  let binder = null;
   function bindReceive() {
     if (typeof window.BarRestockReceive !== "function" || !window.BarRestockGS1) return;
     receive = window.BarRestockReceive({

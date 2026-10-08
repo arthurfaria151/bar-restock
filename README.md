@@ -1,11 +1,18 @@
 # Bar Restock
 
 The website is hosted at [topd.guarasolutions.com](https://topd.guarasolutions.com).
-If an older browser session is missing Shelves or Receive, open
+If an older browser session is missing Shelves, Receive, Checklist or Procedures, open
 [the update page](https://topd.guarasolutions.com/update.html). It downloads and
 checks the current HTML, removes this app's old worker/cache, and opens Shelves.
 It preserves localStorage and sessionStorage, including stock, photos and history.
 Direct links such as `/#shelves` select that page after sign-in.
+
+Checklist includes the five supplied opening, closing and cleaning lists (139
+tasks), with progress and notes saved by date, week or month on this device.
+Procedures includes beer line cleaning, incident policy, induction, trivia and
+pre-batching training requirements, with 15 original procedure pages available
+offline. See [binder coverage and pending sources](docs/BINDER.md). Both roles
+can use these pages; `/#checklist` and `/#procedures` open them directly.
 
 Serve the repository root to run the website; it needs no server-side build.
 `npm run build` prepares the separate native iPad bundle in `www/`.

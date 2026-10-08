@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="app-version" content="46d0170c870d" />
+  <meta name="app-version" content="665a57be078a" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,11 +11,11 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
-  <link rel="manifest" href="manifest.webmanifest?v=46d0170c870d" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=46d0170c870d" />
-  <link rel="icon" type="image/png" href="icon-192.png?v=46d0170c870d" />
+  <link rel="manifest" href="manifest.webmanifest?v=665a57be078a" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=665a57be078a" />
+  <link rel="icon" type="image/png" href="icon-192.png?v=665a57be078a" />
   <title>Bar Restock</title>
-  <link rel="stylesheet" href="styles.css?v=46d0170c870d" />
+  <link rel="stylesheet" href="styles.css?v=665a57be078a" />
 </head>
 <body>
   <!-- Line icon set (Lucide-style, 24×24, 2px stroke). Use: <svg class="icon"><use href="#i-name"/></svg> -->
@@ -130,6 +130,8 @@
             <svg class="icon" aria-hidden="true"><use href="#i-shelves"/></svg>
             Shelves
           </button>
+          <button type="button" class="tab-btn" data-tab="checklist" role="tab" aria-selected="false" aria-controls="panel-checklist">Checklist</button>
+          <button type="button" class="tab-btn" data-tab="procedures" role="tab" aria-selected="false" aria-controls="panel-procedures">Procedures</button>
         </nav>
         <div class="header-right">
           <span id="roleLabel" class="role-label" hidden></span>
@@ -392,6 +394,43 @@
         <div id="shelvesRoot"></div>
       </div>
     </section>
+    <section id="panel-checklist" class="panel" role="tabpanel" aria-labelledby="h-checklist">
+      <header class="hero reveal hero-compact">
+        <h2 class="hero-title" id="h-checklist">The shift checklist.</h2>
+        <p class="hero-sub">Opening, closing and cleaning tasks from the Bot bar binder. Progress is saved on this device.</p>
+      </header>
+      <div class="section binder-content">
+        <div class="binder-toolbar">
+          <div class="field"><label class="field-label" for="checklistPicker">Checklist</label><select id="checklistPicker" class="input"></select></div>
+          <div class="field"><label class="field-label" for="checklistDate">Date in this period</label><input id="checklistDate" class="input" type="date" /></div>
+        </div>
+        <p id="checklistProgress" class="summary" role="status" aria-live="polite"></p>
+        <progress id="checklistMeter" aria-label="Checklist completion"></progress>
+        <div id="checklistInstructions"></div>
+        <div id="checklistTasks"></div>
+        <form id="checklistNotesForm" class="binder-section">
+          <label class="field-label" for="checklistNotes">Comments / low or out-of-stock items</label>
+          <textarea id="checklistNotes" class="input" rows="4" maxlength="2000"></textarea>
+          <div class="binder-actions"><button type="submit" class="btn btn-primary">Save notes</button><span id="checklistNotesStatus" role="status"></span></div>
+        </form>
+        <p id="checklistSource" class="binder-source"></p>
+        <button id="checklistReset" class="btn btn-ghost" type="button">Clear this period’s ticks</button>
+      </div>
+    </section>
+    <section id="panel-procedures" class="panel" role="tabpanel" aria-labelledby="h-procedures">
+      <header class="hero reveal hero-compact">
+        <h2 class="hero-title" id="h-procedures">The bar manual.</h2>
+        <p class="hero-sub">Venue procedures, induction and training requirements from the Bot bar binder.</p>
+      </header>
+      <div class="section binder-content">
+        <div class="binder-toolbar">
+          <div class="field"><label class="field-label" for="procedureSearch">Search procedures</label><input id="procedureSearch" class="input" type="search" placeholder="Search steps or topics" /></div>
+          <div class="field"><label class="field-label" for="procedureTopic">Topic</label><select id="procedureTopic" class="input"></select></div>
+        </div>
+        <p id="procedureCount" class="summary" role="status"></p>
+        <div id="proceduresRoot"></div>
+      </div>
+    </section>
   </main>
 
   <!-- Bottom sheet / dialog used by the Shelves tab (product details, product picker) -->
@@ -408,9 +447,11 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="storage.js?v=46d0170c870d"></script>
-  <script src="gs1.js?v=46d0170c870d"></script>
-  <script src="receive.js?v=46d0170c870d"></script>
-  <script src="app.js?v=46d0170c870d"></script>
+  <script src="storage.js?v=665a57be078a"></script>
+  <script src="gs1.js?v=665a57be078a"></script>
+  <script src="receive.js?v=665a57be078a"></script>
+  <script src="binder-data.js?v=665a57be078a"></script>
+  <script src="binder.js?v=665a57be078a"></script>
+  <script src="app.js?v=665a57be078a"></script>
 </body>
 </html>

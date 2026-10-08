@@ -314,7 +314,7 @@ img { display: block; max-width: 100%; }
 .role-label { color: var(--text-2); font-size: var(--fs-small); }
 #btnLogout { margin-right: calc(var(--s-4) * -1); }
 
-@media (min-width: 768px) {
+@media (min-width: 1200px) {
   .nav-inner { flex-wrap: nowrap; gap: var(--s-4); }
   .brand { margin-right: 0; }
   .menu-toggle { display: none; }
@@ -1578,3 +1578,29 @@ button.shelf-slot:active .slot-thumb { transform: scale(0.96); }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* Binder pages */
+.binder-content { max-width: 960px; }
+.binder-toolbar { display: flex; flex-wrap: wrap; gap: var(--s-4); }
+.binder-toolbar .field { flex: 1 1 220px; min-width: 0; }
+.binder-section { margin: var(--s-5) 0; }
+.binder-section h3 { margin-bottom: var(--s-3); }
+.binder-section ul, .binder-note ol { padding-left: 1.5em; }
+.binder-section li, .binder-note li { margin: var(--s-2) 0; line-height: 1.6; }
+.checklist-item { display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--separator); cursor: pointer; line-height: 1.5; }
+.checklist-item input { flex: 0 0 22px; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); }
+.checklist-item span { min-width: 0; overflow-wrap: anywhere; }
+.checklist-item.is-done span { color: var(--text-2); }
+#checklistMeter { width: 100%; height: 12px; accent-color: var(--accent); }
+.binder-note { padding: var(--s-4); background: var(--surface); border: 1px solid var(--separator); border-radius: var(--r-card); margin-top: var(--s-4); }
+.binder-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-3); }
+.binder-source { color: var(--text-2); font-size: var(--fs-small); overflow-wrap: anywhere; margin: var(--s-4) 0; }
+.binder-document { border: 1px solid var(--separator); border-radius: 16px; margin: var(--s-3) 0; overflow: hidden; }
+.binder-document > summary { padding: var(--s-4); cursor: pointer; line-height: 1.5; }
+.binder-document > summary span { display: inline-flex; flex-direction: column; vertical-align: middle; max-width: 90%; }
+.binder-document small { color: var(--text-2); font-weight: normal; }
+.binder-document-body { padding: 0 var(--s-4) var(--s-4); overflow-wrap: anywhere; }
+.binder-originals > summary { cursor: pointer; padding: var(--s-3) 0; }
+.binder-originals figure { margin: var(--s-4) 0; }
+.binder-originals figcaption { margin-bottom: var(--s-2); }
+.binder-originals img { display: block; width: 100%; height: auto; border-radius: 8px; }

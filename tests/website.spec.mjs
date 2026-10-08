@@ -333,14 +333,14 @@ test('dialogs contain keyboard focus and restore the shelf opener after renderin
   await expect(opener).toBeFocused();
 });
 
-test('all six panels fit seven widths in both color schemes', async ({ page }) => {
+test('all eight panels fit seven widths in both color schemes', async ({ page }) => {
   test.setTimeout(60000);
   await setup(page);
   for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
     for (const width of [320, 375, 768, 820, 1024, 1180, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves']) {
+      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves', 'checklist', 'procedures']) {
         await tab(page, panel);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${panel}, ${width}px, ${colorScheme}`).toBe(true);
       }
@@ -566,4 +566,141 @@ test('failed update leaves existing app caches and stock intact', async ({ page 
   await expect(page.locator('#update')).toBeEnabled();
   expect(await stored(page, keys.stock)).toEqual({ [p.id]: 12 });
   expect(await page.evaluate(() => caches.keys())).toContain('bar-restock-obsolete');
+});
+
+const checklistKey = 'bar-restock-checklists-v1';
+
+test('binder checklists retain daily, weekly and monthly progress and notes independently', async ({ page }) => {
+  await setup(page);
+  await tab(page, 'checklist');
+  await page.locator('#checklistDate').fill('2026-10-08');
+  const first = page.locator('#checklistTasks input').first();
+  await first.click();
+  await expect(page.locator('#checklistProgress')).toContainText('1 of 36');
+  await page.locator('#checklistNotes').fill('Order tonic water');
+  await page.locator('#checklistNotesForm button').click();
+  await expect(page.locator('#checklistNotesStatus')).toHaveText('Notes saved');
+  await page.locator('#checklistDate').fill('2026-10-09');
+  await expect(first).not.toBeChecked();
+  await page.locator('#checklistPicker').selectOption('weekly');
+  await first.click();
+  await page.locator('#checklistDate').fill('2026-10-11');
+  await expect(first).toBeChecked();
+  await page.locator('#checklistDate').fill('2026-10-12');
+  await expect(first).not.toBeChecked();
+  await page.locator('#checklistPicker').selectOption('monthly');
+  await first.click();
+  await page.locator('#checklistDate').fill('2026-10-31');
+  await expect(first).toBeChecked();
+  await page.locator('#checklistDate').fill('2026-11-01');
+  await expect(first).not.toBeChecked();
+  await page.reload();
+  await tab(page, 'checklist');
+  await page.locator('#checklistDate').fill('2026-10-08');
+  await expect(first).toBeChecked();
+  await expect(page.locator('#checklistNotes')).toHaveValue('Order tonic water');
+  page.once('dialog', d => d.accept());
+  await page.locator('#checklistReset').click();
+  await expect(first).not.toBeChecked();
+  await expect(page.locator('#checklistNotes')).toHaveValue('Order tonic water');
+  expect(Object.keys((await stored(page, checklistKey))['weekly:2026-10-05'].checked)).toHaveLength(1);
+  expect(Object.keys((await stored(page, checklistKey))['monthly:2026-10'].checked)).toHaveLength(1);
+});
+
+test('failed checklist writes show an error and leave ticks and notes unchanged', async ({ page }) => {
+  await setup(page);
+  await tab(page, 'checklist');
+  await blockWrites(page, checklistKey);
+  const first = page.locator('#checklistTasks input').first();
+  await first.click();
+  await expect(page.locator('#toast')).toContainText('Couldn’t save');
+  await expect(first).not.toBeChecked();
+  await page.locator('#checklistNotes').fill('Keep these unsaved notes');
+  await page.locator('#checklistNotesForm button').click();
+  await expect(page.locator('#checklistNotesStatus')).toBeEmpty();
+  await expect(page.locator('#checklistNotes')).toHaveValue('Keep these unsaved notes');
+  expect(await stored(page, checklistKey)).toBeNull();
+});
+
+test('two tabs merge checklist ticks and reject stale note overwrites', async ({ page, context }) => {
+  await setup(page);
+  await tab(page, 'checklist');
+  const other = await context.newPage();
+  await setup(other);
+  await tab(other, 'checklist');
+  await Promise.all([
+    page.locator('#checklistTasks input').nth(0).click(),
+    other.locator('#checklistTasks input').nth(1).click(),
+  ]);
+  await expect(page.locator('#checklistProgress')).toContainText('2 of 36');
+  await expect(other.locator('#checklistProgress')).toContainText('2 of 36');
+  await other.locator('#checklistNotes').fill('Draft in second tab');
+  await page.locator('#checklistNotes').fill('Saved in first tab');
+  await page.locator('#checklistNotesForm button').click();
+  await expect(page.locator('#checklistNotesStatus')).toHaveText('Notes saved');
+  await other.locator('#checklistNotesForm button').click();
+  await expect(other.locator('#toast')).toContainText('Notes changed in another tab');
+  await expect(other.locator('#checklistNotes')).toHaveValue('Draft in second tab');
+  const saved = Object.values(await stored(page, checklistKey))[0];
+  expect(saved.note).toBe('Saved in first tab');
+  expect(Object.keys(saved.checked)).toHaveLength(2);
+});
+
+test('bartenders can use binder pages, and sign-out prevents checklist writes', async ({ page }) => {
+  await setup(page, {}, 'bartender');
+  await tab(page, 'checklist');
+  await page.locator('#checklistTasks input').first().click();
+  await expect(page.locator('#checklistProgress')).toContainText('1 of 36');
+  const saved = await stored(page, checklistKey);
+  await tab(page, 'procedures');
+  await expect(page.locator('#proceduresRoot > details')).toHaveCount(5);
+  await page.locator('#btnLogout').click();
+  await page.evaluate(() => {
+    const input = document.querySelector('#checklistTasks input');
+    input.checked = false;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    document.querySelector('#checklistNotesForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  });
+  expect(await stored(page, checklistKey)).toEqual(saved);
+  await expect(page.locator('#checklistTasks input').first()).toBeDisabled();
+});
+
+test('procedure search and source photos expose the supplied binder content', async ({ page }) => {
+  await setup(page);
+  await tab(page, 'procedures');
+  await expect(page.locator('#procedureCount')).toHaveText('5 procedures');
+  await page.locator('#procedureSearch').fill('1.5 HOURS');
+  await expect(page.locator('#proceduresRoot > details')).toHaveCount(1);
+  await expect(page.locator('#proceduresRoot')).toContainText('Standard clean: 2L per 100L');
+  await page.locator('.binder-originals > summary').click();
+  await expect(page.locator('.binder-originals img')).toHaveCount(4);
+  await expect.poll(() => page.locator('.binder-originals img').evaluateAll(images => images.every(i => i.complete && i.naturalWidth > 0))).toBe(true);
+  await page.locator('#procedureSearch').fill('BOTM');
+  await expect(page.locator('#proceduresRoot')).toContainText('Happy Hours, BOTM');
+  await expect(page.locator('#proceduresRoot')).toContainText('Check understanding throughout');
+  await page.locator('#procedureSearch').fill('not-a-binder-word');
+  await expect(page.locator('#procedureCount')).toHaveText('0 procedures');
+  await expect(page.locator('#proceduresRoot')).toHaveText('No procedures match this search.');
+});
+
+test('checklists and all binder source photos are available offline', async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: 'allow' });
+  const page = await context.newPage();
+  await setup(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  expect(await page.evaluate(async () => {
+    const pages = window.BarRestockBinderData.procedures.flatMap(p => p.pages);
+    return (await Promise.all(pages.map(p => caches.match(p.image, { ignoreSearch: true })))).every(Boolean);
+  })).toBe(true);
+  await context.setOffline(true);
+  await page.reload();
+  await tab(page, 'checklist');
+  await page.locator('#checklistTasks input').first().click();
+  await expect(page.locator('#checklistProgress')).toContainText('1 of 36');
+  await tab(page, 'procedures');
+  await page.locator('#procedureSearch').fill('1.5 HOURS');
+  await page.locator('.binder-originals > summary').click();
+  await expect.poll(() => page.locator('.binder-originals img').evaluateAll(images => images.every(i => i.complete && i.naturalWidth > 0))).toBe(true);
+  await context.close();
 });
