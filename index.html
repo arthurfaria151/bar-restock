@@ -35,6 +35,13 @@
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
     <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-shelves" viewBox="0 0 24 24"><path d="M3 3v18M21 3v18M3 9h18M3 15h18M3 21h18"/><path d="M7 9V6M10 9V5M15 15v-3M18 15v-4"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   </svg>
 
   <a class="skip-link" href="#main">Skip to content</a>
@@ -50,7 +57,7 @@
           <span class="role-choice-icon"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg></span>
           <span class="role-choice-text">
             <strong>Bartender</strong>
-            <span>Count stock and update the restock list. No PIN needed.</span>
+            <span>Count stock, update the restock list and check the shelf layout. No PIN needed.</span>
           </span>
           <svg class="icon role-choice-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
         </button>
@@ -107,6 +114,10 @@
             <svg class="icon" aria-hidden="true"><use href="#i-cart"/></svg>
             Restock
             <span class="tab-badge" id="tabBadge" aria-label="products on list">0</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="shelves" role="tab" aria-selected="false" aria-controls="panel-shelves">
+            <svg class="icon" aria-hidden="true"><use href="#i-shelves"/></svg>
+            Shelves
           </button>
         </nav>
         <div class="header-right">
@@ -259,7 +270,37 @@
         <div id="restockRoot"></div>
       </div>
     </section>
+
+    <section id="panel-shelves" class="panel" role="tabpanel" aria-labelledby="h-shelves">
+      <header class="hero reveal">
+        <h2 class="hero-title" id="h-shelves">What goes where.</h2>
+        <p class="hero-sub" id="shelvesSub">Each shelf top to bottom, bottles left to right — just like the cabinet. Tap a bottle to see its stock and par.</p>
+        <div class="hero-actions" id="shelvesActions" hidden>
+          <button type="button" class="btn btn-primary" id="btnShelvesEdit">
+            <svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>
+            <span>Edit layout</span>
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnShelvesReset" hidden>Reset to default</button>
+        </div>
+      </header>
+      <div class="section">
+        <div id="shelvesRoot"></div>
+      </div>
+    </section>
   </main>
+
+  <!-- Bottom sheet / dialog used by the Shelves tab (product details, product picker) -->
+  <div id="sheetBackdrop" class="sheet-backdrop" hidden>
+    <div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head">
+        <h2 class="sheet-title" id="sheetTitle"></h2>
+        <button type="button" class="icon-btn" id="btnSheetClose" aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+      <div id="sheetBody" class="sheet-body"></div>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>

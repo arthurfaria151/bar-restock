@@ -9,6 +9,25 @@
   const CATEGORIES = ["Fridge", "Bar Shelves", "Other"]; // built-ins, never renamed or deleted
   const CATEGORIES_KEY = "bar-restock-categories-v1"; // admin-created categories, in creation order
   const CATEGORY_MAX = 40;
+  const SHELVES_KEY = "bar-restock-shelves-v1"; // shelf layout: levels top→bottom, slots left→right
+  const SHELF_NAME_MAX = 40;
+  const FACINGS_MAX = 24;
+  // Default layout from the 2026-10-08 bar-shelf photos. Ids that aren't in the catalog are skipped.
+  const SHELF_SEED = [
+    {
+      id: "top",
+      name: "Top shelf · Spirits",
+      slots: ["jack-daniels-old-no7", "jagermeister", "fireball", "greenside-vodka", "yella-dry-gin",
+        "el-jimador-blanco", "benchmark-bourbon", "bundaberg-up-rum", "johnnie-walker-red"],
+    },
+    {
+      id: "bottom",
+      name: "Bottom shelf · Mixers",
+      slots: ["glades-orange", "jameson", "kraken-black-spiced", "bartenders-best-lime", "bartenders-best-lemon",
+        "angostura-bitters", "barmans-choice-sugar-syrup", "little-drippa", "cascade-raspberry-cordial",
+        "cascade-lime-cordial"],
+    },
+  ];
   const state = {
     catalog: [],
     catalogError: null, // message when catalog.json failed to load
@@ -17,6 +36,9 @@
     custom: [], // user-added products
     categories: [], // user-created category names (after the built-ins)
     renamingCategory: null, // custom category being renamed inline on the Products tab
+    shelves: null, // saved shelf layout { levels: [...] }, or null to show the default
+    shelfEdit: false, // admin is editing the shelf layout
+    shelfRenaming: null, // level id being renamed inline
     hidden: [], // static catalog ids removed locally
     selection: {}, // id -> restock qty
     stock: {}, // id -> on-hand qty
@@ -82,6 +104,7 @@
     state.par = loadMap(PAR_KEY);
     state.reminded = loadMap(REMINDED_KEY);
     state.categories = loadCategories();
+    state.shelves = loadShelves();
   }
 
   // Older saved state has no categories key: that simply means "no custom categories".
@@ -748,6 +771,7 @@
     if (tab === "restock") renderRestock();
     if (tab === "stock") renderStock();
     if (tab === "par") renderPar();
+    if (tab === "shelves") renderShelves();
   }
 
   function slugify(name) {
@@ -962,6 +986,532 @@
     }
   }
 
+  /*
+   * Shelves tab: a picture of the bar cabinet. Levels run top → bottom, slots left → right.
+   * Layout is stored in localStorage (SHELVES_KEY) as { levels: [{ id, name, slots: [{ id, facings }] }] }.
+   * Slots key on product id, so renaming a category never matters; a slot whose product no
+   * longer exists is simply not shown (and is dropped the next time an admin edits).
+   * Everyone signed in can view; only roles that edit the catalog (admin) can change it.
+   */
+  function seedShelves() {
+    return {
+      levels: SHELF_SEED.map((l) => ({ id: l.id, name: l.name, slots: l.slots.map((id) => ({ id, facings: 1 })) })),
+    };
+  }
+
+  function cleanShelfName(name) {
+    return typeof name === "string" ? name.trim().replace(/\s+/g, " ").slice(0, SHELF_NAME_MAX) : "";
+  }
+
+  function cleanFacings(n) {
+    const v = Math.floor(Number(n));
+    return Number.isFinite(v) ? Math.min(FACINGS_MAX, Math.max(1, v)) : 1;
+  }
+
+  // Anything unreadable falls back to the default layout; nothing else is touched.
+  function sanitizeShelves(raw) {
+    if (!raw || typeof raw !== "object" || !Array.isArray(raw.levels)) return null;
+    const ids = new Set();
+    const levels = [];
+    for (const l of raw.levels) {
+      if (!l || typeof l !== "object") continue;
+      let id = typeof l.id === "string" && l.id ? l.id : "";
+      if (!id || ids.has(id)) id = newLevelId(ids);
+      ids.add(id);
+      const seen = new Set();
+      const slots = [];
+      for (const sl of Array.isArray(l.slots) ? l.slots : []) {
+        const pid = sl && typeof sl.id === "string" ? sl.id : typeof sl === "string" ? sl : "";
+        if (!pid || seen.has(pid)) continue;
+        seen.add(pid);
+        slots.push({ id: pid, facings: cleanFacings(sl && sl.facings) });
+      }
+      levels.push({ id, name: cleanShelfName(l.name) || "Shelf", slots });
+    }
+    return { levels };
+  }
+
+  function loadShelves() {
+    return sanitizeShelves(loadJson(SHELVES_KEY, null));
+  }
+
+  function newLevelId(taken) {
+    let id;
+    do id = "lvl-" + Math.random().toString(36).slice(2, 8);
+    while (taken.has(id));
+    return id;
+  }
+
+  function currentShelves() {
+    return state.shelves || seedShelves();
+  }
+
+  function canEditShelves() {
+    return canEditCatalog();
+  }
+
+  function productMap() {
+    return new Map(effectiveCatalog().map((p) => [p.id, p]));
+  }
+
+  // Slots that point at a product that exists right now, in order.
+  function visibleSlots(level, map) {
+    return level.slots.filter((sl) => map.has(sl.id));
+  }
+
+  // Apply an admin edit: copy the layout, drop slots for products that are gone, change, save.
+  function editShelves(change) {
+    if (!canEditShelves() || state.loading || state.catalogError) return false;
+    const layout = JSON.parse(JSON.stringify(currentShelves()));
+    const map = productMap();
+    layout.levels.forEach((l) => (l.slots = visibleSlots(l, map)));
+    if (change(layout) === false) return false;
+    if (!saveJson(SHELVES_KEY, layout)) return false;
+    state.shelves = layout;
+    renderShelves();
+    return true;
+  }
+
+  function levelById(layout, id) {
+    return layout.levels.find((l) => l.id === id);
+  }
+
+  function shelfNameError(name, layout, ignoreId) {
+    if (!name) return "Enter a shelf name.";
+    const lower = name.toLowerCase();
+    if (layout.levels.some((l) => l.id !== ignoreId && l.name.toLowerCase() === lower)) {
+      return "There’s already a shelf with that name.";
+    }
+    return null;
+  }
+
+  function renderShelves() {
+    const root = $("#shelvesRoot");
+    if (!root) return;
+    const editable = canEditShelves();
+    if (!editable) state.shelfEdit = false;
+    const editing = state.shelfEdit;
+    $("#shelvesActions").hidden = !editable;
+    const editBtn = $("#btnShelvesEdit");
+    editBtn.querySelector("span").textContent = editing ? "Done" : "Edit layout";
+    editBtn.querySelector("svg").style.display = editing ? "none" : "";
+    editBtn.setAttribute("aria-pressed", editing ? "true" : "false");
+    $("#btnShelvesReset").hidden = !editing;
+    $("#shelvesSub").textContent = editing
+      ? "Add, rename and reorder shelves. Tap + to put a product on a shelf, use the arrows to move it, and − / + to set how many face the front."
+      : "Each shelf top to bottom, bottles left to right — just like the cabinet. Tap a bottle to see its stock and par.";
+
+    if (state.loading) {
+      root.innerHTML = SKELETON_ROWS;
+      return;
+    }
+    if (state.catalogError) {
+      root.innerHTML = catalogErrorMarkup();
+      return;
+    }
+    const layout = currentShelves();
+    const map = productMap();
+    const total = layout.levels.reduce((n, l) => n + visibleSlots(l, map).length, 0);
+    const parts = [];
+    parts.push(`<div class="cabinet">
+      <div class="cabinet-label"><strong>Bar Shelves</strong><span>${layout.levels.length} shelf level${
+        layout.levels.length === 1 ? "" : "s"} · ${total} product${total === 1 ? "" : "s"}</span></div>`);
+    if (!layout.levels.length) {
+      parts.push(`<div class="shelf-bay"><div class="shelf-row"><p class="shelf-empty">${
+        editable ? "No shelves yet. Add one below." : "No shelves set up yet. Ask an admin to lay them out."
+      }</p></div></div><div class="shelf-lip"></div>`);
+    }
+    layout.levels.forEach((level, li) => {
+      const slots = visibleSlots(level, map);
+      parts.push(`<section class="shelf-level" data-level="${escapeHtml(level.id)}" aria-label="${escapeHtml(level.name)}">`);
+      if (editing && state.shelfRenaming === level.id) {
+        parts.push(`<div class="shelf-head"><div class="shelf-rename">
+            <input class="input" type="text" maxlength="${SHELF_NAME_MAX}" value="${escapeHtml(level.name)}" aria-label="Shelf name" enterkeyhint="done" autocomplete="off" data-rename-input />
+            <button type="button" class="btn btn-primary btn-sm" data-act="rename-save">Save</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="rename-cancel">Cancel</button>
+            <p class="field-error" role="alert" hidden></p>
+          </div></div>`);
+      } else {
+        parts.push(`<div class="shelf-head">
+          <h3 class="shelf-name">${escapeHtml(level.name)}<span class="shelf-count">${slots.length}</span></h3>`);
+        if (editing) {
+          const nm = escapeHtml(level.name);
+          parts.push(`<div class="shelf-tools">
+            <button type="button" class="icon-btn" data-act="level-up" aria-label="Move ${nm} up"${li === 0 ? " disabled" : ""}>${ICON("chevron-up")}</button>
+            <button type="button" class="icon-btn" data-act="level-down" aria-label="Move ${nm} down"${li === layout.levels.length - 1 ? " disabled" : ""}>${ICON("chevron-down")}</button>
+            <button type="button" class="icon-btn" data-act="rename" aria-label="Rename ${nm}">${ICON("pencil")}</button>
+            <button type="button" class="icon-btn is-danger" data-act="level-delete" aria-label="Delete ${nm}">${ICON("trash")}</button>
+          </div>`);
+        }
+        parts.push(`</div>`);
+      }
+      parts.push(`<div class="shelf-bay"><div class="shelf-row">`);
+      slots.forEach((sl, si) => {
+        const p = map.get(sl.id);
+        const nm = escapeHtml(p.name);
+        const low = isLow(p.id);
+        const badges =
+          (sl.facings > 1 ? `<span class="slot-facings" aria-label="${sl.facings} facings">×${sl.facings}</span>` : "") +
+          (low && !editing ? `<span class="slot-low">LOW</span>` : "");
+        if (editing) {
+          parts.push(`<div class="shelf-slot is-edit" data-slot="${si}" data-id="${escapeHtml(p.id)}">
+            <div class="slot-thumb">${thumbMarkup(p, 112)}</div>
+            <div class="slot-name">${nm}</div>
+            <div class="slot-controls">
+              <button type="button" class="icon-btn" data-act="slot-left" aria-label="Move ${nm} left"${si === 0 ? " disabled" : ""}>${ICON("chevron-left")}</button>
+              <button type="button" class="icon-btn is-danger" data-act="slot-remove" aria-label="Remove ${nm} from this shelf">${ICON("close")}</button>
+              <button type="button" class="icon-btn" data-act="slot-right" aria-label="Move ${nm} right"${si === slots.length - 1 ? " disabled" : ""}>${ICON("chevron-right")}</button>
+            </div>
+            <div class="qty-row slot-facings-row" aria-label="Facings">
+              <button type="button" class="qty-btn" data-act="facings-dec" aria-label="Fewer facings of ${nm}"${sl.facings <= 1 ? " disabled" : ""}>${ICON("minus")}</button>
+              <span class="qty-val">×${sl.facings}</span>
+              <button type="button" class="qty-btn" data-act="facings-inc" aria-label="More facings of ${nm}"${sl.facings >= FACINGS_MAX ? " disabled" : ""}>${ICON("plus")}</button>
+            </div>
+          </div>`);
+        } else {
+          parts.push(`<button type="button" class="shelf-slot" data-slot="${si}" data-id="${escapeHtml(p.id)}" data-act="detail" aria-label="${nm}${sl.facings > 1 ? `, ${sl.facings} facings` : ""}${low ? ", low stock" : ""}">
+            <div class="slot-thumb">${thumbMarkup(p, 104)}${badges}</div>
+            <div class="slot-name">${nm}</div>
+          </button>`);
+        }
+      });
+      if (editing) {
+        parts.push(`<button type="button" class="shelf-add" data-act="slot-add">${ICON("plus")}Add product</button>`);
+      } else if (!slots.length) {
+        parts.push(`<p class="shelf-empty">Nothing on this shelf yet.</p>`);
+      }
+      parts.push(`</div></div><div class="shelf-lip"></div></section>`);
+    });
+    parts.push(`</div>`);
+    if (editing) {
+      parts.push(`<form class="card add-level" data-add-level novalidate>
+        <h3 class="card-title">Add a shelf level</h3>
+        <div class="add-level-fields">
+          <div class="field">
+            <label class="field-label" for="newShelfName">Shelf name</label>
+            <input id="newShelfName" class="input" type="text" maxlength="${SHELF_NAME_MAX}" placeholder="e.g. Middle shelf · Liqueurs" autocomplete="off" enterkeyhint="done" aria-describedby="newShelfError" />
+          </div>
+          <button type="submit" class="btn btn-primary">${ICON("plus")}Add shelf</button>
+        </div>
+        <p id="newShelfError" class="field-error" role="alert" hidden></p>
+        <p class="summary">New shelves go at the bottom. Use the arrows to move them up.</p>
+      </form>`);
+    } else if (!state.shelves && editable) {
+      parts.push(`<p class="shelves-note">This is the default layout from the shelf photos. Tap Edit layout to change it.</p>`);
+    }
+    root.innerHTML = parts.join("");
+    const renameInput = root.querySelector("[data-rename-input]");
+    if (renameInput) {
+      renameInput.focus();
+      renameInput.select();
+    }
+  }
+
+  function onShelvesClick(e) {
+    const btn = e.target.closest("[data-act]");
+    if (!btn || btn.disabled) return;
+    const act = btn.dataset.act;
+    const levelEl = btn.closest("[data-level]");
+    const levelId = levelEl ? levelEl.dataset.level : null;
+    const slotEl = btn.closest("[data-slot]");
+    const si = slotEl ? Number(slotEl.dataset.slot) : -1;
+
+    if (act === "detail") {
+      showProductDetail(slotEl.dataset.id, levelId, si);
+      return;
+    }
+    if (!state.shelfEdit || !canEditShelves()) return;
+    switch (act) {
+      case "slot-left":
+      case "slot-right": {
+        const d = act === "slot-left" ? -1 : 1;
+        editShelves((layout) => {
+          const s = levelById(layout, levelId).slots;
+          const j = si + d;
+          if (j < 0 || j >= s.length) return false;
+          [s[si], s[j]] = [s[j], s[si]];
+        });
+        focusAfterRender(`[data-level="${cssEscape(levelId)}"] [data-slot="${si + d}"] [data-act="${act}"]`);
+        break;
+      }
+      case "slot-remove": {
+        let name = "";
+        editShelves((layout) => {
+          const s = levelById(layout, levelId).slots;
+          const p = productById(s[si] && s[si].id);
+          name = p ? p.name : "";
+          s.splice(si, 1);
+        });
+        showToast(name ? `Removed ${name}` : "Removed");
+        break;
+      }
+      case "facings-inc":
+      case "facings-dec":
+        editShelves((layout) => {
+          const sl = levelById(layout, levelId).slots[si];
+          sl.facings = cleanFacings(sl.facings + (act === "facings-inc" ? 1 : -1));
+        });
+        focusAfterRender(`[data-level="${cssEscape(levelId)}"] [data-slot="${si}"] [data-act="${act}"]`);
+        break;
+      case "slot-add":
+        openPicker(levelId);
+        break;
+      case "level-up":
+      case "level-down": {
+        const d = act === "level-up" ? -1 : 1;
+        editShelves((layout) => {
+          const i = layout.levels.findIndex((l) => l.id === levelId);
+          const j = i + d;
+          if (i < 0 || j < 0 || j >= layout.levels.length) return false;
+          [layout.levels[i], layout.levels[j]] = [layout.levels[j], layout.levels[i]];
+        });
+        focusAfterRender(`[data-level="${cssEscape(levelId)}"] [data-act="${act}"]`);
+        break;
+      }
+      case "rename":
+        state.shelfRenaming = levelId;
+        renderShelves();
+        break;
+      case "rename-cancel":
+        state.shelfRenaming = null;
+        renderShelves();
+        break;
+      case "rename-save":
+        saveShelfRename(levelEl);
+        break;
+      case "level-delete": {
+        const level = levelById(currentShelves(), levelId);
+        if (!level) return;
+        const n = visibleSlots(level, productMap()).length;
+        const msg = n
+          ? `Delete the shelf “${level.name}” and its ${n} product slot${n === 1 ? "" : "s"}? The products stay in the catalog.`
+          : `Delete the shelf “${level.name}”?`;
+        if (!confirm(msg)) return;
+        if (editShelves((layout) => {
+          layout.levels = layout.levels.filter((l) => l.id !== levelId);
+        })) showToast("Shelf deleted");
+        break;
+      }
+    }
+  }
+
+  function saveShelfRename(levelEl) {
+    const input = levelEl.querySelector("[data-rename-input]");
+    const err = levelEl.querySelector(".field-error");
+    const name = cleanShelfName(input.value);
+    const error = shelfNameError(name, currentShelves(), levelEl.dataset.level);
+    if (error) {
+      setFieldError(input, err, error);
+      input.focus();
+      return;
+    }
+    const id = levelEl.dataset.level;
+    state.shelfRenaming = null;
+    editShelves((layout) => {
+      levelById(layout, id).name = name;
+    });
+  }
+
+  function onAddLevel(e) {
+    const form = e.target.closest("[data-add-level]");
+    if (!form) return;
+    e.preventDefault();
+    const input = $("#newShelfName");
+    const name = cleanShelfName(input.value);
+    const error = shelfNameError(name, currentShelves());
+    setFieldError(input, $("#newShelfError"), error);
+    if (error) {
+      input.focus();
+      return;
+    }
+    editShelves((layout) => {
+      layout.levels.push({ id: newLevelId(new Set(layout.levels.map((l) => l.id))), name, slots: [] });
+    });
+    showToast(`Added “${name}”`);
+  }
+
+  function cssEscape(v) {
+    return window.CSS && CSS.escape ? CSS.escape(v) : String(v).replace(/["\\]/g, "\\$&");
+  }
+
+  // Keep keyboard / VoiceOver focus on the control that was pressed after a re-render.
+  function focusAfterRender(selector) {
+    const el = $("#shelvesRoot").querySelector(selector);
+    if (el && !el.disabled) el.focus({ preventScroll: true });
+  }
+
+  /* Sheet: one dialog reused for product details and the product picker. */
+  let sheetReturnFocus = null;
+  let sheetPickerLevel = null;
+
+  function openSheet(title, html) {
+    const backdrop = $("#sheetBackdrop");
+    $("#sheetTitle").textContent = title;
+    $("#sheetBody").innerHTML = html;
+    if (backdrop.hidden) sheetReturnFocus = document.activeElement;
+    backdrop.hidden = false;
+    document.documentElement.style.overflow = "hidden";
+  }
+
+  function closeSheet() {
+    const backdrop = $("#sheetBackdrop");
+    if (!backdrop || backdrop.hidden) return;
+    backdrop.hidden = true;
+    $("#sheetBody").innerHTML = "";
+    sheetPickerLevel = null;
+    document.documentElement.style.overflow = "";
+    if (sheetReturnFocus && document.contains(sheetReturnFocus)) sheetReturnFocus.focus({ preventScroll: true });
+    sheetReturnFocus = null;
+  }
+
+  function showProductDetail(id, levelId, si) {
+    const p = productById(id);
+    if (!p) return;
+    const layout = currentShelves();
+    const level = levelById(layout, levelId);
+    const slot = level ? visibleSlots(level, productMap())[si] : null;
+    const onHand = stockQty(id);
+    const par = parQty(id);
+    const low = isLow(id);
+    const where = level
+      ? `<strong>${escapeHtml(level.name)}</strong>Position ${si + 1} from the left${
+          slot && slot.facings > 1 ? ` · ×${slot.facings} facings` : ""}<br />`
+      : "";
+    openSheet(p.name, `
+      <div class="detail-top">
+        <div class="slot-thumb">${thumbMarkup(p, 120)}</div>
+        <div class="detail-meta">
+          ${where}Category: ${escapeHtml(p.category || "Other")}
+        </div>
+      </div>
+      <div class="detail-stats">
+        <div class="stat"><div class="stat-label">On hand</div><div class="stat-value">${onHand}</div></div>
+        <div class="stat"><div class="stat-label">Par (min)</div>${
+          par > 0 ? `<div class="stat-value">${par}</div>` : `<div class="stat-value is-muted">No par set</div>`
+        }</div>
+      </div>
+      ${low ? `<div class="detail-low">${ICON("alert")}Low stock — at or below par.</div>` : ""}
+    `);
+    $("#btnSheetClose").focus();
+  }
+
+  function openPicker(levelId) {
+    const level = levelById(currentShelves(), levelId);
+    if (!level || !canEditShelves()) return;
+    sheetPickerLevel = levelId;
+    openSheet(`Add to ${level.name}`, `
+      <div class="picker-search">
+        ${ICON("search")}
+        <input id="pickerSearch" class="input" type="search" placeholder="Search products" autocomplete="off" enterkeyhint="search" aria-label="Search products" />
+      </div>
+      <div id="pickerResults"></div>
+    `);
+    renderPickerResults();
+    // On iPad the keyboard would cover half the list, so only focus search on wide screens with a pointer.
+    if (matchMedia("(hover: hover)").matches) $("#pickerSearch").focus();
+    else $("#btnSheetClose").focus();
+  }
+
+  function renderPickerResults() {
+    const box = $("#pickerResults");
+    if (!box || !sheetPickerLevel) return;
+    const level = levelById(currentShelves(), sheetPickerLevel);
+    if (!level) return closeSheet();
+    const map = productMap();
+    const onShelf = new Set(visibleSlots(level, map).map((sl) => sl.id));
+    const q = ($("#pickerSearch").value || "").trim().toLowerCase();
+    const items = effectiveCatalog().filter((p) => !q || p.name.toLowerCase().includes(q) || String(p.category || "").toLowerCase().includes(q));
+    if (!items.length) {
+      box.innerHTML = `<p class="picker-empty">No products match “${escapeHtml(q)}”.</p>`;
+      return;
+    }
+    box.innerHTML = groupByCategory(items).map((g) => `
+      <h3 class="picker-group">${escapeHtml(g.title)}</h3>
+      <ul class="picker-list">${g.items.map((p) => {
+        const on = onShelf.has(p.id);
+        return `<li><button type="button" class="picker-item" data-pick="${escapeHtml(p.id)}"${on ? " disabled" : ""}>
+          ${thumbMarkup(p, 44)}
+          <span class="picker-name">${escapeHtml(p.name)}</span>
+          <span class="picker-state">${on ? "On this shelf" : "Add"}</span>
+        </button></li>`;
+      }).join("")}</ul>`).join("");
+  }
+
+  function onPick(e) {
+    const btn = e.target.closest("[data-pick]");
+    if (!btn || btn.disabled || !sheetPickerLevel) return;
+    const id = btn.dataset.pick;
+    const levelId = sheetPickerLevel;
+    const p = productById(id);
+    const ok = editShelves((layout) => {
+      const level = levelById(layout, levelId);
+      if (!level || level.slots.some((sl) => sl.id === id)) return false;
+      level.slots.push({ id, facings: 1 });
+    });
+    if (ok) {
+      showToast(`Added ${p ? p.name : "product"}`);
+      renderPickerResults();
+    }
+  }
+
+  function toggleShelfEdit() {
+    if (!canEditShelves()) return;
+    state.shelfEdit = !state.shelfEdit;
+    state.shelfRenaming = null;
+    renderShelves();
+  }
+
+  function resetShelves() {
+    if (!canEditShelves()) return;
+    if (!confirm("Reset the shelves to the default layout from the shelf photos? Your changes to the layout will be lost.")) return;
+    try {
+      localStorage.removeItem(SHELVES_KEY);
+    } catch (_) {}
+    state.shelves = null;
+    state.shelfRenaming = null;
+    renderShelves();
+    showToast("Shelves reset");
+  }
+
+  function bindShelves() {
+    const root = $("#shelvesRoot");
+    root.addEventListener("click", onShelvesClick);
+    root.addEventListener("submit", onAddLevel);
+    root.addEventListener("keydown", (e) => {
+      if (!e.target.matches("[data-rename-input]")) return;
+      const levelEl = e.target.closest("[data-level]");
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveShelfRename(levelEl);
+      } else if (e.key === "Escape") {
+        state.shelfRenaming = null;
+        renderShelves();
+      }
+    });
+    root.addEventListener("input", (e) => {
+      if (e.target.id === "newShelfName") setFieldError(e.target, $("#newShelfError"), null);
+      if (e.target.matches("[data-rename-input]")) {
+        setFieldError(e.target, e.target.closest("[data-level]").querySelector(".field-error"), null);
+      }
+    });
+    $("#btnShelvesEdit").addEventListener("click", toggleShelfEdit);
+    $("#btnShelvesReset").addEventListener("click", resetShelves);
+    $("#btnSheetClose").addEventListener("click", closeSheet);
+    $("#sheetBackdrop").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeSheet();
+    });
+    $("#sheetBody").addEventListener("click", onPick);
+    $("#sheetBody").addEventListener("input", (e) => {
+      if (e.target.id === "pickerSearch") renderPickerResults();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !$("#sheetBackdrop").hidden) {
+        e.stopPropagation();
+        closeSheet();
+      }
+    });
+  }
+
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -990,17 +1540,17 @@
     admin: {
       label: "Admin",
       pin: "1001",
-      tabs: ["products", "stock", "par", "restock"],
+      tabs: ["products", "stock", "par", "restock", "shelves"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
       pin: null, // no PIN: one-tap sign-in
-      tabs: ["stock", "restock"],
+      tabs: ["stock", "restock", "shelves"],
       editCatalog: false, // count stock only; cannot add or remove products
     },
   };
-  const ALL_TABS = ["products", "stock", "par", "restock"];
+  const ALL_TABS = ["products", "stock", "par", "restock", "shelves"];
 
   function readSessionRole() {
     try {
@@ -1023,6 +1573,10 @@
     const roleLabel = $("#roleLabel");
     const btnLogout = $("#btnLogout");
     renderCategoryManager();
+    state.shelfEdit = false;
+    state.shelfRenaming = null;
+    closeSheet();
+    if (state.tab === "shelves") renderShelves();
     if (!state.role) {
       loginScreen.hidden = false;
       roleLabel.hidden = true;
@@ -1092,6 +1646,7 @@
     if (state.tab === "stock") renderStock();
     if (state.tab === "par") renderPar();
     if (state.tab === "restock") renderRestock();
+    if (state.tab === "shelves") renderShelves();
     updateLowBanner();
   }
 
@@ -1310,6 +1865,7 @@
     $("#newProductPhoto").addEventListener("change", onPhotoChosen);
     $("#btnRemovePhoto").addEventListener("click", clearPendingPhoto);
     $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
+    bindShelves();
     bindChrome();
 
   }
