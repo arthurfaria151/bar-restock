@@ -72,10 +72,11 @@ export function createHandoutServer(options = {}) {
         if(attempts.size>10000) for(const [key,value] of attempts) if(now()-value.at>15*60000) attempts.delete(key);
         const result = await login(env,body,now());
         if (result) attempts.delete(ip);
-        json(result?200:401,result || {error:'Incorrect username or password'});return;
+        json(result?200:401,result || {error:'Incorrect sign-in details'});return;
       }
       const user = await authenticate(env,req.headers.authorization,now());
-      if (!user) {json(401,{error:'Please sign in to Handout'});return;}
+      if (!user) {json(401,{error:'Please sign in with your PIN'});return;}
+      if (url.pathname==='/api/session' && req.method==='GET') {json(200,{user});return;}
       const current = snapshot(user);
       if (url.pathname==='/api/handout' && req.method==='GET') {json(200,current);return;}
       if (url.pathname==='/api/events' && req.method==='GET') {

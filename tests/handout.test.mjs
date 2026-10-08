@@ -73,9 +73,21 @@ test('real HTTP API streams live edits to both users and provides archived files
    const reader=res.body.getReader();await reader.read();streams.push(reader);
   }
   const response=await fetch(base+'/api/entries',{method:'POST',headers:header(a.token),body:JSON.stringify({date:day.date,text:'Shared update',mutationId:id})});assert.equal(response.status,200);
-  for(const reader of streams)assert.match(new TextDecoder().decode((await reader.read()).value),/Shared update/);
+  for(const reader of streams) { let data=''; while(!data.includes('Shared update')) data+=new TextDecoder().decode((await reader.read()).value); assert.match(data,/Shared update/); }
   assert.equal((await fetch(base+'/api/entries',{method:'POST',headers:header(viewer.token),body:JSON.stringify({date:day.date,text:'Blocked',mutationId:crypto.randomUUID()})})).status,403);
   clock=at+1;publish();
   const file=await fetch(base+'/api/archives/2026-10-08.md',{headers:header(b.token)});assert.equal(file.status,200);assert.match(file.headers.get('content-disposition'),/handout-2026-10-08.md/);assert.match(await file.text(),/Shared update/);
  } finally {for(const abort of aborts)abort.abort();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.close();rmSync(directory,{recursive:true,force:true});}
+});
+
+test('personal PINs identify users, return server roles, and changing a PIN revokes old sessions',async()=> {
+ const pinAccounts=[{id:'arthur',name:'Arthur',role:'admin',pinSalt:salt,pinHash:await passwordHash('314159',salt)},{id:'sam',name:'Sam',role:'bartender',pinSalt:salt,pinHash:await passwordHash('271828',salt)}];
+ const pinEnv={...env,HANDOUT_USERS_JSON:JSON.stringify(pinAccounts)};
+ assert.equal(await login(pinEnv,{pin:'1001'},at),null);
+ assert.equal(await login(pinEnv,{pin:'999999'},at),null);
+ const arthur=await login(pinEnv,{pin:'314159'},at);assert.equal(arthur.user.role,'admin');assert.equal(arthur.user.name,'Arthur');
+ const sam=await login(pinEnv,{pin:'271828'},at);assert.equal(sam.user.role,'bartender');assert.equal(sam.user.name,'Sam');
+ assert.equal((await authenticate(pinEnv,'Bearer '+arthur.token,at)).role,'admin');
+ pinAccounts[0].pinHash=await passwordHash('161803',salt);
+ assert.equal(await authenticate({...pinEnv,HANDOUT_USERS_JSON:JSON.stringify(pinAccounts)},'Bearer '+arthur.token,at),null);
 });

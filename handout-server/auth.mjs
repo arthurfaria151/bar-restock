@@ -6,24 +6,37 @@ export async function passwordHash(password, salt) {
 }
 export function users(env) {
   const values = JSON.parse(env.HANDOUT_USERS_JSON || '[]');
-  return Array.isArray(values) ? values.filter(u => typeof u.id==='string' && typeof u.name==='string' && typeof u.salt==='string' && typeof u.passwordHash==='string') : [];
+  return Array.isArray(values) ? values.filter(u => typeof u.id==='string' && typeof u.name==='string' && ((typeof u.salt==='string' && typeof u.passwordHash==='string') || (typeof u.pinSalt==='string' && typeof u.pinHash==='string'))) : [];
 }
 async function signingKey(secret) {
   if (typeof secret !== 'string' || secret.length < 32) throw new Error('Handout session secret is missing');
   return crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
 }
 export async function login(env, body, now = Date.now()) {
-  if (typeof body.username !== 'string' || typeof body.password !== 'string' || body.password.length > 256) return null;
-  const account = users(env).find(u => u.id === body.username.trim().toLowerCase());
-  // Always derive a password hash, including unknown usernames.
-  const hash = await passwordHash(body.password, account?.salt || 'AAAAAAAAAAAAAAAAAAAAAA');
-  const expected = account?.passwordHash || '0'.repeat(hash.length);
-  let difference = hash.length ^ expected.length;
-  for (let i=0;i<hash.length;i++) difference |= hash.charCodeAt(i) ^ (expected.charCodeAt(i) || 0);
-  if (!account || difference) return null;
-  const payload = encode(new TextEncoder().encode(JSON.stringify({ sub:account.id, exp:now+12*3600000 })));
+  let account;
+  if (typeof body.pin === 'string' && /^[0-9]{6,12}$/.test(body.pin)) {
+    // Check every salted credential: no username, PIN, or searchable PIN hash is stored.
+    for (const candidate of users(env)) {
+      if (!candidate.pinHash || !candidate.pinSalt) continue;
+      const hash = await passwordHash(body.pin, candidate.pinSalt);
+      let difference = hash.length ^ candidate.pinHash.length;
+      for (let i=0;i<hash.length;i++) difference |= hash.charCodeAt(i) ^ (candidate.pinHash.charCodeAt(i) || 0);
+      if (!difference) account = candidate;
+    }
+    if (!account) return null;
+  } else {
+    // Compatibility while an existing venue upgrades its users and website.
+    if (typeof body.username !== 'string' || typeof body.password !== 'string' || body.password.length > 256) return null;
+    account = users(env).find(u => u.id === body.username.trim().toLowerCase());
+    const hash = await passwordHash(body.password, account?.salt || 'AAAAAAAAAAAAAAAAAAAAAA');
+    const expected = account?.passwordHash || '0'.repeat(hash.length);
+    let difference = hash.length ^ expected.length;
+    for (let i=0;i<hash.length;i++) difference |= hash.charCodeAt(i) ^ (expected.charCodeAt(i) || 0);
+    if (!account || difference) return null;
+  }
+  const payload = encode(new TextEncoder().encode(JSON.stringify({ sub:account.id, credential:account.pinHash || account.passwordHash, exp:now+12*3600000 })));
   const signature = encode(await crypto.subtle.sign('HMAC',await signingKey(env.HANDOUT_SESSION_SECRET),new TextEncoder().encode(payload)));
-  return { token:`${payload}.${signature}`, user:{id:account.id,name:account.name,canEdit:account.canEdit !== false} };
+  return { token:`${payload}.${signature}`, user:{id:account.id,name:account.name,canEdit:account.canEdit !== false,role:account.role==='admin'?'admin':'bartender',expiresAt:now+12*3600000} };
 }
 export async function authenticate(env, header, now = Date.now()) {
   try {
@@ -34,6 +47,6 @@ export async function authenticate(env, header, now = Date.now()) {
     const session = JSON.parse(new TextDecoder().decode(decode(payload)));
     if (!Number.isFinite(session.exp) || session.exp <= now) return null;
     const user = users(env).find(u => u.id===session.sub);
-    return user ? {id:user.id,name:user.name,canEdit:user.canEdit !== false,expiresAt:session.exp} : null;
+    return user && session.credential === (user.pinHash || user.passwordHash) ? {id:user.id,name:user.name,canEdit:user.canEdit !== false,role:user.role==='admin'?'admin':'bartender',expiresAt:session.exp} : null;
   } catch { return null; }
 }

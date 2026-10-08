@@ -33,14 +33,14 @@ else
 fi
 install -m 0644 "$source_root"/handout-server/*.mjs /opt/bar-handout/backend/
 if [ ! -s /var/lib/bar-handout/users.json ]; then
-  read -rp "First Handout username [$pi_account]: " handout_user </dev/tty
-  handout_user="${handout_user:-$pi_account}"
-  handout_user="${handout_user,,}"
-  read -rp 'Display name for this account: ' handout_name </dev/tty
-  read -rsp 'Handout password (at least 12 characters): ' handout_password </dev/tty
+  read -rp 'Your display name: ' handout_name </dev/tty
+  read -rsp 'Personal PIN (6–12 digits): ' handout_pin </dev/tty
   echo
-  printf '%s' "$handout_password" | /opt/bar-handout-node/bin/node /opt/bar-handout/backend/add-user.mjs /var/lib/bar-handout/users.json "$handout_user" "$handout_name"
-  unset handout_password
+  read -rsp 'Confirm PIN: ' handout_confirmation </dev/tty
+  echo
+  if [ "$handout_pin" != "$handout_confirmation" ]; then echo 'PINs do not match.' >&2; exit 1; fi
+  printf '%s' "$handout_pin" | /opt/bar-handout-node/bin/node /opt/bar-handout/backend/set-pin.mjs /var/lib/bar-handout/users.json owner admin "$handout_name"
+  unset handout_pin handout_confirmation
   chown barhandout:barhandout /var/lib/bar-handout/users.json
 fi
 if [ ! -f /etc/bar-handout.env ]; then
