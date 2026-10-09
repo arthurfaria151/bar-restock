@@ -38,7 +38,7 @@ for (const directory of publicDirs) {
     'apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
     'vendor/zxing-wasm/zxing-reader.iife.js', 'vendor/zxing-wasm/zxing_reader.wasm',
     'vendor/zxing-wasm/LICENSE-zxing-cpp-Apache-2.0.txt', 'vendor/zxing-wasm/LICENSE-zxing-wasm-MIT.txt',
-    ...catalog.map(p => `thumbs/${p.id}.jpg`),
+    ...catalog.filter(p => p.imagePath !== null).map(p => p.imagePath || `thumbs/${p.id}.jpg`),
     ...(await readdir(join(root, 'binder-pages'))).sort().map(name => `binder-pages/${name}`)];
   for (const asset of assets) {
     const content = await readFile(join(path, asset));

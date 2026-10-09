@@ -27,7 +27,7 @@ Serve the repository root to run the website; it needs no server-side build.
 
 A native iPad application project for counting stock, receiving deliveries,
 setting minimum stock levels, building restock lists, and checking the shelf
-layout. It includes the latest catalog of 87 products and their images.
+layout. It includes a catalog of 138 products; items awaiting photos use text placeholders.
 The Capacitor iOS project bundles the interface and catalog inside the app.
 Clipboard, sharing, email handoff, and barcode-link file exports use native
 iPad APIs.

@@ -355,7 +355,8 @@ test('dialogs contain keyboard focus and restore the shelf opener after renderin
 });
 
 test('all nine panels fit seven widths in both color schemes', async ({ page }) => {
-  test.setTimeout(60000);
+  // 126 panel/viewport combinations with the expanded catalog.
+  test.setTimeout(120000);
   await setup(page);
   for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
@@ -808,7 +809,8 @@ test('tray search and keyboard placement work; duplicate placement preserves bot
   await setup(page, { [keys.shelves]: emptyDisplay() });
   await tab(page, 'shelves');
   await page.locator('#shelfTraySearch').fill(p.name);
-  await expect(page.locator('[data-tray-product]:visible')).toHaveCount(1);
+  await expect(page.locator('[data-tray-product]:visible')).toHaveCount(2);
+  await expect(page.locator('[data-tray-product=de-bortoli-prosecco-piccolo]')).toBeVisible();
   await page.locator(`[data-tray-product="${p.id}"]`).focus();
   await page.keyboard.press('Enter');
   await page.locator('[data-level=top] .shelf-place').click();
@@ -908,4 +910,16 @@ test('status changes merge across tabs and failed saves restore the previous sta
   await blockWrites(page,checklistKey);await page.locator('[data-task-status]').nth(0).selectOption('done');
   await expect(page.locator('#toast')).toContainText('Couldn’t save');await expect(page.locator('[data-task-status]').nth(0)).toHaveValue('progress');
   await expect(page.locator('#checklistTasks input').first()).not.toBeChecked();
+});
+
+test('new catalog products without photos use placeholders and remain selectable after reload',async({page})=> {
+  const requests=[];page.on('request',request=>requests.push(request.url()));
+  await setup(page);
+  const product=page.locator('.product-card').filter({hasText:'Brouhaha Strawberry Rhubarb Sour'});
+  await product.scrollIntoViewIfNeeded();await expect(product.locator('.thumb-fallback')).toHaveText('B');await expect(product.locator('img')).toHaveCount(0);
+  await product.locator('.product-toggle').click();
+  await expect.poll(async()=> (await stored(page,keys.selection))['brouhaha-strawberry-rhubarb-sour']).toBe(1);
+  await page.reload();await expect(product.locator('.product-toggle')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.product-card').filter({hasText:'Divas Strawberry Liqueur'})).toHaveCount(1);
+  expect(requests.some(url=>url.includes('/thumbs/brouhaha-strawberry-rhubarb-sour.'))).toBe(false);
 });

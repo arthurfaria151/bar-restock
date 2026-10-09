@@ -1,5 +1,5 @@
 const BINDER_PAGES = ["./binder-pages/beer-line-clean-1.jpg", "./binder-pages/beer-line-clean-2.jpg", "./binder-pages/beer-line-clean-3.jpg", "./binder-pages/beer-line-clean-4.jpg", "./binder-pages/incident-policy-1.jpg", "./binder-pages/incident-policy-2.jpg", "./binder-pages/incident-policy-3.jpg", "./binder-pages/induction-1.jpg", "./binder-pages/induction-2.jpg", "./binder-pages/induction-3.jpg", "./binder-pages/induction-4.jpg", "./binder-pages/induction-5.jpg", "./binder-pages/trivia-1.jpg", "./binder-pages/trivia-2.jpg", "./binder-pages/trivia-3.jpg"];
-const VERSION = "e5f957f8b47a";
+const VERSION = "77357100d4e6";
 const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",
@@ -34,7 +34,7 @@ self.addEventListener("install", (event) => {
       try {
         const res = await fetch(`./catalog.json?v=${VERSION}`);
         const catalog = await res.json();
-        await Promise.allSettled(catalog.map((p) => cache.add(`./thumbs/${p.id}.jpg?v=${VERSION}`)));
+        await Promise.allSettled(catalog.filter(p => p.imagePath !== null).map((p) => cache.add(`./${p.imagePath || `thumbs/${p.id}.jpg`}?v=${VERSION}`)));
       } catch (e) {
         // thumbs can load on demand
       }

@@ -485,12 +485,12 @@
       const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
       return `<img src="${escapeHtml(p.image)}" alt=""${wh} />`;
     }
-    if (p.custom) {
+    if (p.custom || p.imagePath === null) {
       const letter = escapeHtml((p.name || "?").trim().charAt(0).toUpperCase() || "?");
       return `<div class="thumb-fallback" aria-hidden="true">${letter}</div>`;
     }
     const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
-    return `<img src="${asset(`thumbs/${p.id}.jpg`)}" alt="" loading="lazy"${wh} />`;
+    return `<img src="${asset(p.imagePath || `thumbs/${p.id}.jpg`)}" alt="" loading="lazy"${wh} />`;
   }
 
   function buildLowEmail(products) {
@@ -1951,6 +1951,7 @@
       for (const p of data) {
         if (!p || typeof p.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,119}$/.test(p.id) ||
             typeof p.name !== "string" || !p.name.trim() || ids.has(p.id)) throw new Error("catalog contains invalid or duplicate products");
+        if (p.imagePath && !new RegExp(`^thumbs/${p.id}\\.(?:png|webp|jpg)$`).test(p.imagePath)) throw new Error("catalog contains an invalid product image path");
         ids.add(p.id);
       }
       state.catalog = data;
