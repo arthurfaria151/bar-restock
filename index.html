@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="app-version" content="e35c5f1590a1" />
+  <meta name="app-version" content="e5f957f8b47a" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,11 +11,11 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
-  <link rel="manifest" href="manifest.webmanifest?v=e35c5f1590a1" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=e35c5f1590a1" />
-  <link rel="icon" type="image/png" href="icon-192.png?v=e35c5f1590a1" />
+  <link rel="manifest" href="manifest.webmanifest?v=e5f957f8b47a" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=e5f957f8b47a" />
+  <link rel="icon" type="image/png" href="icon-192.png?v=e5f957f8b47a" />
   <title>Bar Restock</title>
-  <link rel="stylesheet" href="styles.css?v=e35c5f1590a1" />
+  <link rel="stylesheet" href="styles.css?v=e5f957f8b47a" />
 </head>
 <body>
   <!-- Line icon set (Lucide-style, 24×24, 2px stroke). Use: <svg class="icon"><use href="#i-name"/></svg> -->
@@ -375,24 +375,24 @@
     <section id="panel-checklist" class="panel" role="tabpanel" aria-labelledby="h-checklist">
       <header class="hero reveal hero-compact">
         <h2 class="hero-title" id="h-checklist">The shift checklist.</h2>
-        <p class="hero-sub">Opening, closing and cleaning tasks from the Bot bar binder. Progress is saved on this device.</p>
+        <p class="hero-sub">A clear plan for the shift. Track each task from not started to completed. Progress is saved on this device.</p>
       </header>
       <div class="section binder-content">
         <div class="binder-toolbar">
           <div class="field"><label class="field-label" for="checklistPicker">Checklist</label><select id="checklistPicker" class="input"></select></div>
           <div class="field"><label class="field-label" for="checklistDate">Date in this period</label><input id="checklistDate" class="input" type="date" /></div>
         </div>
-        <p id="checklistProgress" class="summary" role="status" aria-live="polite"></p>
-        <progress id="checklistMeter" aria-label="Checklist completion"></progress>
+        <div class="checklist-overview"><div class="checklist-overview-head"><p id="checklistProgress" role="status" aria-live="polite"></p><strong id="checklistPercent"></strong></div><progress id="checklistMeter" aria-label="Checklist completion"></progress></div>
+        <div class="checklist-view-tools"><div id="checklistFilters" class="checklist-filters" role="group" aria-label="Filter tasks by status"><button type="button" data-status-filter="all" aria-pressed="true">All tasks <span>0</span></button><button type="button" data-status-filter="todo" aria-pressed="false">Not started <span>0</span></button><button type="button" data-status-filter="progress" aria-pressed="false">In progress <span>0</span></button><button type="button" data-status-filter="blocked" aria-pressed="false">Blocked <span>0</span></button><button type="button" data-status-filter="done" aria-pressed="false">Completed <span>0</span></button></div><label class="checklist-search"><span class="sr-only">Search tasks</span><input id="checklistSearch" class="input" type="search" placeholder="Search tasks…" /></label></div>
         <div id="checklistInstructions"></div>
-        <div id="checklistTasks"></div>
+        <div id="checklistTasks"></div><p id="checklistEmpty" class="empty-state" hidden>No tasks match this view. Try another status or search.</p>
         <form id="checklistNotesForm" class="binder-section">
           <label class="field-label" for="checklistNotes">Comments / low or out-of-stock items</label>
           <textarea id="checklistNotes" class="input" rows="4" maxlength="2000"></textarea>
           <div class="binder-actions"><button type="submit" class="btn btn-primary">Save notes</button><span id="checklistNotesStatus" role="status"></span></div>
         </form>
         <p id="checklistSource" class="binder-source"></p>
-        <button id="checklistReset" class="btn btn-ghost" type="button">Clear this period’s ticks</button>
+        <button id="checklistReset" class="btn btn-ghost" type="button">Reset this period’s statuses</button>
       </div>
     </section>
     <section id="panel-procedures" class="panel" role="tabpanel" aria-labelledby="h-procedures">
@@ -440,13 +440,13 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="storage.js?v=e35c5f1590a1"></script>
-  <script src="gs1.js?v=e35c5f1590a1"></script>
-  <script src="receive.js?v=e35c5f1590a1"></script>
-  <script src="binder-data.js?v=e35c5f1590a1"></script>
-  <script src="binder.js?v=e35c5f1590a1"></script>
-  <script src="handout-config.js?v=e35c5f1590a1"></script>
-  <script src="handout.js?v=e35c5f1590a1"></script>
-  <script src="app.js?v=e35c5f1590a1"></script>
+  <script src="storage.js?v=e5f957f8b47a"></script>
+  <script src="gs1.js?v=e5f957f8b47a"></script>
+  <script src="receive.js?v=e5f957f8b47a"></script>
+  <script src="binder-data.js?v=e5f957f8b47a"></script>
+  <script src="binder.js?v=e5f957f8b47a"></script>
+  <script src="handout-config.js?v=e5f957f8b47a"></script>
+  <script src="handout.js?v=e5f957f8b47a"></script>
+  <script src="app.js?v=e5f957f8b47a"></script>
 </body>
 </html>

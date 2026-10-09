@@ -1,5 +1,5 @@
 const BINDER_PAGES = ["./binder-pages/beer-line-clean-1.jpg", "./binder-pages/beer-line-clean-2.jpg", "./binder-pages/beer-line-clean-3.jpg", "./binder-pages/beer-line-clean-4.jpg", "./binder-pages/incident-policy-1.jpg", "./binder-pages/incident-policy-2.jpg", "./binder-pages/incident-policy-3.jpg", "./binder-pages/induction-1.jpg", "./binder-pages/induction-2.jpg", "./binder-pages/induction-3.jpg", "./binder-pages/induction-4.jpg", "./binder-pages/induction-5.jpg", "./binder-pages/trivia-1.jpg", "./binder-pages/trivia-2.jpg", "./binder-pages/trivia-3.jpg"];
-const VERSION = "e35c5f1590a1";
+const VERSION = "e5f957f8b47a";
 const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",

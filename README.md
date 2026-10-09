@@ -8,7 +8,9 @@ It preserves localStorage and sessionStorage, including stock, photos and histor
 Direct links such as `/#shelves` select that page after sign-in.
 
 Checklist includes the five supplied opening, closing and cleaning lists (139
-tasks), with progress and notes saved by date, week or month on this device.
+tasks), with Not started, In progress, Blocked and Completed statuses, searchable
+status views, section counts and a completion meter. Existing ticks remain
+completed. Progress and notes save by date, week or month on this device.
 Procedures includes beer line cleaning, incident policy, induction, trivia and
 pre-batching training requirements, with 15 original procedure pages available
 offline. See [binder coverage and pending sources](docs/BINDER.md). Both roles

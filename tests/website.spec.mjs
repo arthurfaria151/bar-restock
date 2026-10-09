@@ -875,3 +875,37 @@ test('dragging near the top scrolls from the bottom tray to the upper tier', asy
   await page.mouse.up();
   await expect(page.locator('[data-level=top] .shelf-slot')).toHaveCount(1);
 });
+
+test('task statuses persist, filter with search, and preserve legacy completed ticks', async ({page}) => {
+  await setup(page);
+  await tab(page,'checklist');
+  await page.locator('#checklistDate').fill('2026-10-08');
+  const controls=page.locator('[data-task-status]');
+  const id=await controls.first().getAttribute('data-task-status');
+  await page.evaluate(({key,id})=>localStorage.setItem(key,JSON.stringify({'opening:2026-10-08':{checked:{[id]:{at:'2026-10-08',role:'admin'}},note:'Keep the shift notes'}})),{key:checklistKey,id});
+  await page.reload();await tab(page,'checklist');await page.locator('#checklistDate').fill('2026-10-08');
+  await expect(controls.first()).toHaveValue('done');
+  await controls.nth(1).selectOption('progress');await controls.nth(2).selectOption('blocked');
+  await expect(page.locator('[data-status-filter=progress] span')).toHaveText('1');
+  await expect(page.locator('[data-status-filter=blocked] span')).toHaveText('1');
+  await page.locator('[data-status-filter=progress]').click();
+  await expect(page.locator('.checklist-item:visible')).toHaveCount(1);
+  await page.locator('#checklistSearch').fill('no-such-binder-task');await expect(page.locator('#checklistEmpty')).toBeVisible();
+  await page.locator('#checklistSearch').fill('');await page.locator('[data-status-filter=all]').click();
+  await page.reload();await tab(page,'checklist');await page.locator('#checklistDate').fill('2026-10-08');
+  await expect(controls.nth(1)).toHaveValue('progress');await expect(controls.nth(2)).toHaveValue('blocked');
+  await expect(page.locator('#checklistNotes')).toHaveValue('Keep the shift notes');
+  await controls.first().selectOption('todo');await expect(page.locator('#checklistTasks input').first()).not.toBeChecked();
+  page.once('dialog',dialog=>dialog.accept());await page.locator('#checklistReset').click();
+  await expect(page.locator('[data-status-filter=todo] span')).toHaveText('36');
+  await expect(page.locator('#checklistNotes')).toHaveValue('Keep the shift notes');
+});
+
+test('status changes merge across tabs and failed saves restore the previous status',async({page,context})=> {
+  await setup(page);await tab(page,'checklist');const other=await context.newPage();await setup(other);await tab(other,'checklist');
+  await Promise.all([page.locator('[data-task-status]').nth(0).selectOption('progress'),other.locator('[data-task-status]').nth(1).selectOption('blocked')]);
+  await expect(page.locator('[data-task-status]').nth(1)).toHaveValue('blocked');await expect(other.locator('[data-task-status]').nth(0)).toHaveValue('progress');
+  await blockWrites(page,checklistKey);await page.locator('[data-task-status]').nth(0).selectOption('done');
+  await expect(page.locator('#toast')).toContainText('Couldn’t save');await expect(page.locator('[data-task-status]').nth(0)).toHaveValue('progress');
+  await expect(page.locator('#checklistTasks input').first()).not.toBeChecked();
+});
