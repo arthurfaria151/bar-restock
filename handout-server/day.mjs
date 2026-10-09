@@ -1,3 +1,4 @@
+import { bookingLines } from './bookings.mjs';
 export const TIME_ZONE = 'Australia/Brisbane';
 const OFFSET = 10 * 60 * 60 * 1000; // Brisbane is UTC+10 year-round.
 export function cutoffMinutes(hour = 2, minute = 0) {
@@ -19,6 +20,7 @@ export function archiveFile(day, closedAt, cutoff = 120) {
   const time = `${String(Math.floor(cutoff/60)).padStart(2,'0')}:${String(cutoff%60).padStart(2,'0')}`;
   const lines = [`# Bot bar handout — ${day.date}`, '', `Business-day end: ${time} (${TIME_ZONE})`, `Archived: ${closedAt}`, `Revision: ${day.revision}`, ''];
   for (const entry of day.entries) lines.push(`## ${entry.authorName}`, '', entry.text, '', `Last edited by ${entry.updatedByName} at ${entry.updatedAt}`, '');
+  if(day.bookings?.length) lines.push('## Approved bookings','',...day.bookings.flatMap(bookingLines));
   if (!day.entries.length) lines.push('No notes were recorded for this business day.', '');
   return lines.join('\n');
 }

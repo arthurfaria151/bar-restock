@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "$EUID" -ne 0 ]; then echo 'Run with sudo.' >&2; exit 1; fi
-if [ "$#" -lt 1 ]; then echo 'Usage: sudo bash scripts/set-staff-pin.sh account-id [admin|bartender] ["Display name"]' >&2; exit 1; fi
+if [ "$#" -lt 1 ]; then echo 'Usage: sudo bash scripts/set-staff-pin.sh account-id [admin|manager|bartender] ["Display name"]' >&2; exit 1; fi
 read -rsp 'Personal PIN (6–12 digits): ' staff_pin </dev/tty
 echo
 read -rsp 'Confirm PIN: ' staff_confirmation </dev/tty

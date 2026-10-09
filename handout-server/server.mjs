@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HandoutStore } from './store.mjs';
 import { login, authenticate } from './auth.mjs';
-import { cutoffMinutes, nextClose, TIME_ZONE } from './day.mjs';
+import { cutoffMinutes, nextClose, TIME_ZONE, businessDate } from './day.mjs';
 const MAX_BODY = 40000;
 export function createHandoutServer(options = {}) {
   const env = options.env || process.env;
@@ -54,7 +54,7 @@ export function createHandoutServer(options = {}) {
     let url;
     try {
       url = new URL(req.url,'http://localhost');
-      if (url.pathname==='/health' && req.method==='GET') { json(200,{ok:true});return; }
+      if (url.pathname==='/health' && req.method==='GET') { json(200,{ok:true,features:{bookings:true}});return; }
       let body = {};
       if (['POST','PUT','DELETE'].includes(req.method)) {
         let size=0;const chunks=[];
@@ -77,6 +77,12 @@ export function createHandoutServer(options = {}) {
       const user = await authenticate(env,req.headers.authorization,now());
       if (!user) {json(401,{error:'Please sign in with your PIN'});return;}
       if (url.pathname==='/api/session' && req.method==='GET') {json(200,{user});return;}
+      if(url.pathname==='/api/bookings' && req.method==='GET') {json(200,{bookings:store.bookings(),now:new Date(now()).toISOString(),businessDate:businessDate(now(),cutoff),user});return;}
+      const bookingRoute=url.pathname.match(/^\/api\/bookings\/([a-f0-9-]{36})(?:\/(approve|reject|cancel|withdraw|task))?$/);
+      if(url.pathname==='/api/bookings' && req.method==='POST' || bookingRoute && req.method==='PUT') {
+        const result=store.saveBooking(bookingRoute?.[1],bookingRoute ? bookingRoute[2] || 'edit' : 'create',body,user,now());
+        if(result.error){json(result.status,result);return;}publish();json(200,result);return;
+      }
       const current = snapshot(user);
       if (url.pathname==='/api/handout' && req.method==='GET') {json(200,current);return;}
       if (url.pathname==='/api/events' && req.method==='GET') {

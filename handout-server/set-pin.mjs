@@ -2,7 +2,7 @@ import { readFileSync, existsSync, writeFileSync, renameSync, chmodSync } from '
 import { randomBytes } from 'node:crypto';
 import { passwordHash } from './auth.mjs';
 const [file,id,role='bartender',name]=process.argv.slice(2);
-if (!file || !id || !['admin','bartender'].includes(role)) throw new Error('Usage: set-pin.mjs USERS_FILE account-id [admin|bartender] [Display name], with PIN on stdin');
+if (!file || !id || !['admin','manager','bartender'].includes(role)) throw new Error('Usage: set-pin.mjs USERS_FILE account-id [admin|manager|bartender] [Display name], with PIN on stdin');
 const pin=readFileSync(0,'utf8');
 if (!/^[0-9]{6,12}$/.test(pin)) throw new Error('Use a personal PIN of 6–12 digits');
 const accounts=existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : [];

@@ -36,7 +36,7 @@ export async function login(env, body, now = Date.now()) {
   }
   const payload = encode(new TextEncoder().encode(JSON.stringify({ sub:account.id, credential:account.pinHash || account.passwordHash, exp:now+12*3600000 })));
   const signature = encode(await crypto.subtle.sign('HMAC',await signingKey(env.HANDOUT_SESSION_SECRET),new TextEncoder().encode(payload)));
-  return { token:`${payload}.${signature}`, user:{id:account.id,name:account.name,canEdit:account.canEdit !== false,role:account.role==='admin'?'admin':'bartender',expiresAt:now+12*3600000} };
+  return { token:`${payload}.${signature}`, user:{id:account.id,name:account.name,canEdit:account.canEdit !== false,role:['admin','manager'].includes(account.role)?account.role:'bartender',expiresAt:now+12*3600000} };
 }
 export async function authenticate(env, header, now = Date.now()) {
   try {
@@ -47,6 +47,6 @@ export async function authenticate(env, header, now = Date.now()) {
     const session = JSON.parse(new TextDecoder().decode(decode(payload)));
     if (!Number.isFinite(session.exp) || session.exp <= now) return null;
     const user = users(env).find(u => u.id===session.sub);
-    return user && session.credential === (user.pinHash || user.passwordHash) ? {id:user.id,name:user.name,canEdit:user.canEdit !== false,role:user.role==='admin'?'admin':'bartender',expiresAt:session.exp} : null;
+    return user && session.credential === (user.pinHash || user.passwordHash) ? {id:user.id,name:user.name,canEdit:user.canEdit !== false,role:['admin','manager'].includes(user.role)?user.role:'bartender',expiresAt:session.exp} : null;
   } catch { return null; }
 }

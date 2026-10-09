@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, writeFileSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
+import { changeBooking, bookingsForDay } from './bookings.mjs';
 import { businessDate, nextDate, archiveFile, applyEntry } from './day.mjs';
 export class HandoutStore {
   constructor(directory, cutoff = 120) {
@@ -10,7 +11,9 @@ export class HandoutStore {
     this.db = new DatabaseSync(join(directory,'handout.sqlite'));
     this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
       CREATE TABLE IF NOT EXISTS days (date TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, entries TEXT NOT NULL DEFAULT '[]', closed_at TEXT, archive TEXT);
+      CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, document TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS mutations (id TEXT PRIMARY KEY, response TEXT NOT NULL, created_at INTEGER NOT NULL);`);
+    if(!this.db.prepare('PRAGMA table_info(days)').all().some(c=>c.name==='bookings')) this.db.exec("ALTER TABLE days ADD COLUMN bookings TEXT NOT NULL DEFAULT '[]'");
     // Recreate any file whose DB commit completed before a power interruption.
     for (const row of this.db.prepare('SELECT date, archive FROM days WHERE closed_at IS NOT NULL').all()) this.writeArchive(row);
   }
@@ -20,7 +23,7 @@ export class HandoutStore {
   }
   get(date) {
     const row = this.db.prepare('SELECT * FROM days WHERE date=?').get(date);
-    return row ? { date:row.date,revision:row.revision,entries:JSON.parse(row.entries),closedAt:row.closed_at } : null;
+    return row ? { date:row.date,revision:row.revision,entries:JSON.parse(row.entries),closedAt:row.closed_at,bookings:JSON.parse(row.bookings) } : null;
   }
   ensureDay(now = Date.now()) {
     const today = businessDate(now,this.cutoff);
@@ -31,6 +34,7 @@ export class HandoutStore {
     try {
       while (date <= today) {
         this.db.prepare('INSERT OR IGNORE INTO days(date) VALUES(?)').run(date);
+        this.db.prepare('UPDATE days SET bookings=? WHERE date=? AND closed_at IS NULL').run(JSON.stringify(bookingsForDay(this.bookings(),date,this.cutoff)),date);
         if (date < today) {
           const day = this.get(date);
           if (!day.closedAt) {
@@ -63,6 +67,24 @@ export class HandoutStore {
       }
       this.db.exec('COMMIT'); return result;
     } catch(error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  bookings() { return this.db.prepare('SELECT document FROM bookings').all().map(row=>JSON.parse(row.document)).sort((a,b)=>a.startAt.localeCompare(b.startAt) || a.id.localeCompare(b.id)); }
+  saveBooking(id,action,body,actor,now=Date.now()) {
+    this.ensureDay(now);
+    if(typeof body.mutationId!=='string' || !/^[a-f0-9-]{36}$/.test(body.mutationId)) return {error:'Invalid save identifier',status:400};
+    const key='booking:'+actor.id+':'+body.mutationId;
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const cached=this.db.prepare('SELECT response FROM mutations WHERE id=?').get(key);
+      if(cached){this.db.exec('COMMIT');return JSON.parse(cached.response);}
+      const row=id ? this.db.prepare('SELECT document FROM bookings WHERE id=?').get(id) : null;
+      const result=changeBooking(row?JSON.parse(row.document):null,action,body,actor,now);
+      if(result.booking) {
+        this.db.prepare('INSERT INTO bookings(id,document) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET document=excluded.document').run(result.booking.id,JSON.stringify(result.booking));
+        this.db.prepare('INSERT INTO mutations(id,response,created_at) VALUES(?,?,?)').run(key,JSON.stringify(result),now);
+      }
+      this.db.exec('COMMIT');return result;
+    } catch(error){this.db.exec('ROLLBACK');throw error;}
   }
   archives(before = '9999-99-99') {
     return this.db.prepare('SELECT date,closed_at AS closedAt,revision FROM days WHERE closed_at IS NOT NULL AND date < ? ORDER BY date DESC LIMIT 60').all(before);
