@@ -913,16 +913,52 @@ test('status changes merge across tabs and failed saves restore the previous sta
   await expect(page.locator('#checklistTasks input').first()).not.toBeChecked();
 });
 
-test('new catalog products without photos use placeholders and remain selectable after reload',async({page})=> {
-  const requests=[];page.on('request',request=>requests.push(request.url()));
+test('new catalog products show web images, fall back to a letter when an image fails, and stay selectable',async({page})=> {
+  await page.route('**/img/products/brouhaha-strawberry-rhubarb-sour.webp*',route=>route.fulfill({status:404,body:'missing'}));
   await setup(page);
+  const ok=page.locator('.product-card').filter({hasText:'Divas Strawberry Liqueur'});
+  await ok.scrollIntoViewIfNeeded();await expect(ok.locator('img.product-img')).toHaveAttribute('src',/img\/products\/divas-strawberry\.webp/);
+  await expect.poll(()=>ok.locator('img').evaluate(img=>img.complete&&img.naturalWidth)).toBe(400);
   const product=page.locator('.product-card').filter({hasText:'Brouhaha Strawberry Rhubarb Sour'});
   await product.scrollIntoViewIfNeeded();await expect(product.locator('.thumb-fallback')).toHaveText('B');await expect(product.locator('img')).toHaveCount(0);
   await product.locator('.product-toggle').click();
   await expect.poll(async()=> (await stored(page,keys.selection))['brouhaha-strawberry-rhubarb-sour']).toBe(1);
   await page.reload();await expect(product.locator('.product-toggle')).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('.product-card').filter({hasText:'Divas Strawberry Liqueur'})).toHaveCount(1);
-  expect(requests.some(url=>url.includes('/thumbs/brouhaha-strawberry-rhubarb-sour.'))).toBe(false);
+});
+
+test('admins change a product image from an upload; it persists, can be reset and bartenders get no control',async({page})=> {
+  const id='divas-strawberry',imageKey='bar-restock-image-overrides-v1';
+  await setup(page);await tab(page,'stock');
+  const row=page.locator('#stockRoot .restock-item').filter({hasText:'Divas Strawberry Liqueur'});
+  await row.locator('[data-act="img"]').click();
+  await expect(page.locator('#sheetTitle')).toContainText('Divas Strawberry Liqueur');
+  await page.locator('#imgUpload').setInputFiles(new URL('../img/products/red-bull-energy.webp',import.meta.url).pathname);
+  await expect(page.locator('#toast')).toContainText('Image updated');
+  await expect.poll(async()=> (await stored(page,imageKey))?.[id]?.kind).toBe('data');
+  expect((await stored(page,imageKey))[id].src.length).toBeLessThanOrEqual(160000);
+  await page.locator('#btnSheetClose').click();
+  await expect(row.locator('img.product-img')).toHaveAttribute('src',/^data:image\/jpeg/);
+  await page.reload();await tab(page,'stock');
+  await expect(row.locator('img.product-img')).toHaveAttribute('src',/^data:image\/jpeg/);
+  await row.locator('[data-act="img"]').click();
+  await page.locator('#imgUrl').fill('javascript:alert(1)');await page.locator('#imgUrlForm button[type=submit]').click();
+  await expect(page.locator('#imgError')).toContainText('https://');
+  await page.locator('[data-img-reset]').click();
+  await expect.poll(async()=> (await stored(page,imageKey))?.[id]).toBeUndefined();
+  await page.locator('#btnSheetClose').click();
+  await expect(row.locator('img.product-img')).toHaveAttribute('src',/img\/products\/divas-strawberry\.webp/);
+  const bar=await page.context().newPage();await setup(bar,{},'bartender');await tab(bar,'stock');
+  await expect(bar.locator('#stockRoot .restock-item').first()).toBeVisible();
+  await expect(bar.locator('#stockRoot [data-act="img"]')).toHaveCount(0);await expect(bar.locator('#stockRoot [data-act="del"]')).toHaveCount(0);
+  await tab(bar,'shelves');await expect(bar.locator('[data-img-edit]')).toHaveCount(0);
+});
+
+test('stored image overrides are validated before use',async({page})=> {
+  await setup(page,{'bar-restock-image-overrides-v1':{'divas-strawberry':{kind:'url',src:'javascript:alert(1)'},'red-bull-energy':{kind:'data',src:'data:text/html;base64,PHNjcmlwdD4='}}});
+  const a=page.locator('.product-card').filter({hasText:'Divas Strawberry Liqueur'});
+  await expect(a.locator('img.product-img')).toHaveAttribute('src',/img\/products\/divas-strawberry\.webp/);
+  const b=page.locator('#productsRoot .product-card[data-id="red-bull-energy"]');
+  await expect(b.locator('img.product-img')).toHaveAttribute('src',/img\/products\/red-bull-energy\.webp/);
 });
 
 test('Restock contains its list sub-page and product corner tags persist without selecting the product', async ({ page }) => {

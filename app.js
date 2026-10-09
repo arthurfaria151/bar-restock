@@ -12,6 +12,12 @@
   const CATEGORIES_KEY = "bar-restock-categories-v1"; // admin-created categories, in creation order
   const CATEGORY_MAX = 40;
   const SHELVES_KEY = "bar-restock-shelves-v1"; // shelf layout: levels top→bottom, slots left→right
+  // Admin image overrides, per product id: { kind: "data" | "url", src, at }. Device-local.
+  const IMAGES_KEY = "bar-restock-image-overrides-v1";
+  const IMAGE_SIZE = 400; // uploaded/pasted images are fitted inside a 400×400 white square
+  const IMAGE_DATA_MAX = 160000; // characters per stored data URL (~120 KB)
+  const IMAGE_TOTAL_MAX = 2000000; // all stored data URLs together, so localStorage keeps room for counts
+  const IMAGE_URL_MAX = 2000;
   const SHELF_NAME_MAX = 40;
   const FACINGS_MAX = 24;
   // Default layout from the 2026-10-08 bar-shelf photos. Ids that aren't in the catalog are skipped.
@@ -42,6 +48,7 @@
     photoLoading: false,
     photoVersion: 0, // ignore conversions superseded by another choice/remove/sign-out
     tags: {},
+    imageOverrides: {}, // id -> { kind, src, at } chosen by an admin on this device
     custom: [], // user-added products
     categories: [], // user-created category names (after the built-ins)
     renamingCategory: null, // custom category being renamed inline on Restock
@@ -116,6 +123,43 @@
     state.reminded = loadMap(REMINDED_KEY);
     state.categories = loadCategories();
     state.shelves = loadShelves();
+    state.imageOverrides = loadImageOverrides();
+  }
+
+  // Only well-formed overrides survive a reload: data URLs of raster images, or http(s) links.
+  function cleanImageOverride(o) {
+    if (!o || typeof o !== "object" || typeof o.src !== "string") return null;
+    if (o.kind === "data") {
+      return /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(o.src) && o.src.length <= IMAGE_DATA_MAX
+        ? { kind: "data", src: o.src, at: Number(o.at) || 0 } : null;
+    }
+    if (o.kind === "url") {
+      const url = safeImageUrl(o.src);
+      return url ? { kind: "url", src: url, at: Number(o.at) || 0 } : null;
+    }
+    return null;
+  }
+
+  function safeImageUrl(raw) {
+    const text = String(raw || "").trim();
+    if (!text || text.length > IMAGE_URL_MAX) return null;
+    try {
+      const url = new URL(text);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+      if (url.username || url.password) return null;
+      return url.href;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function loadImageOverrides() {
+    const out = {};
+    for (const [id, o] of Object.entries(loadMap(IMAGES_KEY))) {
+      const clean = /^[a-z0-9][a-z0-9-]{0,119}$/.test(id) ? cleanImageOverride(o) : null;
+      if (clean) out[id] = clean;
+    }
+    return out;
   }
 
   // Older saved state has no categories key: that simply means "no custom categories".
@@ -484,18 +528,47 @@
     return effectiveCatalog().filter((p) => isLow(p.id));
   }
 
-  function thumbMarkup(p, size) {
-    if (p.custom && typeof p.image === "string" && p.image.startsWith("data:image/")) {
-      const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
-      return `<img src="${escapeHtml(p.image)}" alt=""${wh} />`;
-    }
-    if (p.custom || p.imagePath === null) {
-      const letter = escapeHtml((p.name || "?").trim().charAt(0).toUpperCase() || "?");
-      return `<div class="thumb-fallback" aria-hidden="true">${letter}</div>`;
-    }
-    const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
-    return `<img src="${asset(p.imagePath || `thumbs/${p.id}.jpg`)}" alt="" loading="lazy"${wh} />`;
+  // The product's own picture: a hand-added product's photo, else the catalog image.
+  function defaultImageSrc(p) {
+    if (p.custom) return typeof p.image === "string" && p.image.startsWith("data:image/") ? p.image : null;
+    if (p.imagePath === null) return null;
+    return asset(p.imagePath || `thumbs/${p.id}.jpg`);
   }
+
+  // Every product picture in the app comes from here. An admin override wins, then the
+  // default image; if one fails to load, the error handler below steps down to the next
+  // one and finally to the letter tile, so there is never a broken-image icon.
+  function thumbMarkup(p, size) {
+    const letter = escapeHtml((p.name || "?").trim().charAt(0).toUpperCase() || "?");
+    const sources = [];
+    const override = state.imageOverrides[p.id];
+    if (override) sources.push(override.src);
+    const own = defaultImageSrc(p);
+    if (own && !sources.includes(own)) sources.push(own);
+    if (!sources.length) return `<div class="thumb-fallback" aria-hidden="true">${letter}</div>`;
+    const wh = size ? ` width="${size}" height="${size}"` : ` width="400" height="400"`;
+    const lazy = sources[0].startsWith("data:") ? "" : ` loading="lazy"`;
+    const next = sources[1] ? ` data-fallback="${escapeHtml(sources[1])}"` : "";
+    return `<img class="product-img" src="${escapeHtml(sources[0])}" alt=""${lazy}${wh}${next} data-letter="${letter}" referrerpolicy="no-referrer" />`;
+  }
+
+  function onProductImageError(e) {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.classList.contains("product-img")) return;
+    const next = img.getAttribute("data-fallback");
+    if (next) {
+      img.removeAttribute("data-fallback");
+      img.src = next;
+      return;
+    }
+    const tile = document.createElement("div");
+    tile.className = "thumb-fallback";
+    tile.setAttribute("aria-hidden", "true");
+    tile.textContent = img.dataset.letter || "?";
+    img.replaceWith(tile);
+  }
+  // Image errors don't bubble, so listen in the capture phase for every product image.
+  document.addEventListener("error", onProductImageError, true);
 
   function buildLowEmail(products) {
     const lines = [
@@ -918,7 +991,7 @@
       const values = {};
       if (p.custom) values[CUSTOM_KEY] = loadJson(CUSTOM_KEY, []).filter((c) => c.id !== id);
       else values[HIDDEN_KEY] = Array.from(new Set(loadJson(HIDDEN_KEY, []).concat(id)));
-      for (const key of [STOCK_KEY, PAR_KEY, REMINDED_KEY, STORAGE_KEY]) {
+      for (const key of [STOCK_KEY, PAR_KEY, REMINDED_KEY, STORAGE_KEY, IMAGES_KEY]) {
         values[key] = loadMap(key);
         delete values[key][id];
       }
@@ -1010,6 +1083,7 @@
               <span class="qty-val">${qty}</span>
               <button type="button" class="qty-btn" data-act="inc" aria-label="Increase stock">${ICON("plus")}</button>
             </div>
+            ${editable ? `<button type="button" class="btn btn-secondary btn-image" data-act="img" aria-label="Change image for ${escapeHtml(p.name)}">${ICON("camera")}Image</button>` : ""}
             ${editable ? `<button type="button" class="btn btn-danger" data-act="del" aria-label="Delete ${escapeHtml(p.name)}">${ICON("trash")}Delete</button>` : ""}
           </div>
         `;
@@ -1018,7 +1092,8 @@
             const act = btn.dataset.act;
             if (act === "inc") changeStock(p.id, 1);
             else if (act === "dec") changeStock(p.id, -1);
-            else deleteProduct(p.id);
+            else if (act === "img") openImageEditor(p.id);
+            else if (act === "del") deleteProduct(p.id);
           });
         });
         ul.appendChild(li);
@@ -1662,6 +1737,8 @@
     backdrop.hidden = true;
     $("#sheetBody").innerHTML = "";
     sheetPickerLevel = null;
+    imageEditor.id = null;
+    imageEditor.version++;
     document.documentElement.style.overflow = "";
     updateModalState();
     if (receive) receive.onSheetClosed();
@@ -1699,6 +1776,7 @@
         }</div>
       </div>
       ${low ? `<div class="detail-low">${ICON("alert")}Low stock — at or below par.</div>` : ""}
+      ${canEditCatalog() ? `<button type="button" class="btn btn-secondary detail-image-btn" data-img-edit="${escapeHtml(p.id)}">${ICON("camera")}Change image</button>` : ""}
     `);
     $("#btnSheetClose").focus();
   }
@@ -1817,6 +1895,225 @@
         e.stopPropagation();
         closeSheet();
       }
+    });
+  }
+
+  /*
+   * Change image (Admin only). The picture is stored on this device under IMAGES_KEY:
+   * uploads and CORS-readable URLs become a resized data URL (works offline); other URLs
+   * are kept as a link and fall back to the default image when they can't load.
+   */
+  const imageEditor = { id: null, version: 0, busy: false };
+
+  function openImageEditor(id) {
+    const p = productById(id);
+    if (!p || !canEditCatalog()) return;
+    const reopen = imageEditor.id === id && !$("#sheetBackdrop").hidden;
+    imageEditor.id = id;
+    imageEditor.version++;
+    imageEditor.busy = false;
+    const override = state.imageOverrides[id];
+    const hint = override
+      ? override.kind === "url" ? "Custom image link — needs internet to show; the default image is used offline." : "Custom image saved on this device."
+      : p.custom ? (defaultImageSrc(p) ? "Photo added with the product." : "No image yet.") : "Default product image.";
+    openSheet(`Image · ${p.name}`, `
+      <div class="img-editor" data-img-editor="${escapeHtml(id)}">
+        <div class="img-editor-preview">${thumbMarkup(p, 200)}</div>
+        <p class="img-editor-hint" id="imgEditorHint">${escapeHtml(hint)}</p>
+        <label class="btn btn-primary img-upload-btn" for="imgUpload">${ICON("camera")}<span>Take or upload a photo</span></label>
+        <input id="imgUpload" class="visually-hidden" type="file" accept="image/*" />
+        <form id="imgUrlForm" class="img-url-form" novalidate>
+          <label class="field-label" for="imgUrl">Or paste an image link</label>
+          <div class="img-url-row">
+            <input id="imgUrl" class="input" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="${IMAGE_URL_MAX}" />
+            <button type="submit" class="btn btn-secondary">Use link</button>
+          </div>
+        </form>
+        <p class="field-error" id="imgError" role="alert" hidden></p>
+        ${override ? `<button type="button" class="btn btn-danger img-reset-btn" data-img-reset>${ICON("trash")}Use default image</button>` : ""}
+      </div>`);
+    if (reopen) $("#btnSheetClose").focus();
+  }
+
+  function setImageBusy(on, message) {
+    imageEditor.busy = on;
+    document.querySelectorAll(".img-editor button, .img-editor input").forEach((el) => { el.disabled = on; });
+    $(".img-upload-btn")?.classList.toggle("is-disabled", on);
+    const hint = $("#imgEditorHint");
+    if (hint && message) hint.textContent = message;
+  }
+
+  function imageEditorError(message) {
+    const err = $("#imgError");
+    if (err) setFieldError($("#imgUrl"), err, message);
+  }
+
+  // Draw the picture inside a white square, keeping its proportions, then shrink the JPEG
+  // until it fits the per-image budget.
+  function fitImageToDataUrl(source, width, height) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = IMAGE_SIZE;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, IMAGE_SIZE, IMAGE_SIZE);
+    const box = IMAGE_SIZE - 40;
+    const scale = Math.min(box / width, box / height);
+    const w = Math.max(1, Math.round(width * scale));
+    const h = Math.max(1, Math.round(height * scale));
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(source, (IMAGE_SIZE - w) / 2, (IMAGE_SIZE - h) / 2, w, h);
+    for (const q of [0.85, 0.75, 0.65, 0.5]) {
+      const url = canvas.toDataURL("image/jpeg", q);
+      if (url.length <= IMAGE_DATA_MAX) return url;
+    }
+    throw new Error("too large");
+  }
+
+  function decodeBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          if (!img.naturalWidth || !img.naturalHeight) throw new Error("empty");
+          resolve(fitImageToDataUrl(img, img.naturalWidth, img.naturalHeight));
+        } catch (err) {
+          reject(err);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("decode failed"));
+      };
+      img.src = url;
+    });
+  }
+
+  // A link the browser can display but not read (no CORS) is stored as a link.
+  function probeImageUrl(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const done = (ok) => { clearTimeout(timer); img.onload = img.onerror = null; resolve(ok); };
+      const timer = setTimeout(() => done(false), 10000);
+      img.referrerPolicy = "no-referrer";
+      img.onload = () => done(img.naturalWidth > 0);
+      img.onerror = () => done(false);
+      img.src = url;
+    });
+  }
+
+  async function saveImageOverride(id, value) {
+    const saved = await storage.withLock(() => {
+      if (!canEditCatalog() || !productById(id)) return false;
+      const map = loadMap(IMAGES_KEY);
+      if (value) {
+        const total = Object.entries(map).reduce((sum, [key, o]) =>
+          key !== id && o && o.kind === "data" && typeof o.src === "string" ? sum + o.src.length : sum, 0);
+        if (value.kind === "data" && total + value.src.length > IMAGE_TOTAL_MAX) return "full";
+        map[id] = value;
+      } else {
+        delete map[id];
+      }
+      if (!saveJson(IMAGES_KEY, map)) return false;
+      state.imageOverrides = loadImageOverrides();
+      return true;
+    });
+    if (saved === "full") {
+      imageEditorError("Too many custom images on this device. Use the default image for some products first.");
+      return false;
+    }
+    if (!saved) return false;
+    refreshProductImages();
+    return true;
+  }
+
+  function refreshProductImages() {
+    renderProducts();
+    if (state.tab === "stock") renderStock();
+    if (state.tab === "par") renderPar();
+    if (state.tab === "restock") renderRestock();
+    if (state.tab === "shelves") renderShelves();
+    if (receive) receive.onCatalogLoaded();
+  }
+
+  async function onImageUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    const id = imageEditor.id;
+    if (!file || !id || imageEditor.busy || !canEditCatalog()) return;
+    e.target.value = "";
+    if (!/^image\//.test(file.type)) return imageEditorError("That file isn’t an image.");
+    if (file.size > 25 * 1024 * 1024) return imageEditorError("That image is too large (over 25 MB).");
+    const version = imageEditor.version;
+    setImageBusy(true, "Preparing image…");
+    try {
+      const src = await decodeBlob(file);
+      if (version !== imageEditor.version) return;
+      if (await saveImageOverride(id, { kind: "data", src, at: Date.now() })) {
+        showToast("Image updated");
+        openImageEditor(id);
+      } else if (version === imageEditor.version) setImageBusy(false, "Couldn’t save the image.");
+    } catch (_) {
+      if (version !== imageEditor.version) return;
+      setImageBusy(false, " ");
+      imageEditorError("Couldn’t read that image. Try a JPG or PNG.");
+    }
+  }
+
+  async function onImageUrl(e) {
+    e.preventDefault();
+    const id = imageEditor.id;
+    if (!id || imageEditor.busy || !canEditCatalog()) return;
+    const url = safeImageUrl($("#imgUrl").value);
+    if (!url) return imageEditorError("Enter a full image link starting with https://");
+    const version = imageEditor.version;
+    setImageBusy(true, "Loading image…");
+    let value = null;
+    try {
+      const res = await fetch(url, { mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", signal: AbortSignal.timeout(10000) });
+      const blob = res.ok ? await res.blob() : null;
+      if (blob && /^image\//.test(blob.type) && blob.size <= 25 * 1024 * 1024) {
+        value = { kind: "data", src: await decodeBlob(blob), at: Date.now() };
+      }
+    } catch (_) {}
+    if (version !== imageEditor.version) return;
+    if (!value && await probeImageUrl(url)) value = { kind: "url", src: url, at: Date.now() };
+    if (version !== imageEditor.version) return;
+    if (!value) {
+      setImageBusy(false, " ");
+      return imageEditorError("Couldn’t load an image from that link.");
+    }
+    if (await saveImageOverride(id, value)) {
+      showToast(value.kind === "data" ? "Image updated" : "Image link saved — it needs internet to show");
+      openImageEditor(id);
+    } else if (version === imageEditor.version) setImageBusy(false, "Couldn’t save the image.");
+  }
+
+  async function onImageReset() {
+    const id = imageEditor.id;
+    if (!id || imageEditor.busy || !canEditCatalog()) return;
+    if (await saveImageOverride(id, null)) {
+      showToast("Default image restored");
+      openImageEditor(id);
+    }
+  }
+
+  function bindImageEditor() {
+    const body = $("#sheetBody");
+    body.addEventListener("click", (e) => {
+      const edit = e.target.closest("[data-img-edit]");
+      if (edit) return openImageEditor(edit.dataset.imgEdit);
+      if (e.target.closest("[data-img-reset]")) onImageReset();
+    });
+    body.addEventListener("change", (e) => {
+      if (e.target.id === "imgUpload") onImageUpload(e);
+    });
+    body.addEventListener("submit", (e) => {
+      if (e.target.id === "imgUrlForm") onImageUrl(e);
+    });
+    body.addEventListener("input", (e) => {
+      if (e.target.id === "imgUrl") setFieldError(e.target, $("#imgError"), null);
     });
   }
 
@@ -1976,7 +2273,7 @@
       for (const p of data) {
         if (!p || typeof p.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,119}$/.test(p.id) ||
             typeof p.name !== "string" || !p.name.trim() || ids.has(p.id)) throw new Error("catalog contains invalid or duplicate products");
-        if (p.imagePath && !new RegExp(`^thumbs/${p.id}\\.(?:png|webp|jpg)$`).test(p.imagePath)) throw new Error("catalog contains an invalid product image path");
+        if (p.imagePath && !new RegExp(`^(?:img/products|thumbs)/${p.id}\\.(?:png|webp|jpg)$`).test(p.imagePath)) throw new Error("catalog contains an invalid product image path");
         ids.add(p.id);
       }
       state.catalog = data;
@@ -2215,6 +2512,7 @@
     $("#btnRemovePhoto").addEventListener("click", clearPendingPhoto);
     $("#loginPin").addEventListener("input", (e) => setFieldError(e.target, $("#loginError"), null));
     bindShelves();
+    bindImageEditor();
     bindReceive();
     binder = window.BarRestockBinder({ escapeHtml, asset, loadJson, saveJson,
       withStorageLock: storage.withLock, showToast, roleId: () => state.role });
