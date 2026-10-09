@@ -14,7 +14,8 @@ const assets = ['app.js', 'handout.js', 'bookings.js', 'handout-config.js', 'bin
   'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
   'vendor/zxing-wasm/zxing-reader.iife.js', 'vendor/zxing-wasm/zxing_reader.wasm',
   ...(await readdir(join(root, 'binder-pages'))).sort().map(name => `binder-pages/${name}`),
-  ...(await readdir(join(root, 'thumbs'))).sort().map(name => `thumbs/${name}`)];
+  ...(await readdir(join(root, 'thumbs'))).sort().map(name => `thumbs/${name}`),
+  ...(await readdir(join(root, 'img/products'))).sort().map(name => `img/products/${name}`)];
 for (const path of assets) hash.update(path).update(await readFile(join(root, path)));
 const version = hash.digest('hex').slice(0, 12);
 const nextHtml = normalize(html).replace('content="VERSION"', `content="${version}"`)

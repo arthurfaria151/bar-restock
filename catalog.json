@@ -4,567 +4,648 @@
     "name": "De Bortoli Prosecco",
     "category": "Fridge",
     "sourcePhoto": "IMG_0229.jpg",
-    "notes": "Cork & cage bottles; also small screw-cap versions in IMG_0218"
+    "notes": "Cork & cage bottles; also small screw-cap versions in IMG_0218",
+    "imagePath": "img/products/de-bortoli-prosecco.webp"
   },
   {
     "id": "red-bull-red-edition",
     "name": "Red Bull The Red Edition",
     "category": "Fridge",
     "sourcePhoto": "IMG_0218.jpg",
-    "notes": "Watermelon flavour"
+    "notes": "Watermelon flavour",
+    "imagePath": "img/products/red-bull-red-edition.webp"
   },
   {
     "id": "red-bull-tropical-edition",
     "name": "Red Bull The Tropical Edition",
     "category": "Fridge",
     "sourcePhoto": "IMG_0218.jpg",
-    "notes": "Yellow can"
+    "notes": "Yellow can",
+    "imagePath": "img/products/red-bull-tropical-edition.webp"
   },
   {
     "id": "red-bull-pink-edition",
     "name": "Red Bull The Pink Edition Sugarfree",
     "category": "Fridge",
     "sourcePhoto": "IMG_0218.jpg",
-    "notes": "Forest Fruit"
+    "notes": "Forest Fruit",
+    "imagePath": "img/products/red-bull-pink-edition.webp"
   },
   {
     "id": "red-bull-energy",
     "name": "Red Bull Energy Drink",
     "category": "Fridge",
     "sourcePhoto": "IMG_0218.jpg",
-    "notes": "Classic blue/silver"
+    "notes": "Classic blue/silver",
+    "imagePath": "img/products/red-bull-energy.webp"
   },
   {
     "id": "red-bull-sugarfree",
     "name": "Red Bull Sugarfree",
     "category": "Fridge",
     "sourcePhoto": "IMG_0218.jpg",
-    "notes": "Light blue can"
+    "notes": "Light blue can",
+    "imagePath": "img/products/red-bull-sugarfree.webp"
   },
   {
     "id": "vodka-cruiser-guava",
     "name": "Vodka Cruiser Lush Guava",
     "category": "Fridge",
     "sourcePhoto": "IMG_0219.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/vodka-cruiser-guava.webp"
   },
   {
     "id": "vodka-cruiser-watermelon",
     "name": "Vodka Cruiser Juicy Watermelon",
     "category": "Fridge",
     "sourcePhoto": "IMG_0219.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/vodka-cruiser-watermelon.webp"
   },
   {
     "id": "vodka-cruiser-lemon-lime",
     "name": "Vodka Cruiser Zesty Lemon Lime",
     "category": "Fridge",
     "sourcePhoto": "IMG_0219.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/vodka-cruiser-lemon-lime.webp"
   },
   {
     "id": "vodka-cruiser-pineapple",
     "name": "Vodka Cruiser Pure Pineapple",
     "category": "Fridge",
     "sourcePhoto": "IMG_0219.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/vodka-cruiser-pineapple.webp"
   },
   {
     "id": "bundaberg-sarsaparilla",
     "name": "Bundaberg Sarsaparilla",
     "category": "Fridge",
     "sourcePhoto": "IMG_0220.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/bundaberg-sarsaparilla.webp"
   },
   {
     "id": "bundaberg-ginger-beer",
     "name": "Bundaberg Ginger Beer",
     "category": "Fridge",
     "sourcePhoto": "IMG_0220.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/bundaberg-ginger-beer.webp"
   },
   {
     "id": "bundaberg-guava",
     "name": "Bundaberg Guava Sparkling Drink",
     "category": "Fridge",
     "sourcePhoto": "IMG_0220.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/bundaberg-guava.webp"
   },
   {
     "id": "somersby-pear",
     "name": "Somersby Cider Pear",
     "category": "Fridge",
     "sourcePhoto": "IMG_0221.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/somersby-pear.webp"
   },
   {
     "id": "somersby-apple",
     "name": "Somersby Cider Apple",
     "category": "Fridge",
     "sourcePhoto": "IMG_0221.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/somersby-apple.webp"
   },
   {
     "id": "suntory-196-double-lemon",
     "name": "Suntory -196 Double Lemon",
     "category": "Fridge",
     "sourcePhoto": "IMG_0222.jpg",
-    "notes": "6% Alc/Vol"
+    "notes": "6% Alc/Vol",
+    "imagePath": "img/products/suntory-196-double-lemon.webp"
   },
   {
     "id": "brookvale-union-ginger-beer",
     "name": "Brookvale Union Alcoholic Ginger Beer",
     "category": "Fridge",
     "sourcePhoto": "IMG_0222.jpg",
-    "notes": "4.0% Alc/Vol"
+    "notes": "4.0% Alc/Vol",
+    "imagePath": "img/products/brookvale-union-ginger-beer.webp"
   },
   {
     "id": "bundaberg-rum-cola",
     "name": "Bundaberg Rum Original & Cola",
     "category": "Fridge",
     "sourcePhoto": "IMG_0223.jpg",
-    "notes": "4.6% 345mL"
+    "notes": "4.6% 345mL",
+    "imagePath": "img/products/bundaberg-rum-cola.webp"
   },
   {
     "id": "jack-daniels-cola",
     "name": "Jack Daniel's Tennessee Whiskey & Cola",
     "category": "Fridge",
     "sourcePhoto": "IMG_0223.jpg",
-    "notes": "4.8% 330mL"
+    "notes": "4.8% 330mL",
+    "imagePath": "img/products/jack-daniels-cola.webp"
   },
   {
     "id": "pure-blonde",
     "name": "Pure Blonde Ultra Low Carb Lager",
     "category": "Fridge",
     "sourcePhoto": "IMG_0226.jpg",
-    "notes": "Also in IMG_0224"
+    "notes": "Also in IMG_0224",
+    "imagePath": "img/products/pure-blonde.webp"
   },
   {
     "id": "coopers-pale-ale",
     "name": "Coopers Original Pale Ale",
     "category": "Fridge",
     "sourcePhoto": "IMG_0224.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/coopers-pale-ale.webp"
   },
   {
     "id": "great-northern",
     "name": "Great Northern Original Full Strength",
     "category": "Fridge",
     "sourcePhoto": "IMG_0224.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/great-northern.webp"
   },
   {
     "id": "corona-extra",
     "name": "Corona Extra",
     "category": "Fridge",
     "sourcePhoto": "IMG_0224.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/corona-extra.webp"
   },
   {
     "id": "peroni-0",
     "name": "Peroni Nastro Azzurro 0.0%",
     "category": "Fridge",
     "sourcePhoto": "IMG_0225.jpg",
-    "notes": "Also partially in IMG_0223"
+    "notes": "Also partially in IMG_0223",
+    "imagePath": "img/products/peroni-0.webp"
   },
   {
     "id": "heineken-0",
     "name": "Heineken 0.0",
     "category": "Fridge",
     "sourcePhoto": "IMG_0225.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/heineken-0.webp"
   },
   {
     "id": "better-beer-middy",
     "name": "Better Beer Middy Ultra Low Carb",
     "category": "Fridge",
     "sourcePhoto": "IMG_0225.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/better-beer-middy.webp"
   },
   {
     "id": "brouhaha-milk-stout",
     "name": "Brouhaha Milk Stout",
     "category": "Fridge",
     "sourcePhoto": "IMG_0225.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/brouhaha-milk-stout.webp"
   },
   {
     "id": "james-boags-premium-light",
     "name": "James Boag's Premium Light",
     "category": "Fridge",
     "sourcePhoto": "IMG_0226.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/james-boags-premium-light.webp"
   },
   {
     "id": "strongbow-apple",
     "name": "Strongbow Apple Cider",
     "category": "Fridge",
     "sourcePhoto": "IMG_0226.jpg",
-    "notes": "? Partially visible behind Pure Blonde"
+    "notes": "? Partially visible behind Pure Blonde",
+    "imagePath": "img/products/strongbow-apple.webp"
   },
   {
     "id": "de-bortoli-vivo-moscato",
     "name": "De Bortoli Vivo Moscato",
     "category": "Fridge",
     "sourcePhoto": "IMG_0227.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/de-bortoli-vivo-moscato.webp"
   },
   {
     "id": "de-bortoli-vivo-sauvignon-blanc",
     "name": "De Bortoli Vivo Sauvignon Blanc",
     "category": "Fridge",
     "sourcePhoto": "IMG_0227.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/de-bortoli-vivo-sauvignon-blanc.webp"
   },
   {
     "id": "rose-pale-dry-2023",
     "name": "Rosé Pale & Dry 2023",
     "category": "Fridge",
     "sourcePhoto": "IMG_0227.jpg",
-    "notes": "Brand name only 'Rosé' on circular black label"
+    "notes": "Brand name only 'Rosé' on circular black label",
+    "imagePath": "img/products/rose-pale-dry-2023.webp"
   },
   {
     "id": "jean-pierre-brut",
     "name": "Jean Pierre Brut",
     "category": "Fridge",
     "sourcePhoto": "IMG_0227.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/jean-pierre-brut.webp"
   },
   {
     "id": "de-bortoli-chardonnay",
     "name": "De Bortoli Regional Reserve Chardonnay",
     "category": "Fridge",
     "sourcePhoto": "IMG_0229.jpg",
-    "notes": "Yarra Valley"
+    "notes": "Yarra Valley",
+    "imagePath": "img/products/de-bortoli-chardonnay.webp"
   },
   {
     "id": "lyres-classico",
     "name": "Lyre's Classico Non-Alcoholic Sparkling",
     "category": "Fridge",
     "sourcePhoto": "IMG_0229.jpg",
-    "notes": "Non-alcoholic sparkling"
+    "notes": "Non-alcoholic sparkling",
+    "imagePath": "img/products/lyres-classico.webp"
   },
   {
     "id": "james-boags-premium-lager",
     "name": "James Boag's Premium Lager",
     "category": "Fridge",
     "sourcePhoto": "IMG_0229.jpg",
-    "notes": "? Partially obscured on far left"
+    "notes": "? Partially obscured on far left",
+    "imagePath": "img/products/james-boags-premium-lager.webp"
   },
   {
     "id": "de-bortoli-vivo-shiraz",
     "name": "De Bortoli Vivo Shiraz",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0228.jpg",
-    "notes": "Close-up on bar; also stocked with bar wines"
+    "notes": "Close-up on bar; also stocked with bar wines",
+    "imagePath": "img/products/de-bortoli-vivo-shiraz.webp"
   },
   {
     "id": "aubrey-cold-brew",
     "name": "Aubrey Cold Brew Coffee Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/aubrey-cold-brew.webp"
   },
   {
     "id": "vok-peach",
     "name": "Vok Peach Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/vok-peach.webp"
   },
   {
     "id": "lyres-white-cane",
     "name": "Lyre's White Cane Spirit",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "Non-alcoholic"
+    "notes": "Non-alcoholic",
+    "imagePath": "img/products/lyres-white-cane.webp"
   },
   {
     "id": "lyres-agave-blanco",
     "name": "Lyre's Agave Blanco Spirit",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "Non-alcoholic"
+    "notes": "Non-alcoholic",
+    "imagePath": "img/products/lyres-agave-blanco.webp"
   },
   {
     "id": "lyres-italian-spritz",
     "name": "Lyre's Italian Spritz",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "Non-alcoholic"
+    "notes": "Non-alcoholic",
+    "imagePath": "img/products/lyres-italian-spritz.webp"
   },
   {
     "id": "lyres-coffee-originale",
     "name": "Lyre's Coffee Originale",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "Non-alcoholic"
+    "notes": "Non-alcoholic",
+    "imagePath": "img/products/lyres-coffee-originale.webp"
   },
   {
     "id": "lyres-dry-london",
     "name": "Lyre's Dry London Spirit",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "Non-alcoholic"
+    "notes": "Non-alcoholic",
+    "imagePath": "img/products/lyres-dry-london.webp"
   },
   {
     "id": "monin-passion-fruit",
     "name": "Monin Passion Fruit Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/monin-passion-fruit.webp"
   },
   {
     "id": "monin-blue-curacao",
     "name": "Monin Blue Curaçao Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/monin-blue-curacao.webp"
   },
   {
     "id": "monin-lavender",
     "name": "Monin Lavender Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/monin-lavender.webp"
   },
   {
     "id": "monin-toasted-marshmallow",
     "name": "Monin Toasted Marshmallow Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/monin-toasted-marshmallow.webp"
   },
   {
     "id": "monin-pineapple",
     "name": "Monin Pineapple Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/monin-pineapple.webp"
   },
   {
     "id": "licor-43",
     "name": "Licor 43",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/licor-43.webp"
   },
   {
     "id": "1800-coconut",
     "name": "1800 Coconut Tequila",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/1800-coconut.webp"
   },
   {
     "id": "frangelico",
     "name": "Frangelico",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/frangelico.webp"
   },
   {
     "id": "midori",
     "name": "Midori Melon Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/midori.webp"
   },
   {
     "id": "agwa",
     "name": "Agwa de Bolivia Coca Leaf Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/agwa.webp"
   },
   {
     "id": "four-pillars-bloody-shiraz",
     "name": "Four Pillars Bloody Shiraz Gin",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/four-pillars-bloody-shiraz.webp"
   },
   {
     "id": "paraiso-lychee",
     "name": "Paraiso Lychee Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/paraiso-lychee.webp"
   },
   {
     "id": "hendricks-gin",
     "name": "Hendrick's Gin",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/hendricks-gin.webp"
   },
   {
     "id": "passoa",
     "name": "Passoã Passion Fruit Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/passoa.webp"
   },
   {
     "id": "patient-wolf-gin",
     "name": "Patient Wolf Premium Dry Gin",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/patient-wolf-gin.webp"
   },
   {
     "id": "alize-bleu",
     "name": "Alizé Bleu Passion",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": ""
+    "notes": "",
+    "imagePath": "img/products/alize-bleu.webp"
   },
   {
     "id": "monin-agave",
     "name": "Monin Agave Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Top shelf"
+    "notes": "? Top shelf",
+    "imagePath": "img/products/monin-agave.webp"
   },
   {
     "id": "monin-elderflower",
     "name": "Monin Elderflower Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Top shelf"
+    "notes": "? Top shelf",
+    "imagePath": "img/products/monin-elderflower.webp"
   },
   {
     "id": "monin-vanilla",
     "name": "Monin Vanilla Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Top shelf"
+    "notes": "? Top shelf",
+    "imagePath": "img/products/monin-vanilla.webp"
   },
   {
     "id": "absolut-vodka",
     "name": "Absolut Vodka",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Back row, partially visible"
+    "notes": "? Back row, partially visible",
+    "imagePath": "img/products/absolut-vodka.webp"
   },
   {
     "id": "belvedere-vodka",
     "name": "Belvedere Vodka",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Frosted bottle back row"
+    "notes": "? Frosted bottle back row",
+    "imagePath": "img/products/belvedere-vodka.webp"
   },
   {
     "id": "smirnoff-red",
     "name": "Smirnoff Red Label",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Back row"
+    "notes": "? Back row",
+    "imagePath": "img/products/smirnoff-red.webp"
   },
   {
     "id": "massenez-creme-de-mure",
     "name": "Massenez Crème de Mûre",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Far right back"
+    "notes": "? Far right back",
+    "imagePath": "img/products/massenez-creme-de-mure.webp"
   },
   {
     "id": "massenez-creme-de-cassis",
     "name": "Massenez Crème de Cassis",
     "category": "Bar Shelves",
     "sourcePhoto": "IMG_0236.jpg",
-    "notes": "? Far right back"
+    "notes": "? Far right back",
+    "imagePath": "img/products/massenez-creme-de-cassis.webp"
   },
   {
     "id": "jack-daniels-old-no7",
     "name": "Jack Daniel's Old No.7 Tennessee Whiskey",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "40% 700mL"
+    "notes": "40% 700mL",
+    "imagePath": "img/products/jack-daniels-old-no7.webp"
   },
   {
     "id": "jagermeister",
     "name": "Jägermeister",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "35% 700mL"
+    "notes": "35% 700mL",
+    "imagePath": "img/products/jagermeister.webp"
   },
   {
     "id": "fireball",
     "name": "Fireball Cinnamon Whisky",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "Cinnamon flavoured whisky; 33% 700mL"
+    "notes": "Cinnamon flavoured whisky; 33% 700mL",
+    "imagePath": "img/products/fireball.webp"
   },
   {
     "id": "greenside-vodka",
     "name": "Greenside Premium Tasmanian Vodka",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "37% 700mL"
+    "notes": "37% 700mL",
+    "imagePath": "img/products/greenside-vodka.webp"
   },
   {
     "id": "yella-dry-gin",
     "name": "Yella Dry Gin",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "37% 700mL"
+    "notes": "37% 700mL",
+    "imagePath": "img/products/yella-dry-gin.webp"
   },
   {
     "id": "el-jimador-blanco",
     "name": "el Jimador Tequila Blanco",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "100% agave azul; 38% 700mL"
+    "notes": "100% agave azul; 38% 700mL",
+    "imagePath": "img/products/el-jimador-blanco.webp"
   },
   {
     "id": "benchmark-bourbon",
     "name": "McAfee's Benchmark Old No.8 Bourbon",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "Kentucky straight bourbon; 37% 700mL"
+    "notes": "Kentucky straight bourbon; 37% 700mL",
+    "imagePath": "img/products/benchmark-bourbon.webp"
   },
   {
     "id": "bundaberg-up-rum",
     "name": "Bundaberg Rum Original Underproof",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "UP rum 37%; partly hidden behind Benchmark, size not readable"
+    "notes": "UP rum 37%; partly hidden behind Benchmark, size not readable",
+    "imagePath": "img/products/bundaberg-up-rum.webp"
   },
   {
     "id": "johnnie-walker-red",
     "name": "Johnnie Walker Red Label",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-top-spirits-2026-10-08.jpg",
-    "notes": "Blended Scotch whisky; size not readable"
+    "notes": "Blended Scotch whisky; size not readable",
+    "imagePath": "img/products/johnnie-walker-red.webp"
   },
   {
     "id": "glades-orange",
     "name": "Glades Orange Cocktail Liqueur",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "? Far left, brand script 'Glades' partly obscured; 700mL"
+    "notes": "? Far left, brand script 'Glades' partly obscured; 700mL",
+    "imagePath": "img/products/glades-orange.webp"
   },
   {
     "id": "jameson",
     "name": "Jameson Irish Whiskey",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "Triple distilled"
+    "notes": "Triple distilled",
+    "imagePath": "img/products/jameson.webp"
   },
   {
     "id": "kraken-black-spiced",
     "name": "Kraken Black Spiced Rum",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "40% 700mL"
+    "notes": "40% 700mL",
+    "imagePath": "img/products/kraken-black-spiced.webp"
   },
   {
     "id": "bartenders-best-lime",
     "name": "Bartender's Best Lime Juice",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "Australian grown; non-alcoholic 750mL"
+    "notes": "Australian grown; non-alcoholic 750mL",
+    "imagePath": "img/products/bartenders-best-lime.webp"
   },
   {
     "id": "bartenders-best-lemon",
@@ -578,340 +659,345 @@
     "name": "Angostura Aromatic Bitters",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "? Yellow cap, paper wrapper turned away; 'ANGOS…' visible"
+    "notes": "? Yellow cap, paper wrapper turned away; 'ANGOS…' visible",
+    "imagePath": "img/products/angostura-bitters.webp"
   },
   {
     "id": "barmans-choice-sugar-syrup",
     "name": "Barman's Choice Sugar Syrup",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "Authentic Batching Co. cocktail mixer; 750mL"
+    "notes": "Authentic Batching Co. cocktail mixer; 750mL",
+    "imagePath": "img/products/barmans-choice-sugar-syrup.webp"
   },
   {
     "id": "little-drippa",
     "name": "Little Drippa Cold Drip Coffee",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "For cocktails, non-alcoholic; keep refrigerated"
+    "notes": "For cocktails, non-alcoholic; keep refrigerated",
+    "imagePath": "img/products/little-drippa.webp"
   },
   {
     "id": "cascade-raspberry-cordial",
     "name": "Cascade Raspberry Cordial",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "Raspberry flavour cordial"
+    "notes": "Raspberry flavour cordial",
+    "imagePath": "img/products/cascade-raspberry-cordial.webp"
   },
   {
     "id": "cascade-lime-cordial",
     "name": "Cascade Lime Cordial",
     "category": "Bar Shelves",
     "sourcePhoto": "shelf-bottom-mixers-2026-10-08.jpg",
-    "notes": "Lime flavour cordial"
+    "notes": "Lime flavour cordial",
+    "imagePath": "img/products/cascade-lime-cordial.webp"
   },
   {
     "id": "brouhaha-strawberry-rhubarb-sour",
     "name": "Brouhaha Strawberry Rhubarb Sour",
     "category": "Fridge",
-    "imagePath": null
+    "imagePath": "img/products/brouhaha-strawberry-rhubarb-sour.webp"
   },
   {
     "id": "de-bortoli-prosecco-piccolo",
     "name": "De Bortoli Prosecco Piccolo",
     "category": "Fridge",
-    "imagePath": null
+    "imagePath": "img/products/de-bortoli-prosecco-piccolo.webp"
   },
   {
     "id": "smiths-original",
     "name": "Smith's Original",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/smiths-original.webp"
   },
   {
     "id": "smiths-cheese-onion",
     "name": "Smith's Cheese & Onion",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/smiths-cheese-onion.webp"
   },
   {
     "id": "smiths-barbecue",
     "name": "Smith's Barbecue",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/smiths-barbecue.webp"
   },
   {
     "id": "smiths-salt-vinegar",
     "name": "Smith's Salt & Vinegar",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/smiths-salt-vinegar.webp"
   },
   {
     "id": "smiths-chicken",
     "name": "Smith's Chicken",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/smiths-chicken.webp"
   },
   {
     "id": "twisties-cheese",
     "name": "Twisties Cheese",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/twisties-cheese.webp"
   },
   {
     "id": "doritos-cheese-supreme",
     "name": "Doritos Cheese Supreme",
     "category": "Other",
-    "imagePath": null
+    "imagePath": "img/products/doritos-cheese-supreme.webp"
   },
   {
     "id": "fireball-blazing-apple",
     "name": "Fireball Blazing Apple",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/fireball-blazing-apple.webp"
   },
   {
     "id": "de-bortoli-regional-reserve-shiraz",
     "name": "De Bortoli Regional Reserve Shiraz",
     "category": "Fridge",
-    "imagePath": null
+    "imagePath": "img/products/de-bortoli-regional-reserve-shiraz.webp"
   },
   {
     "id": "monin-bubblegum",
     "name": "Monin Bubblegum Syrup",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/monin-bubblegum.webp"
   },
   {
     "id": "patient-wolf-pink-lake-gin",
     "name": "Patient Wolf Pink Lake Gin",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/patient-wolf-pink-lake-gin.webp"
   },
   {
     "id": "four-pillars-rare-dry-gin",
     "name": "Four Pillars Rare Dry Gin",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/four-pillars-rare-dry-gin.webp"
   },
   {
     "id": "1800-reposado",
     "name": "1800 Reposado Tequila",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/1800-reposado.webp"
   },
   {
     "id": "1800-silver",
     "name": "1800 Silver Tequila",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/1800-silver.webp"
   },
   {
     "id": "herradura-anejo",
     "name": "Herradura Añejo Tequila",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/herradura-anejo.webp"
   },
   {
     "id": "herradura-plata",
     "name": "Herradura Plata Tequila",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/herradura-plata.webp"
   },
   {
     "id": "campari",
     "name": "Campari",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/campari.webp"
   },
   {
     "id": "disaronno",
     "name": "Disaronno Originale",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/disaronno.webp"
   },
   {
     "id": "bacardi-carta-blanca",
     "name": "Bacardí Carta Blanca",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/bacardi-carta-blanca.webp"
   },
   {
     "id": "bacardi-carta-oro",
     "name": "Bacardí Carta Oro",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/bacardi-carta-oro.webp"
   },
   {
     "id": "malibu",
     "name": "Malibu Coconut Rum",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/malibu.webp"
   },
   {
     "id": "sailor-jerry",
     "name": "Sailor Jerry Spiced Rum",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/sailor-jerry.webp"
   },
   {
     "id": "canadian-club",
     "name": "Canadian Club Whisky",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/canadian-club.webp"
   },
   {
     "id": "jack-daniels-1907",
     "name": "Jack Daniel's 1907 Tennessee Whiskey",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/jack-daniels-1907.webp"
   },
   {
     "id": "jack-daniels-gentleman-jack",
     "name": "Jack Daniel's Gentleman Jack",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/jack-daniels-gentleman-jack.webp"
   },
   {
     "id": "woodford-reserve-bourbon",
     "name": "Woodford Reserve Bourbon",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/woodford-reserve-bourbon.webp"
   },
   {
     "id": "monkey-shoulder",
     "name": "Monkey Shoulder Blended Malt Scotch Whisky",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/monkey-shoulder.webp"
   },
   {
     "id": "wild-turkey-bourbon",
     "name": "Wild Turkey Bourbon",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/wild-turkey-bourbon.webp"
   },
   {
     "id": "diplomatico-rum",
     "name": "Diplomático Rum",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/diplomatico-rum.webp"
   },
   {
     "id": "el-jimador-reposado",
     "name": "el Jimador Reposado Tequila",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/el-jimador-reposado.webp"
   },
   {
     "id": "gin-mare",
     "name": "Gin Mare",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/gin-mare.webp"
   },
   {
     "id": "sheep-dog-peanut-butter",
     "name": "Sheep Dog Peanut Butter Whiskey",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/sheep-dog-peanut-butter.webp"
   },
   {
     "id": "captain-morgan-spiced-gold",
     "name": "Captain Morgan Original Spiced Gold",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/captain-morgan-spiced-gold.webp"
   },
   {
     "id": "glades-lychee",
     "name": "Glades Lychee Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/glades-lychee.webp"
   },
   {
     "id": "glades-peach",
     "name": "Glades Peach Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/glades-peach.webp"
   },
   {
     "id": "glades-butterscotch",
     "name": "Glades Butterscotch Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/glades-butterscotch.webp"
   },
   {
     "id": "glades-blue-citrus",
     "name": "Glades Blue Citrus Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/glades-blue-citrus.webp"
   },
   {
     "id": "divas-strawberry",
     "name": "Divas Strawberry Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/divas-strawberry.webp"
   },
   {
     "id": "aubrey-passionfruit",
     "name": "Aubrey Passionfruit Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/aubrey-passionfruit.webp"
   },
   {
     "id": "aubrey-watermelon",
     "name": "Aubrey Watermelon Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/aubrey-watermelon.webp"
   },
   {
     "id": "aubrey-elderflower",
     "name": "Aubrey Elderflower Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/aubrey-elderflower.webp"
   },
   {
     "id": "aubrey-lychee",
     "name": "Aubrey Lychee Liqueur",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/aubrey-lychee.webp"
   },
   {
     "id": "lula-rum",
     "name": "Lula Rum",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/lula-rum.webp"
   },
   {
     "id": "lula-coco-rum",
     "name": "Lula Coco Rum",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/lula-coco-rum.webp"
   },
   {
     "id": "mcguigan-zero-shiraz",
     "name": "McGuigan Zero Shiraz",
     "category": "Fridge",
-    "imagePath": null
+    "imagePath": "img/products/mcguigan-zero-shiraz.webp"
   },
   {
     "id": "baileys-original",
     "name": "Baileys Original Irish Cream",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/baileys-original.webp"
   },
   {
     "id": "aperol",
     "name": "Aperol",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/aperol.webp"
   },
   {
     "id": "makers-mark",
     "name": "Maker's Mark Bourbon",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/makers-mark.webp"
   },
   {
     "id": "southern-comfort",
     "name": "Southern Comfort",
     "category": "Bar Shelves",
-    "imagePath": null
+    "imagePath": "img/products/southern-comfort.webp"
   }
 ]

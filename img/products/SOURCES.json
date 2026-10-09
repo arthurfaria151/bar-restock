@@ -1,0 +1,1252 @@
+{
+  "about": "Web packshots for catalog.json products. Each image was downloaded once, background-cleaned, fitted within 360x360 on a white 400x400 canvas and saved as WebP. sourcePage is where the product was matched; imageUrl is the original image. confidence: exact = brand, variant and size match; close = same product but size/pack/label variant may differ; uncertain = best available match, name differs.",
+  "generated": "2026-10-09",
+  "counts": {
+    "exact": 118,
+    "close": 17,
+    "uncertain": 2,
+    "missing": 1
+  },
+  "missing": {
+    "bartenders-best-lemon": {
+      "name": "Bartender's Best Lemon Juice",
+      "file": "thumbs/bartenders-best-lemon.jpg",
+      "reason": "New 2026 product; no clean front-on web packshot found on the brand site, AU retailers or Open Food Facts. Keeps the existing shelf-photo thumb."
+    }
+  },
+  "images": {
+    "de-bortoli-prosecco": {
+      "name": "De Bortoli Prosecco",
+      "file": "img/products/de-bortoli-prosecco.webp",
+      "bytes": 6350,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_460997/de-bortoli-king-valley-prosecco",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/460997-1.png",
+      "confidence": "exact",
+      "note": "King Valley Prosecco 750ml"
+    },
+    "red-bull-red-edition": {
+      "name": "Red Bull The Red Edition",
+      "file": "img/products/red-bull-red-edition.webp",
+      "bytes": 11172,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_82625/red-bull-energy-drink-the-red-edition-250ml-can",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/82625-1.png",
+      "confidence": "exact",
+      "note": "250ml can"
+    },
+    "red-bull-tropical-edition": {
+      "name": "Red Bull The Tropical Edition",
+      "file": "img/products/red-bull-tropical-edition.webp",
+      "bytes": 9636,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_948527/red-bull-summer-tropical-250ml-4-pack",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/948527-2.png",
+      "confidence": "close",
+      "note": "Single yellow Tropical can shot from the 4-pack listing"
+    },
+    "red-bull-pink-edition": {
+      "name": "Red Bull The Pink Edition Sugarfree",
+      "file": "img/products/red-bull-pink-edition.webp",
+      "bytes": 8160,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_6008388/red-bull-the-berry-edition-sugar-free-cans-250ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/6008388-1.png",
+      "confidence": "exact",
+      "note": "250ml can; sold in Australia as 'The Berry Edition Sugarfree' (pink can, forest fruit)"
+    },
+    "red-bull-energy": {
+      "name": "Red Bull Energy Drink",
+      "file": "img/products/red-bull-energy.webp",
+      "bytes": 7364,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_114632/red-bull-energy-drink-250ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/114632-1.png",
+      "confidence": "exact",
+      "note": "250ml can"
+    },
+    "red-bull-sugarfree": {
+      "name": "Red Bull Sugarfree",
+      "file": "img/products/red-bull-sugarfree.webp",
+      "bytes": 7966,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_192401/red-bull-energy-drink-with-taurine-and-caffeine-sugar-free-can-250ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/192401-1.png",
+      "confidence": "exact",
+      "note": "250ml can"
+    },
+    "vodka-cruiser-guava": {
+      "name": "Vodka Cruiser Lush Guava",
+      "file": "img/products/vodka-cruiser-guava.webp",
+      "bytes": 4488,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_742152/vodka-cruiser-lush-guava-bottles-275ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/742152-1.png",
+      "confidence": "exact",
+      "note": "275ml bottle"
+    },
+    "vodka-cruiser-watermelon": {
+      "name": "Vodka Cruiser Juicy Watermelon",
+      "file": "img/products/vodka-cruiser-watermelon.webp",
+      "bytes": 6054,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_798168/vodka-cruiser-juicy-watermelon-bottles-275ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/798168-1.png",
+      "confidence": "exact",
+      "note": "275ml bottle"
+    },
+    "vodka-cruiser-lemon-lime": {
+      "name": "Vodka Cruiser Zesty Lemon Lime",
+      "file": "img/products/vodka-cruiser-lemon-lime.webp",
+      "bytes": 3834,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_742166/vodka-cruiser-zesty-lemon-lime-bottles-275ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/742166-1.png",
+      "confidence": "exact",
+      "note": "275ml bottle"
+    },
+    "vodka-cruiser-pineapple": {
+      "name": "Vodka Cruiser Pure Pineapple",
+      "file": "img/products/vodka-cruiser-pineapple.webp",
+      "bytes": 5674,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_742130/vodka-cruiser-pure-pineapple-bottles-275ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/742130-1.png",
+      "confidence": "exact",
+      "note": "275ml bottle"
+    },
+    "bundaberg-sarsaparilla": {
+      "name": "Bundaberg Sarsaparilla",
+      "file": "img/products/bundaberg-sarsaparilla.webp",
+      "bytes": 11280,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_229039/bundaberg-brewed-sarsaparilla-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/229039-1.png",
+      "confidence": "exact",
+      "note": "375ml bottle"
+    },
+    "bundaberg-ginger-beer": {
+      "name": "Bundaberg Ginger Beer",
+      "file": "img/products/bundaberg-ginger-beer.webp",
+      "bytes": 11892,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_97471/bundaberg-ginger-beer-bottles-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/97471-2.png",
+      "confidence": "exact",
+      "note": "375ml bottle (single-bottle shot from the 4-pack listing)"
+    },
+    "bundaberg-guava": {
+      "name": "Bundaberg Guava Sparkling Drink",
+      "file": "img/products/bundaberg-guava.webp",
+      "bytes": 11612,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_886812/bundaberg-guava-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/886812-1.png",
+      "confidence": "exact",
+      "note": "375ml bottle"
+    },
+    "somersby-pear": {
+      "name": "Somersby Cider Pear",
+      "file": "img/products/somersby-pear.webp",
+      "bytes": 6082,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_768384/somersby-pear-cider-bottles-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/768384-1.png",
+      "confidence": "exact",
+      "note": "330ml bottle"
+    },
+    "somersby-apple": {
+      "name": "Somersby Cider Apple",
+      "file": "img/products/somersby-apple.webp",
+      "bytes": 6194,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_768443/somersby-apple-cider-bottles-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/768443-1.png",
+      "confidence": "exact",
+      "note": "330ml bottle"
+    },
+    "suntory-196-double-lemon": {
+      "name": "Suntory -196 Double Lemon",
+      "file": "img/products/suntory-196-double-lemon.webp",
+      "bytes": 15062,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_172518/suntory-196-double-lemon-cans-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/172518-1.png",
+      "confidence": "exact",
+      "note": "330ml can"
+    },
+    "brookvale-union-ginger-beer": {
+      "name": "Brookvale Union Alcoholic Ginger Beer",
+      "file": "img/products/brookvale-union-ginger-beer.webp",
+      "bytes": 25608,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_544772/brookvale-union-ginger-beer-cans-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/544772-1.png",
+      "confidence": "exact",
+      "note": "330ml can"
+    },
+    "bundaberg-rum-cola": {
+      "name": "Bundaberg Rum Original & Cola",
+      "file": "img/products/bundaberg-rum-cola.webp",
+      "bytes": 13850,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_28730/bundaberg-rum-cola-cans-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/28730-1.png",
+      "confidence": "close",
+      "note": "Bundaberg Rum & Cola 375ml can; catalog note says 345mL"
+    },
+    "jack-daniels-cola": {
+      "name": "Jack Daniel's Tennessee Whiskey & Cola",
+      "file": "img/products/jack-daniels-cola.webp",
+      "bytes": 6422,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_850672/jack-daniel-s-tennessee-whiskey-cola-bottle-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/850672-1.png",
+      "confidence": "exact",
+      "note": "330ml bottle, 4.8%"
+    },
+    "pure-blonde": {
+      "name": "Pure Blonde Ultra Low Carb Lager",
+      "file": "img/products/pure-blonde.webp",
+      "bytes": 9472,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_921675/pure-blonde-ultra-low-carb-lager-cans-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/921675-1.png",
+      "confidence": "exact",
+      "note": "375ml can"
+    },
+    "coopers-pale-ale": {
+      "name": "Coopers Original Pale Ale",
+      "file": "img/products/coopers-pale-ale.webp",
+      "bytes": 10230,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_25620/coopers-original-pale-ale-bottles-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/25620-1.png",
+      "confidence": "exact",
+      "note": "375ml bottle"
+    },
+    "great-northern": {
+      "name": "Great Northern Original Full Strength",
+      "file": "img/products/great-northern.webp",
+      "bytes": 7068,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_365986/great-northern-brewing-co-original-lager-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/365986-1.png",
+      "confidence": "exact",
+      "note": "Original Lager 330ml bottle"
+    },
+    "corona-extra": {
+      "name": "Corona Extra",
+      "file": "img/products/corona-extra.webp",
+      "bytes": 5546,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_357480/corona-extra-beer-bottles-355ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/357480-1.png",
+      "confidence": "exact",
+      "note": "355ml bottle"
+    },
+    "peroni-0": {
+      "name": "Peroni Nastro Azzurro 0.0%",
+      "file": "img/products/peroni-0.webp",
+      "bytes": 7170,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_207216/peroni-nastro-azzurro-nastro-azzurro-0-0-percent-bottle-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/207216-1.png",
+      "confidence": "exact",
+      "note": "0.0% 330ml bottle"
+    },
+    "heineken-0": {
+      "name": "Heineken 0.0",
+      "file": "img/products/heineken-0.webp",
+      "bytes": 9096,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_804969/heineken-zero-bottle-330ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/804969-1.png",
+      "confidence": "exact",
+      "note": "0.0 330ml bottle"
+    },
+    "better-beer-middy": {
+      "name": "Better Beer Middy Ultra Low Carb",
+      "file": "img/products/better-beer-middy.webp",
+      "bytes": 6734,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_6079726/better-beer-middy-lager-can-30x355ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/6079726-1.png",
+      "confidence": "exact",
+      "note": "Middy ultra low carb 355ml can"
+    },
+    "brouhaha-milk-stout": {
+      "name": "Brouhaha Milk Stout",
+      "file": "img/products/brouhaha-milk-stout.webp",
+      "bytes": 6106,
+      "sourcePage": "https://beercellar.co.nz/products/brouhaha-brewery-milk-stout-375ml",
+      "imageUrl": "https://beercellar.co.nz/cdn/shop/files/Stout-render-220328-230603.jpg?v=1696383345",
+      "confidence": "exact",
+      "note": "375ml can"
+    },
+    "james-boags-premium-light": {
+      "name": "James Boag's Premium Light",
+      "file": "img/products/james-boags-premium-light.webp",
+      "bytes": 6876,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_901251/james-boag-s-premium-light-bottles-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/901251-1.png",
+      "confidence": "exact",
+      "note": "375ml bottle"
+    },
+    "strongbow-apple": {
+      "name": "Strongbow Apple Cider",
+      "file": "img/products/strongbow-apple.webp",
+      "bytes": 5744,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_907493/strongbow-original-apple-cider-bottles-355ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/907493-1.png",
+      "confidence": "close",
+      "note": "Original apple cider 355ml bottle; variant (original/sweet/dry) not confirmed from photo"
+    },
+    "de-bortoli-vivo-moscato": {
+      "name": "De Bortoli Vivo Moscato",
+      "file": "img/products/de-bortoli-vivo-moscato.webp",
+      "bytes": 2508,
+      "sourcePage": "https://www.omycellar.com/products/vivo-moscato-2023",
+      "imageUrl": "https://www.omycellar.com/cdn/shop/files/VIVOMoscato.png?v=1753800562",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "de-bortoli-vivo-sauvignon-blanc": {
+      "name": "De Bortoli Vivo Sauvignon Blanc",
+      "file": "img/products/de-bortoli-vivo-sauvignon-blanc.webp",
+      "bytes": 3342,
+      "sourcePage": "https://www.patrickscellars.com/products/6789",
+      "imageUrl": "https://www.patrickscellars.com/cdn/shop/files/6789_bdebd54a-9c04-4490-951e-21621bde05c6.jpg?v=1718090684",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "rose-pale-dry-2023": {
+      "name": "Rosé Pale & Dry 2023",
+      "file": "img/products/rose-pale-dry-2023.webp",
+      "bytes": 5320,
+      "sourcePage": "https://auziliquor.com.au/products/de-bortoli-rose-pale-dry-750ml-13",
+      "imageUrl": "https://auziliquor.com.au/cdn/shop/files/ros_-ros_-bottle-image-nv_1_1_1_1200x1200.jpg?v=1700130736",
+      "confidence": "close",
+      "note": "De Bortoli Rosé Rosé Pale & Dry 750ml (round black 'ROSÉ' label); shot is the NV label, catalog says 2023"
+    },
+    "jean-pierre-brut": {
+      "name": "Jean Pierre Brut",
+      "file": "img/products/jean-pierre-brut.webp",
+      "bytes": 3626,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_68010/jean-pierre-brut",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/68010-1.png",
+      "confidence": "exact",
+      "note": ""
+    },
+    "de-bortoli-chardonnay": {
+      "name": "De Bortoli Regional Reserve Chardonnay",
+      "file": "img/products/de-bortoli-chardonnay.webp",
+      "bytes": 3590,
+      "sourcePage": "https://www.cockburnsofleith.co.uk/product/chardonnay-regional-reserve-de-bortoli/",
+      "imageUrl": "https://www.cockburnsofleith.co.uk/wp-content/uploads/2022/06/Regional-Reserve.png",
+      "confidence": "close",
+      "note": "Regional Reserve Chardonnay (UK retailer shot); vintage/region line on label may differ from the Yarra Valley bottle"
+    },
+    "lyres-classico": {
+      "name": "Lyre's Classico Non-Alcoholic Sparkling",
+      "file": "img/products/lyres-classico.webp",
+      "bytes": 4562,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000005222_LYRCLA750/lyres-classico-750ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000005222_LYRCLA750-1.png",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "james-boags-premium-lager": {
+      "name": "James Boag's Premium Lager",
+      "file": "img/products/james-boags-premium-lager.webp",
+      "bytes": 6940,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_67870/james-boag-s-premium-lager-bottles-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/67870-1.png",
+      "confidence": "exact",
+      "note": "375ml bottle"
+    },
+    "de-bortoli-vivo-shiraz": {
+      "name": "De Bortoli Vivo Shiraz",
+      "file": "img/products/de-bortoli-vivo-shiraz.webp",
+      "bytes": 3648,
+      "sourcePage": "https://www.patrickscellars.com/products/6788",
+      "imageUrl": "https://www.patrickscellars.com/cdn/shop/files/6788_cc229add-03e7-4cc8-8331-45b9b07396b6.jpg?v=1718090686",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "aubrey-cold-brew": {
+      "name": "Aubrey Cold Brew Coffee Liqueur",
+      "file": "img/products/aubrey-cold-brew.webp",
+      "bytes": 4694,
+      "sourcePage": "https://liquorworld.com.au/products/aubrey-cold-drip-coffee-liqueur-700ml",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/0972/5922/5405/files/AubreyColdDripCoffeeLiqueur700ml.png?v=1777008299",
+      "confidence": "uncertain",
+      "note": "Listed as 'Aubrey Cold Drip Coffee Liqueur 700ml'; looks like the shelf bottle but the name differs from the catalog's 'Cold Brew'"
+    },
+    "vok-peach": {
+      "name": "Vok Peach Liqueur",
+      "file": "img/products/vok-peach.webp",
+      "bytes": 4860,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_717778/vok-peach-liqueur-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/717778-1.png",
+      "confidence": "exact",
+      "note": "500ml"
+    },
+    "lyres-white-cane": {
+      "name": "Lyre's White Cane Spirit",
+      "file": "img/products/lyres-white-cane.webp",
+      "bytes": 7280,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_65593/lyre-s-non-alcoholic-white-cane-spirit-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/65593-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "lyres-agave-blanco": {
+      "name": "Lyre's Agave Blanco Spirit",
+      "file": "img/products/lyres-agave-blanco.webp",
+      "bytes": 8956,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000005222_LYRABL700AU/lyres-agave-blanco-spirit-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000005222_LYRABL700AU-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "lyres-italian-spritz": {
+      "name": "Lyre's Italian Spritz",
+      "file": "img/products/lyres-italian-spritz.webp",
+      "bytes": 9144,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_172363/lyres-non-alcoholic-italian-spritz-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/172363-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "lyres-coffee-originale": {
+      "name": "Lyre's Coffee Originale",
+      "file": "img/products/lyres-coffee-originale.webp",
+      "bytes": 9044,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_65545/lyre-s-non-alcoholic-coffee-originale-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/65545-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "lyres-dry-london": {
+      "name": "Lyre's Dry London Spirit",
+      "file": "img/products/lyres-dry-london.webp",
+      "bytes": 8054,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_65546/lyre-s-non-alcoholic-dry-london-spirit-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/65546-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "monin-passion-fruit": {
+      "name": "Monin Passion Fruit Syrup",
+      "file": "img/products/monin-passion-fruit.webp",
+      "bytes": 4600,
+      "sourcePage": "https://grabmonin.co.nz/product/beverages/monin/monin-syrups/monin-passionfruit-syrup-700ml/",
+      "imageUrl": "https://grabmonin.co.nz/wp-content/uploads/2019/11/passionfruit-syrup.jpg",
+      "confidence": "exact",
+      "note": "700ml (Monin NZ distributor)"
+    },
+    "monin-blue-curacao": {
+      "name": "Monin Blue Curaçao Syrup",
+      "file": "img/products/monin-blue-curacao.webp",
+      "bytes": 6628,
+      "sourcePage": "https://grabmonin.co.nz/product/beverages/monin/monin-syrups/monin-blue-curacao-syrup-700ml/",
+      "imageUrl": "https://grabmonin.co.nz/wp-content/uploads/2019/11/blue-curacao-syrup.jpg",
+      "confidence": "exact",
+      "note": "700ml (Monin NZ distributor)"
+    },
+    "monin-lavender": {
+      "name": "Monin Lavender Syrup",
+      "file": "img/products/monin-lavender.webp",
+      "bytes": 6272,
+      "sourcePage": "https://grabmonin.co.nz/product/beverages/monin/monin-syrups/monin-lavender-syrup-700ml/",
+      "imageUrl": "https://grabmonin.co.nz/wp-content/uploads/2019/11/lavender-syrup.jpg",
+      "confidence": "exact",
+      "note": "700ml (Monin NZ distributor)"
+    },
+    "monin-toasted-marshmallow": {
+      "name": "Monin Toasted Marshmallow Syrup",
+      "file": "img/products/monin-toasted-marshmallow.webp",
+      "bytes": 6348,
+      "sourcePage": "https://www.thecafedistributors.com.au/monin-toasted-marshmallow-syrup-700ml",
+      "imageUrl": "https://www.thecafedistributors.com.au/assets/full/888.png?20200703030217",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "monin-pineapple": {
+      "name": "Monin Pineapple Syrup",
+      "file": "img/products/monin-pineapple.webp",
+      "bytes": 5746,
+      "sourcePage": "https://grabmonin.co.nz/product/beverages/monin/monin-syrups/monin-pineapple-syrup-700ml/",
+      "imageUrl": "https://grabmonin.co.nz/wp-content/uploads/2019/11/pineapple-syrup.jpg",
+      "confidence": "exact",
+      "note": "700ml (Monin NZ distributor)"
+    },
+    "licor-43": {
+      "name": "Licor 43",
+      "file": "img/products/licor-43.webp",
+      "bytes": 7926,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_911694/licor-43-spanish-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/911694-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "1800-coconut": {
+      "name": "1800 Coconut Tequila",
+      "file": "img/products/1800-coconut.webp",
+      "bytes": 7006,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_161640/1800-coconut-tequila-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/161640-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "frangelico": {
+      "name": "Frangelico",
+      "file": "img/products/frangelico.webp",
+      "bytes": 7088,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_3517/frangelico-hazelnut-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/3517-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "midori": {
+      "name": "Midori Melon Liqueur",
+      "file": "img/products/midori.webp",
+      "bytes": 6528,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_91199/midori-melon-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/91199-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "agwa": {
+      "name": "Agwa de Bolivia Coca Leaf Liqueur",
+      "file": "img/products/agwa.webp",
+      "bytes": 6972,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_727021/agwa-de-bolivia-herbal-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/727021-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "four-pillars-bloody-shiraz": {
+      "name": "Four Pillars Bloody Shiraz Gin",
+      "file": "img/products/four-pillars-bloody-shiraz.webp",
+      "bytes": 6568,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_525635/four-pillars-bloody-shiraz-gin-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/525635-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "paraiso-lychee": {
+      "name": "Paraiso Lychee Liqueur",
+      "file": "img/products/paraiso-lychee.webp",
+      "bytes": 4784,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_904201/paraiso-lychee-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/904201-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "hendricks-gin": {
+      "name": "Hendrick's Gin",
+      "file": "img/products/hendricks-gin.webp",
+      "bytes": 7902,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_913548/hendricks-gin-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/913548-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "passoa": {
+      "name": "Passoã Passion Fruit Liqueur",
+      "file": "img/products/passoa.webp",
+      "bytes": 5232,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_505427/passoa-passionfruit-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/505427-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "patient-wolf-gin": {
+      "name": "Patient Wolf Premium Dry Gin",
+      "file": "img/products/patient-wolf-gin.webp",
+      "bytes": 5146,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_671358/patient-wolf-dry-gin-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/671358-1.png",
+      "confidence": "exact",
+      "note": "Dry Gin 700ml"
+    },
+    "alize-bleu": {
+      "name": "Alizé Bleu Passion",
+      "file": "img/products/alize-bleu.webp",
+      "bytes": 5860,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_6001515/aliz-bleu-cognac-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/6001515-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "monin-agave": {
+      "name": "Monin Agave Syrup",
+      "file": "img/products/monin-agave.webp",
+      "bytes": 6416,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_822655/monin-agave-syrup",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/822655-1.png",
+      "confidence": "exact",
+      "note": ""
+    },
+    "monin-elderflower": {
+      "name": "Monin Elderflower Syrup",
+      "file": "img/products/monin-elderflower.webp",
+      "bytes": 6006,
+      "sourcePage": "https://grabmonin.co.nz/product/beverages/monin/monin-syrups/monin-elderflower-syrup-700ml/",
+      "imageUrl": "https://grabmonin.co.nz/wp-content/uploads/2021/01/750_ml_elderflower.png",
+      "confidence": "exact",
+      "note": "700ml (Monin NZ distributor; file name says 750ml)"
+    },
+    "monin-vanilla": {
+      "name": "Monin Vanilla Syrup",
+      "file": "img/products/monin-vanilla.webp",
+      "bytes": 6490,
+      "sourcePage": "https://www.barware.com.au/p/monin-vanilla-syrup-700ml/MoninVanilla",
+      "imageUrl": "https://www.barware.com.au/assets/full/MoninVanilla.jpg?20260625210633",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "absolut-vodka": {
+      "name": "Absolut Vodka",
+      "file": "img/products/absolut-vodka.webp",
+      "bytes": 5920,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_27720/absolut-vodka-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/27720-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "belvedere-vodka": {
+      "name": "Belvedere Vodka",
+      "file": "img/products/belvedere-vodka.webp",
+      "bytes": 3970,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_798463/belvedere-vodka-1l",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/798463-1.png",
+      "confidence": "close",
+      "note": "1L listing (700ml bottle looks the same)"
+    },
+    "smirnoff-red": {
+      "name": "Smirnoff Red Label",
+      "file": "img/products/smirnoff-red.webp",
+      "bytes": 6774,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_19252/smirnoff-red-label-vodka-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/19252-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "massenez-creme-de-mure": {
+      "name": "Massenez Crème de Mûre",
+      "file": "img/products/massenez-creme-de-mure.webp",
+      "bytes": 3312,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_1000002953_MAMUR700/massenez-liqueur-creme-de-mure-blackberry-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/1000002953_MAMUR700-1.png",
+      "confidence": "close",
+      "note": "700ml listing; size on shelf not confirmed"
+    },
+    "massenez-creme-de-cassis": {
+      "name": "Massenez Crème de Cassis",
+      "file": "img/products/massenez-creme-de-cassis.webp",
+      "bytes": 3584,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_218839/massenez-g-e-creme-de-cassis-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/218839-1.png",
+      "confidence": "close",
+      "note": "500ml; size on shelf not confirmed"
+    },
+    "jack-daniels-old-no7": {
+      "name": "Jack Daniel's Old No.7 Tennessee Whiskey",
+      "file": "img/products/jack-daniels-old-no7.webp",
+      "bytes": 9428,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_73587/jack-daniel-s-old-no-7-tennessee-whiskey-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/73587-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "jagermeister": {
+      "name": "Jägermeister",
+      "file": "img/products/jagermeister.webp",
+      "bytes": 10296,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_844/jagermeister-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/844-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "fireball": {
+      "name": "Fireball Cinnamon Whisky",
+      "file": "img/products/fireball.webp",
+      "bytes": 9240,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_728377/fireball-cinnamon-flavoured-whisky-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/728377-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "greenside-vodka": {
+      "name": "Greenside Premium Tasmanian Vodka",
+      "file": "img/products/greenside-vodka.webp",
+      "bytes": 4958,
+      "sourcePage": "https://redbottle.com.au/greenside-vodka-700ml/",
+      "imageUrl": "https://cdn11.bigcommerce.com/s-x3kq5bcr0e/images/stencil/1280x1280/products/17246/9681/Greenside_tas_vodka__83364.1755840073.png?c=1",
+      "confidence": "exact",
+      "note": "700ml 37%"
+    },
+    "yella-dry-gin": {
+      "name": "Yella Dry Gin",
+      "file": "img/products/yella-dry-gin.webp",
+      "bytes": 4594,
+      "sourcePage": "https://redbottle.com.au/yella-australian-dry-gin-700ml/",
+      "imageUrl": "https://cdn11.bigcommerce.com/s-x3kq5bcr0e/images/stencil/1280x1280/products/19998/10099/yella_1__91455.1778464345.jpg?c=1",
+      "confidence": "exact",
+      "note": "700ml 37%"
+    },
+    "el-jimador-blanco": {
+      "name": "el Jimador Tequila Blanco",
+      "file": "img/products/el-jimador-blanco.webp",
+      "bytes": 6824,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_642586/el-jimador-blanco-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/642586-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "benchmark-bourbon": {
+      "name": "McAfee's Benchmark Old No.8 Bourbon",
+      "file": "img/products/benchmark-bourbon.webp",
+      "bytes": 6506,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_224481/mcafee-s-benchmark-bourbon-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/224481-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "bundaberg-up-rum": {
+      "name": "Bundaberg Rum Original Underproof",
+      "file": "img/products/bundaberg-up-rum.webp",
+      "bytes": 7582,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_91195/bundaberg-original-underproof-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/91195-1.png",
+      "confidence": "exact",
+      "note": "700ml (size not readable in shelf photo)"
+    },
+    "johnnie-walker-red": {
+      "name": "Johnnie Walker Red Label",
+      "file": "img/products/johnnie-walker-red.webp",
+      "bytes": 6542,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_9068/johnnie-walker-red-label-blended-scotch-whisky-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/9068-1.png",
+      "confidence": "exact",
+      "note": "700ml (size not readable in shelf photo)"
+    },
+    "glades-orange": {
+      "name": "Glades Orange Cocktail Liqueur",
+      "file": "img/products/glades-orange.webp",
+      "bytes": 4858,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004260_DGLADES6/glades-orange-cocktail-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004260_DGLADES6-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "jameson": {
+      "name": "Jameson Irish Whiskey",
+      "file": "img/products/jameson.webp",
+      "bytes": 6818,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_21546/jameson-blended-irish-whiskey-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/21546-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "kraken-black-spiced": {
+      "name": "Kraken Black Spiced Rum",
+      "file": "img/products/kraken-black-spiced.webp",
+      "bytes": 8592,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_724737/the-kraken-black-spiced-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/724737-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "bartenders-best-lime": {
+      "name": "Bartender's Best Lime Juice",
+      "file": "img/products/bartenders-best-lime.webp",
+      "bytes": 4490,
+      "sourcePage": "https://thenonalcoholicclub.com/products/mr-consistent-non-alcoholic-waterboy-cocktail-mixer-non-alcoholic-750ml-copy",
+      "imageUrl": "https://thenonalcoholicclub.com/cdn/shop/files/Untitled_1200_x_1500_px_5ed86c2f-8c45-406e-a952-f41f9b677b70.jpg?v=1784901254",
+      "confidence": "exact",
+      "note": "750ml; original on black, background removed"
+    },
+    "angostura-bitters": {
+      "name": "Angostura Aromatic Bitters",
+      "file": "img/products/angostura-bitters.webp",
+      "bytes": 7890,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_73862/angostura-aromatic-bitters-200ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/73862-1.png",
+      "confidence": "exact",
+      "note": "200ml"
+    },
+    "barmans-choice-sugar-syrup": {
+      "name": "Barman's Choice Sugar Syrup",
+      "file": "img/products/barmans-choice-sugar-syrup.webp",
+      "bytes": 5842,
+      "sourcePage": "https://www.porterslux.com.au/products/barmans-choice-sugar-syrup-750ml",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/0812/1276/8573/files/Barman_sChoiceSugarSyrup750mlSingleBottle.webp?v=1703351090",
+      "confidence": "exact",
+      "note": "750ml (shot includes a soft shadow)"
+    },
+    "little-drippa": {
+      "name": "Little Drippa Cold Drip Coffee",
+      "file": "img/products/little-drippa.webp",
+      "bytes": 4290,
+      "sourcePage": "https://www.nicks.com.au/products/little-drippa-cocktail-coffee-750ml",
+      "imageUrl": "https://media.nicks.com.au/products/85a72c6c/9369999305475_1.jpg",
+      "confidence": "exact",
+      "note": "Little Drippa Cocktail Coffee 750ml; background removed"
+    },
+    "cascade-raspberry-cordial": {
+      "name": "Cascade Raspberry Cordial",
+      "file": "img/products/cascade-raspberry-cordial.webp",
+      "bytes": 5642,
+      "sourcePage": "https://www.thirstycamel.com.au/product/cascade-raspberry-cordial-bottle-750ml-single/45b343a7cd",
+      "imageUrl": "https://cache-cdn.beta.thirstycamel.com.au/insecure/q:80/rs:auto:0:1200:1:0/plain/productimages-production/2e85a410-f0e6-4d0e-0dd5-1442ca418e12",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "cascade-lime-cordial": {
+      "name": "Cascade Lime Cordial",
+      "file": "img/products/cascade-lime-cordial.webp",
+      "bytes": 5554,
+      "sourcePage": "https://wholesale.liquormart.com.au/product/cascade-lime-cordial-750ml/",
+      "imageUrl": "https://wholesale.liquormart.com.au/wp-content/uploads/2024/06/CASCADE-LIME-CORDIAL-750ML-1.png",
+      "confidence": "exact",
+      "note": "750ml"
+    },
+    "brouhaha-strawberry-rhubarb-sour": {
+      "name": "Brouhaha Strawberry Rhubarb Sour",
+      "file": "img/products/brouhaha-strawberry-rhubarb-sour.webp",
+      "bytes": 8088,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_78332/brouhaha-brewery-strawberry-rhubarb-sour-cans-375ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/78332-1.png",
+      "confidence": "exact",
+      "note": "375ml can"
+    },
+    "de-bortoli-prosecco-piccolo": {
+      "name": "De Bortoli Prosecco Piccolo",
+      "file": "img/products/de-bortoli-prosecco-piccolo.webp",
+      "bytes": 5952,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_108524/de-bortoli-king-valley-prosecco-200ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/108524-1.png",
+      "confidence": "exact",
+      "note": "200ml"
+    },
+    "smiths-original": {
+      "name": "Smith's Original",
+      "file": "img/products/smiths-original.webp",
+      "bytes": 17126,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_826730/smiths-crinkle-cut-original-170g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/826730-1.png",
+      "confidence": "close",
+      "note": "Crinkle Cut Original 170g; bar pack size unknown"
+    },
+    "smiths-cheese-onion": {
+      "name": "Smith's Cheese & Onion",
+      "file": "img/products/smiths-cheese-onion.webp",
+      "bytes": 16396,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_826735/smiths-crinkle-cut-chips-cheese-onion-170g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/826735-1.png",
+      "confidence": "close",
+      "note": "Crinkle Cut Cheese & Onion 170g; bar pack size unknown"
+    },
+    "smiths-barbecue": {
+      "name": "Smith's Barbecue",
+      "file": "img/products/smiths-barbecue.webp",
+      "bytes": 15134,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_826733/smiths-crinkle-cut-barbecue-chips-170g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/826733-1.png",
+      "confidence": "close",
+      "note": "Crinkle Cut Barbecue 170g; bar pack size unknown"
+    },
+    "smiths-salt-vinegar": {
+      "name": "Smith's Salt & Vinegar",
+      "file": "img/products/smiths-salt-vinegar.webp",
+      "bytes": 17002,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_826738/smiths-crinkle-cut-salt-and-vinegar-170g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/826738-1.png",
+      "confidence": "close",
+      "note": "Crinkle Cut Salt & Vinegar 170g; bar pack size unknown"
+    },
+    "smiths-chicken": {
+      "name": "Smith's Chicken",
+      "file": "img/products/smiths-chicken.webp",
+      "bytes": 19068,
+      "sourcePage": "https://www.smiths-chips.com.au/products/crinkle-cut-chips/chicken-chips",
+      "imageUrl": "https://www.smiths-chips.com.au/prod/s3fs-public/2022-11/PEP962-Smiths-Crinkle-Chicken-2022-170g-3D.png",
+      "confidence": "close",
+      "note": "Crinkle Cut Chicken 170g (brand site); bar pack size unknown"
+    },
+    "twisties-cheese": {
+      "name": "Twisties Cheese",
+      "file": "img/products/twisties-cheese.webp",
+      "bytes": 13510,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_81659/twisties-cheese-90g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/81659-1.png",
+      "confidence": "close",
+      "note": "90g bag; bar pack size unknown"
+    },
+    "doritos-cheese-supreme": {
+      "name": "Doritos Cheese Supreme",
+      "file": "img/products/doritos-cheese-supreme.webp",
+      "bytes": 12674,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_826731/doritos-corn-chips-cheese-supreme-170g",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/826731-1.png",
+      "confidence": "close",
+      "note": "170g bag; bar pack size unknown"
+    },
+    "fireball-blazing-apple": {
+      "name": "Fireball Blazing Apple",
+      "file": "img/products/fireball-blazing-apple.webp",
+      "bytes": 10728,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_6088811/fireball-blazin-apple-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/6088811-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "de-bortoli-regional-reserve-shiraz": {
+      "name": "De Bortoli Regional Reserve Shiraz",
+      "file": "img/products/de-bortoli-regional-reserve-shiraz.webp",
+      "bytes": 3170,
+      "sourcePage": "https://adnams.co.uk/products/de-bortoli-regional-shiraz-hethecote-australia",
+      "imageUrl": "https://adnams.co.uk/cdn/shop/files/De-Bortoli-Regional-Reserve-Shiraz-Adnams-PLC-111797.png?v=1743071954",
+      "confidence": "exact",
+      "note": "Regional Reserve Heathcote Shiraz (UK retailer shot)"
+    },
+    "monin-bubblegum": {
+      "name": "Monin Bubblegum Syrup",
+      "file": "img/products/monin-bubblegum.webp",
+      "bytes": 6348,
+      "sourcePage": "https://www.monacellars.com.au/products/monin-bubblegum-syrup-700ml",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/0765/9778/8948/files/5d3a39e816d53bacab557028edbecd37105cb879.jpg?v=1789108971",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "patient-wolf-pink-lake-gin": {
+      "name": "Patient Wolf Pink Lake Gin",
+      "file": "img/products/patient-wolf-pink-lake-gin.webp",
+      "bytes": 6158,
+      "sourcePage": "https://thewineprovidore.com.au/products/patient-wolf-pink-lake-gin-43-700ml",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2435/3999/files/PATIENTWOLFPINKLAKEGIN43_700ML.jpg?v=1704781839",
+      "confidence": "exact",
+      "note": "700ml 43%"
+    },
+    "four-pillars-rare-dry-gin": {
+      "name": "Four Pillars Rare Dry Gin",
+      "file": "img/products/four-pillars-rare-dry-gin.webp",
+      "bytes": 5954,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_781785/four-pillars-rare-dry-gin-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/781785-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "1800-reposado": {
+      "name": "1800 Reposado Tequila",
+      "file": "img/products/1800-reposado.webp",
+      "bytes": 7188,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_667525/1800-reposado-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/667525-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "1800-silver": {
+      "name": "1800 Silver Tequila",
+      "file": "img/products/1800-silver.webp",
+      "bytes": 7366,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_756926/1800-blanco-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/756926-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "herradura-anejo": {
+      "name": "Herradura Añejo Tequila",
+      "file": "img/products/herradura-anejo.webp",
+      "bytes": 11188,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_784490/herradura-a-ejo-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/784490-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "herradura-plata": {
+      "name": "Herradura Plata Tequila",
+      "file": "img/products/herradura-plata.webp",
+      "bytes": 11282,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_784501/herradura-plata-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/784501-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "campari": {
+      "name": "Campari",
+      "file": "img/products/campari.webp",
+      "bytes": 5342,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_95025/campari-bitter-aperitif-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/95025-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "disaronno": {
+      "name": "Disaronno Originale",
+      "file": "img/products/disaronno.webp",
+      "bytes": 12346,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_47266/disaronno-italian-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/47266-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "bacardi-carta-blanca": {
+      "name": "Bacardí Carta Blanca",
+      "file": "img/products/bacardi-carta-blanca.webp",
+      "bytes": 6380,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_91192/bacardi-carta-blanca-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/91192-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "bacardi-carta-oro": {
+      "name": "Bacardí Carta Oro",
+      "file": "img/products/bacardi-carta-oro.webp",
+      "bytes": 7460,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_84909/bacardi-carta-oro-superior-gold-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/84909-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "malibu": {
+      "name": "Malibu Coconut Rum",
+      "file": "img/products/malibu.webp",
+      "bytes": 5132,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_97103/malibu-classic-caribbean-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/97103-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "sailor-jerry": {
+      "name": "Sailor Jerry Spiced Rum",
+      "file": "img/products/sailor-jerry.webp",
+      "bytes": 6534,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_374557/sailor-jerry-spiced-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/374557-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "canadian-club": {
+      "name": "Canadian Club Whisky",
+      "file": "img/products/canadian-club.webp",
+      "bytes": 5524,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_21534/canadian-club-blended-whisky-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/21534-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "jack-daniels-1907": {
+      "name": "Jack Daniel's 1907 Tennessee Whiskey",
+      "file": "img/products/jack-daniels-1907.webp",
+      "bytes": 9840,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_380979/jack-daniel-s-1907-tennessee-whiskey-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/380979-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "jack-daniels-gentleman-jack": {
+      "name": "Jack Daniel's Gentleman Jack",
+      "file": "img/products/jack-daniels-gentleman-jack.webp",
+      "bytes": 11284,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_902889/jack-daniel-s-gentleman-jack-tennessee-whiskey-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/902889-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "woodford-reserve-bourbon": {
+      "name": "Woodford Reserve Bourbon",
+      "file": "img/products/woodford-reserve-bourbon.webp",
+      "bytes": 6642,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_110093/woodford-reserve-kentucky-straight-bourbon-whiskey-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/110093-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "monkey-shoulder": {
+      "name": "Monkey Shoulder Blended Malt Scotch Whisky",
+      "file": "img/products/monkey-shoulder.webp",
+      "bytes": 9470,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_375519/monkey-shoulder-blended-malt-scotch-whisky-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/375519-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "wild-turkey-bourbon": {
+      "name": "Wild Turkey Bourbon",
+      "file": "img/products/wild-turkey-bourbon.webp",
+      "bytes": 6510,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_58930/wild-turkey-kentucky-straight-bourbon-whiskey-81p-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/58930-1.png",
+      "confidence": "close",
+      "note": "Wild Turkey 81 proof 700ml; catalog doesn't say 81 vs 101"
+    },
+    "diplomatico-rum": {
+      "name": "Diplomático Rum",
+      "file": "img/products/diplomatico-rum.webp",
+      "bytes": 8338,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_873431/diplom-tico-reserva-exclusiva-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/873431-1.png",
+      "confidence": "close",
+      "note": "Reserva Exclusiva 700ml; catalog doesn't name the expression"
+    },
+    "el-jimador-reposado": {
+      "name": "el Jimador Reposado Tequila",
+      "file": "img/products/el-jimador-reposado.webp",
+      "bytes": 7228,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_348013/el-jimador-reposado-tequila-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/348013-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "gin-mare": {
+      "name": "Gin Mare",
+      "file": "img/products/gin-mare.webp",
+      "bytes": 5360,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_381436/gin-mare-mediterranean-gin-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/381436-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "sheep-dog-peanut-butter": {
+      "name": "Sheep Dog Peanut Butter Whiskey",
+      "file": "img/products/sheep-dog-peanut-butter.webp",
+      "bytes": 8058,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_155580/sheep-dog-peanut-butter-whiskey-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/155580-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "captain-morgan-spiced-gold": {
+      "name": "Captain Morgan Original Spiced Gold",
+      "file": "img/products/captain-morgan-spiced-gold.webp",
+      "bytes": 7618,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_906818/captain-morgan-original-spiced-gold-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/906818-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "glades-lychee": {
+      "name": "Glades Lychee Liqueur",
+      "file": "img/products/glades-lychee.webp",
+      "bytes": 4364,
+      "sourcePage": "https://liquorworld.com.au/products/glades-lychee-liqueur-700ml",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/0972/5922/5405/files/GladesLycheeLiqueur700ml.png?v=1777877922",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "glades-peach": {
+      "name": "Glades Peach Liqueur",
+      "file": "img/products/glades-peach.webp",
+      "bytes": 4460,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004260_DGLADES5/glades-peach-cocktail-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004260_DGLADES5-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "glades-butterscotch": {
+      "name": "Glades Butterscotch Liqueur",
+      "file": "img/products/glades-butterscotch.webp",
+      "bytes": 5392,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004260_DGLADES1/glades-butterscotch-cocktail-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004260_DGLADES1-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "glades-blue-citrus": {
+      "name": "Glades Blue Citrus Liqueur",
+      "file": "img/products/glades-blue-citrus.webp",
+      "bytes": 5098,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004260_DGLADES2/glades-blue-citrus-cocktail-liqueur-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004260_DGLADES2-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "divas-strawberry": {
+      "name": "Divas Strawberry Liqueur",
+      "file": "img/products/divas-strawberry.webp",
+      "bytes": 5348,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004260_DGLADES7/glades-strawberry-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004260_DGLADES7-1.png",
+      "confidence": "uncertain",
+      "note": "Glades Strawberry 700ml (Divas Drinks' Glades range); catalog says 'Divas Strawberry'"
+    },
+    "aubrey-passionfruit": {
+      "name": "Aubrey Passionfruit Liqueur",
+      "file": "img/products/aubrey-passionfruit.webp",
+      "bytes": 6492,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_186898/aubrey-passionfruit-liqueur-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/186898-1.png",
+      "confidence": "exact",
+      "note": "500ml"
+    },
+    "aubrey-watermelon": {
+      "name": "Aubrey Watermelon Liqueur",
+      "file": "img/products/aubrey-watermelon.webp",
+      "bytes": 6024,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_186931/aubrey-watermelon-liqueur-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/186931-1.png",
+      "confidence": "exact",
+      "note": "500ml"
+    },
+    "aubrey-elderflower": {
+      "name": "Aubrey Elderflower Liqueur",
+      "file": "img/products/aubrey-elderflower.webp",
+      "bytes": 5018,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_186946/aubrey-elderflower-liqueur-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/186946-1.png",
+      "confidence": "exact",
+      "note": "500ml"
+    },
+    "aubrey-lychee": {
+      "name": "Aubrey Lychee Liqueur",
+      "file": "img/products/aubrey-lychee.webp",
+      "bytes": 4296,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_186894/aubrey-lychee-liqueur-500ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/186894-1.png",
+      "confidence": "exact",
+      "note": "500ml"
+    },
+    "lula-rum": {
+      "name": "Lula Rum",
+      "file": "img/products/lula-rum.webp",
+      "bytes": 4078,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_231627/lula-rum-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/231627-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "lula-coco-rum": {
+      "name": "Lula Coco Rum",
+      "file": "img/products/lula-coco-rum.webp",
+      "bytes": 5850,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_ER_2000004502_9369900078009/lula-coco-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/2000004502_9369900078009-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "mcguigan-zero-shiraz": {
+      "name": "McGuigan Zero Shiraz",
+      "file": "img/products/mcguigan-zero-shiraz.webp",
+      "bytes": 2888,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_147836/mcguigan-zero-alcohol-free-shiraz",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/147836-1.png",
+      "confidence": "exact",
+      "note": ""
+    },
+    "baileys-original": {
+      "name": "Baileys Original Irish Cream",
+      "file": "img/products/baileys-original.webp",
+      "bytes": 4932,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_73796/baileys-irish-cream-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/73796-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "aperol": {
+      "name": "Aperol",
+      "file": "img/products/aperol.webp",
+      "bytes": 6602,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_908592/aperol-aperitivo-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/908592-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "makers-mark": {
+      "name": "Maker's Mark Bourbon",
+      "file": "img/products/makers-mark.webp",
+      "bytes": 8462,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_49750/maker-s-mark-kentucky-straight-bourbon-whisky-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/49750-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    },
+    "southern-comfort": {
+      "name": "Southern Comfort",
+      "file": "img/products/southern-comfort.webp",
+      "bytes": 5550,
+      "sourcePage": "https://www.danmurphys.com.au/product/DM_73833/southern-comfort-700ml",
+      "imageUrl": "https://media.danmurphys.com.au/dmo/product/73833-1.png",
+      "confidence": "exact",
+      "note": "700ml"
+    }
+  }
+}

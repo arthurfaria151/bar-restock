@@ -1,5 +1,5 @@
 const BINDER_PAGES = ["./binder-pages/beer-line-clean-1.jpg", "./binder-pages/beer-line-clean-2.jpg", "./binder-pages/beer-line-clean-3.jpg", "./binder-pages/beer-line-clean-4.jpg", "./binder-pages/incident-policy-1.jpg", "./binder-pages/incident-policy-2.jpg", "./binder-pages/incident-policy-3.jpg", "./binder-pages/induction-1.jpg", "./binder-pages/induction-2.jpg", "./binder-pages/induction-3.jpg", "./binder-pages/induction-4.jpg", "./binder-pages/induction-5.jpg", "./binder-pages/trivia-1.jpg", "./binder-pages/trivia-2.jpg", "./binder-pages/trivia-3.jpg"];
-const VERSION = "f630248d0662";
+const VERSION = "7c9d68aa7c6d";
 const CACHE = `bar-restock-${VERSION}`;
 const SHELL = [
   "./",
@@ -31,13 +31,14 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
       await cache.addAll(SHELL.map((path) => new Request(path, { cache: "reload" })));
-      // Prefetch thumbs one by one so a single missing image doesn't skip the rest.
+      // Precache every catalog product image (img/products/*.webp, ~1 MB) individually so a
+      // single missing image doesn't skip the rest; this is what makes pictures work offline.
       try {
         const res = await fetch(`./catalog.json?v=${VERSION}`);
         const catalog = await res.json();
         await Promise.allSettled(catalog.filter(p => p.imagePath !== null).map((p) => cache.add(`./${p.imagePath || `thumbs/${p.id}.jpg`}?v=${VERSION}`)));
       } catch (e) {
-        // thumbs can load on demand
+        // product images can load on demand
       }
     }).then(() => self.skipWaiting())
   );

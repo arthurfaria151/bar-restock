@@ -33,7 +33,12 @@ Serve the repository root to run the website; it needs no server-side build.
 
 A native iPad application project for counting stock, receiving deliveries,
 setting minimum stock levels, building restock lists, and checking the shelf
-layout. It includes a catalog of 138 products; items awaiting photos use text placeholders.
+layout. It includes a catalog of 138 products with web product images in
+`img/products/` (sources and match confidence in `img/products/SOURCES.json`);
+a product whose image is missing or fails to load shows its initial instead.
+Admin can replace a product's image on a device with Image (Stock list or the
+Shelves product sheet): a photo or pasted link, resized to 400 px and saved
+locally under `bar-restock-image-overrides-v1`.
 The Capacitor iOS project bundles the interface and catalog inside the app.
 Clipboard, sharing, email handoff, and barcode-link file exports use native
 iPad APIs.
