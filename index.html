@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="app-version" content="77357100d4e6" />
+  <meta name="app-version" content="f630248d0662" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,11 +11,11 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="Bar restock list — tap products, set quantities, copy your list." />
-  <link rel="manifest" href="manifest.webmanifest?v=77357100d4e6" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=77357100d4e6" />
-  <link rel="icon" type="image/png" href="icon-192.png?v=77357100d4e6" />
+  <link rel="manifest" href="manifest.webmanifest?v=f630248d0662" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=f630248d0662" />
+  <link rel="icon" type="image/png" href="icon-192.png?v=f630248d0662" />
   <title>Bar Restock</title>
-  <link rel="stylesheet" href="styles.css?v=77357100d4e6" />
+  <link rel="stylesheet" href="styles.css?v=f630248d0662" />
 </head>
 <body>
   <!-- Line icon set (Lucide-style, 24×24, 2px stroke). Use: <svg class="icon"><use href="#i-name"/></svg> -->
@@ -83,7 +83,7 @@
         <nav class="tab-bar" role="tablist" aria-label="Sections">
           <button type="button" class="tab-btn active" data-tab="products" role="tab" aria-selected="true" aria-controls="panel-products">
             <svg class="icon" aria-hidden="true"><use href="#i-package"/></svg>
-            Products
+            Restock
           </button>
           <button type="button" class="tab-btn" data-tab="stock" role="tab" aria-selected="false" aria-controls="panel-stock">
             <svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg>
@@ -98,17 +98,13 @@
             Par
             <span class="tab-badge" id="parBadge" aria-label="products low">0</span>
           </button>
-          <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false" aria-controls="panel-restock">
-            <svg class="icon" aria-hidden="true"><use href="#i-cart"/></svg>
-            Restock
-            <span class="tab-badge" id="tabBadge" aria-label="products on list">0</span>
-          </button>
           <button type="button" class="tab-btn" data-tab="shelves" role="tab" aria-selected="false" aria-controls="panel-shelves">
             <svg class="icon" aria-hidden="true"><use href="#i-shelves"/></svg>
             Shelves
           </button>
           <button type="button" class="tab-btn" data-tab="checklist" role="tab" aria-selected="false" aria-controls="panel-checklist">Checklist</button>
           <button type="button" class="tab-btn" data-tab="procedures" role="tab" aria-selected="false" aria-controls="panel-procedures">Procedures</button>
+          <button type="button" class="tab-btn" data-tab="bookings" role="tab" aria-selected="false" aria-controls="panel-bookings">Bookings</button>
           <button type="button" class="tab-btn" data-tab="handout" role="tab" aria-selected="false" aria-controls="panel-handout">Handout</button>
         </nav>
         <div class="header-right">
@@ -135,6 +131,14 @@
   </div>
 
   <main id="main" inert>
+    <nav id="restockSubnav" class="restock-subnav" aria-label="Restock pages" hidden>
+      <button type="button" class="btn btn-secondary" data-goto="products">Products</button>
+          <button type="button" class="tab-btn" data-tab="restock" role="tab" aria-selected="false" aria-controls="panel-restock">
+            <svg class="icon" aria-hidden="true"><use href="#i-cart"/></svg>
+            Restock list
+            <span class="tab-badge" id="tabBadge" aria-label="products on list">0</span>
+          </button>
+    </nav>
     <section id="panel-products" class="panel active" role="tabpanel" aria-labelledby="h-products">
       <header class="hero reveal">
         <h2 class="hero-title" id="h-products">Build tonight’s restock.</h2>
@@ -409,6 +413,34 @@
         <div id="proceduresRoot"></div>
       </div>
     </section>
+    <section id="panel-bookings" class="panel" role="tabpanel" aria-labelledby="h-bookings">
+      <header class="hero reveal hero-compact"><h2 class="hero-title" id="h-bookings">Bookings.</h2><p class="hero-sub">Plan the venue, request approval, and prepare the shift. All times are Brisbane time.</p></header>
+      <div class="section binder-content">
+        <div class="booking-toolbar"><button id="bookingNew" type="button" class="btn btn-primary">Request booking</button><button id="bookingRefresh" type="button" class="btn btn-secondary">Refresh</button><span id="bookingConnection" role="status"></span></div>
+        <p id="bookingStatus" role="status" aria-live="polite"></p>
+        <details id="bookingEditor" class="binder-document"><summary>Booking details</summary><form id="bookingForm" class="binder-document-body">
+          <div class="booking-form-grid">
+            <div class="field"><label class="field-label" for="bookingName">Booking / customer name</label><input id="bookingName" class="input" maxlength="120" required /></div>
+            <div class="field"><label class="field-label" for="bookingContact">Contact (optional)</label><input id="bookingContact" class="input" maxlength="200" /></div>
+            <div class="field"><label class="field-label" for="bookingStart">Starts · Brisbane</label><input id="bookingStart" class="input" type="datetime-local" required /></div>
+            <div class="field"><label class="field-label" for="bookingEnd">Ends · Brisbane</label><input id="bookingEnd" class="input" type="datetime-local" required /></div>
+            <div class="field"><label class="field-label" for="bookingGuests">Guests</label><input id="bookingGuests" class="input" type="number" min="0" max="10000" step="1" value="0" required /></div>
+            <div class="field"><label class="field-label" for="bookingArea">Part of the venue</label><input id="bookingArea" class="input" maxlength="120" placeholder="e.g. Terrace, upstairs, main bar" /></div>
+            <div class="field"><label class="field-label" for="bookingTables">Number of tables</label><input id="bookingTables" class="input" type="number" min="0" max="200" step="1" value="0" required /></div>
+            <div class="field"><label class="field-label" for="bookingPoolTables">Pool tables</label><input id="bookingPoolTables" class="input" type="number" min="0" max="50" step="1" value="0" required /></div>
+            <div class="field"><label class="booking-tab-toggle"><input id="bookingTab" type="checkbox" /> Bar tab required</label></div>
+            <div class="field"><label class="field-label" for="bookingTabValue">Tab limit · AUD (optional)</label><input id="bookingTabValue" class="input" type="number" min="0" max="1000000" step="0.01" disabled /></div>
+          </div>
+          <div class="field"><label class="field-label" for="bookingDrinks">Types of drinks requested</label><textarea id="bookingDrinks" class="input" rows="3" maxlength="2000" placeholder="Beer, cocktails, non-alcoholic options…"></textarea></div>
+          <div class="field"><label class="field-label" for="bookingRequests">Special requests</label><textarea id="bookingRequests" class="input" rows="3" maxlength="2000"></textarea></div>
+          <div class="field"><label class="field-label" for="bookingCustomTasks">Additional preparation tasks · one per line</label><textarea id="bookingCustomTasks" class="input" rows="3" maxlength="2000" placeholder="Set up decorations&#10;Arrange a welcome sign"></textarea></div>
+          <p class="binder-source">Table signs, venue setup, pool reservations, tabs and drink preparation tasks are generated from these details. Bartender requests require manager/admin approval.</p>
+          <div class="binder-actions"><button id="bookingSubmit" class="btn btn-primary" type="submit">Send request</button><button id="bookingFormCancel" class="btn btn-secondary" type="button">Cancel</button></div>
+        </form></details>
+        <div class="checklist-view-tools"><div id="bookingFilters" class="checklist-filters" role="group" aria-label="Booking view"><button type="button" data-booking-filter="present" aria-pressed="false">Present <span>0</span></button><button type="button" data-booking-filter="future" aria-pressed="true">Future <span>0</span></button><button type="button" data-booking-filter="past" aria-pressed="false">Past <span>0</span></button><button type="button" data-booking-filter="requests" aria-pressed="false">Requests <span>0</span></button><button type="button" data-booking-filter="history" aria-pressed="false">Cancelled / declined <span>0</span></button></div><label class="checklist-search"><span class="visually-hidden">Search bookings</span><input id="bookingSearch" class="input" type="search" placeholder="Search bookings…" /></label></div>
+        <div id="bookingList"></div>
+      </div>
+    </section>
     <section id="panel-handout" class="panel" role="tabpanel" aria-labelledby="h-handout">
       <header class="hero reveal hero-compact"><h2 class="hero-title" id="h-handout">Handout.</h2><p class="hero-sub">A shared handover for the team. Each business day is archived at 2:00 am Brisbane time.</p></header>
       <div class="section binder-content">
@@ -417,6 +449,7 @@
         <p id="handoutStatus" role="status" aria-live="polite"></p>
         <div id="handoutShared" hidden>
           <div class="handout-day"><h3 id="handoutDate"></h3><p id="handoutClose"></p><button id="handoutBack" type="button" class="btn btn-secondary btn-sm" hidden>Back to today</button><button id="handoutDownload" type="button" class="btn btn-secondary btn-sm" hidden>Download handout file</button></div>
+          <div id="handoutBookings"></div>
           <div id="handoutEntries"></div>
           <form id="handoutEditForm" class="card handout-editor" hidden><label class="field-label" for="handoutEditText">Edit note</label><textarea id="handoutEditText" class="input" rows="6" maxlength="8000" required></textarea><div class="binder-actions"><button type="submit" class="btn btn-primary">Save changes</button><button id="handoutEditAsNew" type="button" class="btn btn-secondary">Add draft as new note</button><button id="handoutEditCancel" type="button" class="btn btn-ghost">Cancel edit</button></div></form>
           <form id="handoutComposer" class="card handout-editor"><label class="field-label" for="handoutText">Add to the handout</label><textarea id="handoutText" class="input" rows="5" maxlength="8000" placeholder="Updates, tasks or anything the next shift needs to know…" required></textarea><div class="binder-actions"><button type="submit" class="btn btn-primary">Share note</button></div></form>
@@ -440,13 +473,14 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="storage.js?v=77357100d4e6"></script>
-  <script src="gs1.js?v=77357100d4e6"></script>
-  <script src="receive.js?v=77357100d4e6"></script>
-  <script src="binder-data.js?v=77357100d4e6"></script>
-  <script src="binder.js?v=77357100d4e6"></script>
-  <script src="handout-config.js?v=77357100d4e6"></script>
-  <script src="handout.js?v=77357100d4e6"></script>
-  <script src="app.js?v=77357100d4e6"></script>
+  <script src="storage.js?v=f630248d0662"></script>
+  <script src="gs1.js?v=f630248d0662"></script>
+  <script src="receive.js?v=f630248d0662"></script>
+  <script src="binder-data.js?v=f630248d0662"></script>
+  <script src="binder.js?v=f630248d0662"></script>
+  <script src="handout-config.js?v=f630248d0662"></script>
+  <script src="bookings.js?v=f630248d0662"></script>
+  <script src="handout.js?v=f630248d0662"></script>
+  <script src="app.js?v=f630248d0662"></script>
 </body>
 </html>

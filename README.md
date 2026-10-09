@@ -22,6 +22,12 @@ Handout uses the Raspberry Pi server for shared notes and daily archives
 at 02:00 Brisbane time. See [Pi installation and connection](docs/HANDOUT-PI.md).
 It requires the Pi service and a verified public HTTPS endpoint before activation.
 
+Bookings uses the same Pi and PIN session. Bartenders request bookings;
+managers/admins approve them. Present, future, past and cancelled/declined
+views include venue/table/pool requirements, tabs, drinks and shared preparation
+tasks. Approved bookings appear in their Brisbane business-day Handout and
+are preserved in its archive. Open `/#bookings` to view them.
+
 Serve the repository root to run the website; it needs no server-side build.
 `npm run build` prepares the separate native iPad bundle in `www/`.
 
@@ -107,3 +113,5 @@ share sheet and import a file from Files. This transfers barcode mappings;
 stock counts, products, shelf layouts, photos, and delivery history are not
 included. There is no full inventory sync between devices. Existing Safari or
 Home Screen data is not automatically imported into the native app.
+
+Restock contains the product picker and its Restock list sub-page. Admins can add Limited Time, Sale, Incentive, and Not restocking labels to product corners. Labels are saved on the current device and do not prevent manual restocking.

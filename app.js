@@ -1,6 +1,8 @@
 (() => {
   const STORAGE_KEY = "bar-restock-selection-v1";
   const STOCK_KEY = "bar-restock-stock-v1";
+  const TAGS_KEY = "bar-restock-product-tags-v1";
+  const PRODUCT_TAGS = ["Limited Time", "Sale", "Incentive", "Not restocking"];
   const CUSTOM_KEY = "bar-restock-custom-v1";
   const HIDDEN_KEY = "bar-restock-hidden-v1";
   const PAR_KEY = "bar-restock-par-v1";
@@ -39,9 +41,10 @@
     pendingPhoto: null, // resized data URL chosen in the Add product form
     photoLoading: false,
     photoVersion: 0, // ignore conversions superseded by another choice/remove/sign-out
+    tags: {},
     custom: [], // user-added products
     categories: [], // user-created category names (after the built-ins)
-    renamingCategory: null, // custom category being renamed inline on the Products tab
+    renamingCategory: null, // custom category being renamed inline on Restock
     shelves: null, // saved shelf layout { levels: [...] }, or null to show the default
     shelfEdit: false, // admin is editing the shelf layout
     shelfRenaming: null, // level id being renamed inline
@@ -103,6 +106,7 @@
   }
 
   function loadStockState() {
+    state.tags = loadMap(TAGS_KEY);
     state.stock = loadMap(STOCK_KEY);
     const custom = loadJson(CUSTOM_KEY, []);
     state.custom = Array.isArray(custom) ? custom.filter((p) => p && p.id && p.name) : [];
@@ -670,6 +674,8 @@
         card.dataset.id = p.id;
         card.innerHTML = `
           <span class="selected-dot"></span>
+          <div class="product-tags">${(Array.isArray(state.tags[p.id]) ? state.tags[p.id] : []).map(tag => `<span class="product-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          ${canEditCatalog() ? `<details class="product-tag-editor"><summary aria-label="Edit tags for ${escapeHtml(p.name)}">Tags</summary><div class="product-tag-options">${PRODUCT_TAGS.map(tag => `<label><input type="checkbox" data-product-tag="${escapeHtml(tag)}"${(state.tags[p.id] || []).includes(tag) ? " checked" : ""}>${escapeHtml(tag)}</label>`).join("")}<small>Saved on this device</small></div></details>` : ""}
           <button type="button" class="product-toggle" aria-label="Select ${escapeHtml(p.name)}" aria-pressed="false">
             ${thumbMarkup(p)}
             <span class="name">${escapeHtml(p.name)}</span>
@@ -680,7 +686,20 @@
             <button type="button" class="qty-btn" data-act="inc" aria-label="Increase">${ICON("plus")}</button>
           </div>
         `;
+        card.addEventListener("change", async (e) => {
+          if (!e.target.matches("[data-product-tag]") || !canEditCatalog()) return;
+          const tag = e.target.dataset.productTag, checked = e.target.checked;
+          const saved = await storage.withLock(() => {
+            const tags = loadMap(TAGS_KEY), current = Array.isArray(tags[p.id]) ? tags[p.id] : [];
+            tags[p.id] = checked ? [...new Set([...current, tag])] : current.filter(value => value !== tag);
+            if (!saveJson(TAGS_KEY, tags)) return false;
+            state.tags = tags; return true;
+          });
+          if (!saved) { e.target.checked = !checked; return; }
+          card.querySelector(".product-tags").innerHTML = state.tags[p.id].map(value => `<span class="product-tag">${escapeHtml(value)}</span>`).join("");
+        });
         card.addEventListener("click", (e) => {
+          if (e.target.closest(".product-tag-editor")) return;
           const btn = e.target.closest("[data-act]");
           if (btn) {
             e.stopPropagation();
@@ -705,7 +724,7 @@
     if (ids.length === 0) {
       const canPick = !state.role || ROLES[state.role].tabs.includes("products");
       const hint = canPick
-        ? "Tap products on the Products tab to build your restock list."
+        ? "Tap products on Restock to build your restock list."
         : "Nothing has been added to the restock list yet.";
       restockRoot.innerHTML = `
         <div class="empty-state">
@@ -826,6 +845,7 @@
     }
     if (tab !== "shelves") cancelShelfDrag();
     state.tab = tab;
+    $("#restockSubnav").hidden = !["products", "restock"].includes(tab);
     if (!native) {
       const url = new URL(location.href);
       url.hash = tab;
@@ -834,7 +854,7 @@
     if (receive && tab !== "receive") receive.onTabChange(tab); // stop the camera before the panel hides
     document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach((b) => {
-      const on = b.dataset.tab === tab;
+      const on = b.dataset.tab === tab || (b.dataset.tab === "products" && tab === "restock");
       b.classList.toggle("active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
     });
@@ -846,6 +866,7 @@
     if (receive && tab === "receive") receive.onTabChange(tab);
     if (binder) binder.onTabChange(tab);
     if (handout) handout.onTabChange(tab);
+    if (bookings) bookings.onTabChange(tab);
   }
 
   function slugify(name) {
@@ -1822,16 +1843,17 @@
   const ROLES = {
     admin: {
       label: "Admin",
-      tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"],
+      tabs: ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "bookings", "handout"],
       editCatalog: true,
     },
     bartender: {
       label: "Bartender",
-      tabs: ["stock", "receive", "restock", "shelves", "checklist", "procedures", "handout"],
+      tabs: ["products", "stock", "receive", "restock", "shelves", "checklist", "procedures", "bookings", "handout"],
       editCatalog: false, // count stock and receive deliveries; cannot add or remove products or link barcodes
     },
   };
-  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "handout"];
+  ROLES.manager = {label:'Manager',tabs:["products","stock","receive","restock","shelves","checklist","procedures","bookings","handout"],editCatalog:false};
+  const ALL_TABS = ["products", "stock", "receive", "par", "restock", "shelves", "checklist", "procedures", "bookings", "handout"];
 
   function setSession(session) {
     clearTimeout(expiryTimer);
@@ -1879,12 +1901,13 @@
   function applyRole(roleId) {
     state.role = roleId && ROLES[roleId] ? roleId : null;
     Object.keys(ROLES).forEach((id) => document.body.classList.remove("role-" + id));
+    if (!state.loading) renderProducts();
     // Show only the tabs this role may open (driven by ROLES, not per-role CSS).
     const allowedTabs = state.role ? ROLES[state.role].tabs : ALL_TABS;
     document.querySelectorAll(".tab-btn").forEach((b) => {
       b.hidden = !allowedTabs.includes(b.dataset.tab);
     });
-    $(".tab-bar").style.gridTemplateColumns = `repeat(${allowedTabs.length}, 1fr)`;
+    $(".tab-bar").style.gridTemplateColumns = `repeat(${allowedTabs.filter(tab => tab !== "restock").length}, 1fr)`;
     const loginScreen = $("#loginScreen");
     const roleLabel = $("#roleLabel");
     const btnLogout = $("#btnLogout");
@@ -1898,6 +1921,7 @@
     if (receive) receive.onRoleChange();
     if (binder) binder.onRoleChange();
     if (handout) handout.onRoleChange();
+    if (bookings) bookings.onRoleChange();
     if (!state.role) {
       loginScreen.hidden = false;
       clearPendingPhoto();
@@ -1931,8 +1955,9 @@
 
   function signOut(force=false) {
     if (!force && handout && !handout.canSignOut()) return;
+    if (!force && bookings && !bookings.canSignOut()) return;
     ++authGeneration;
-    if (!force) handout?.discardDrafts();
+    if (!force) {handout?.discardDrafts();bookings?.discardDrafts();}
     setSession(null);
     $('#loginPin').value='';
     setFieldError($('#loginPin'),$('#loginError'),force ? 'Your session ended. Enter your PIN.' : null);
@@ -2193,7 +2218,8 @@
     bindReceive();
     binder = window.BarRestockBinder({ escapeHtml, asset, loadJson, saveJson,
       withStorageLock: storage.withLock, showToast, roleId: () => state.role });
-    handout = window.BarRestockHandout({ escapeHtml, roleId: () => state.role, session: () => authSession, onAuthRequired: () => signOut(true) });
+    bookings = window.BarRestockBookings({escapeHtml,roleId:()=>state.role,session:()=>authSession,onAuthRequired:()=>signOut(true)});
+    handout = window.BarRestockHandout({ escapeHtml, roleId: () => state.role, session: () => authSession, onAuthRequired: () => signOut(true), updateBookingTask: (id,task) => bookings.updateTask(id,task) });
     bindChrome();
     window.addEventListener("hashchange", () => {
       const requested = location.hash.slice(1);
@@ -2208,7 +2234,7 @@
    */
   let receive = null;
   let binder = null;
-  let handout = null;
+  let handout = null, bookings = null;
   function bindReceive() {
     if (typeof window.BarRestockReceive !== "function" || !window.BarRestockGS1) return;
     receive = window.BarRestockReceive({

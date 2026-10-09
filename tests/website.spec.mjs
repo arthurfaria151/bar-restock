@@ -6,7 +6,7 @@ async function mockVenue(page) {
     const request=route.request(),path=new URL(request.url()).pathname;
     const role=path==='/api/login' ? (request.postDataJSON().pin==='271828'?'bartender':'admin') : request.headers().authorization?.replace('Bearer test-','');
     const user={id:role,name:role==='admin'?'Arthur':'Sam',role,canEdit:true,expiresAt:Date.now()+43200000};
-    const value=path==='/api/login'?{token:'test-'+role,user}:path==='/api/session'?{user}:path==='/api/archives'?{archives:[]}:{date:'2026-10-08',entries:[],user,closeHour:2,closeMinute:0};
+    const value=path==='/api/login'?{token:'test-'+role,user}:path==='/api/session'?{user}:path==='/api/archives'?{archives:[]}:path==='/api/bookings'?{bookings:[],now:new Date().toISOString(),user}:{date:'2026-10-08',entries:[],user,closeHour:2,closeMinute:0};
     await route.fulfill({contentType:'application/json',body:JSON.stringify(value)});
   });
   await page.addInitScript(()=> {
@@ -52,6 +52,7 @@ async function setup(page, values = {}, role = 'admin') {
   await expect(page.locator('#productsRoot .product-card')).toHaveCount(catalog.length + (values[keys.custom]?.length || 0));
 }
 async function tab(page, name) {
+  if (name === "restock" && !await page.locator("#restockSubnav").isVisible()) await tab(page, "products");
   const button = page.locator(`.tab-btn[data-tab="${name}"]`);
   if (!await button.isVisible()) await page.locator('#menuToggle').click();
   await button.click();
@@ -354,15 +355,15 @@ test('dialogs contain keyboard focus and restore the shelf opener after renderin
   await expect(opener).toBeFocused();
 });
 
-test('all nine panels fit seven widths in both color schemes', async ({ page }) => {
-  // 126 panel/viewport combinations with the expanded catalog.
+test('all ten panels fit seven widths in both color schemes', async ({ page }) => {
+  // 140 panel/viewport combinations with the expanded catalog.
   test.setTimeout(120000);
   await setup(page);
   for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
     for (const width of [320, 375, 768, 820, 1024, 1180, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves', 'checklist', 'procedures', 'handout']) {
+      for (const panel of ['products', 'stock', 'receive', 'par', 'restock', 'shelves', 'checklist', 'procedures', 'bookings', 'handout']) {
         await tab(page, panel);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${panel}, ${width}px, ${colorScheme}`).toBe(true);
       }
@@ -550,7 +551,7 @@ test('Shelves direct link opens after sign-in and survives reload', async ({ pag
   await page.reload();
   await expect(page.locator('#panel-shelves')).toBeVisible();
   await page.goto('/#par');
-  await expect(page.locator('#panel-stock')).toBeVisible();
+  await expect(page.locator('#panel-products')).toBeVisible();
   await expect(page.locator('#panel-par')).not.toBeVisible();
 });
 
@@ -922,4 +923,24 @@ test('new catalog products without photos use placeholders and remain selectable
   await page.reload();await expect(product.locator('.product-toggle')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.product-card').filter({hasText:'Divas Strawberry Liqueur'})).toHaveCount(1);
   expect(requests.some(url=>url.includes('/thumbs/brouhaha-strawberry-rhubarb-sour.'))).toBe(false);
+});
+
+test('Restock contains its list sub-page and product corner tags persist without selecting the product', async ({ page }) => {
+  await setup(page);
+  await expect(page.locator('.nav-menu [data-tab="products"]')).toContainText('Restock');
+  await expect(page.locator('.nav-menu [data-tab="restock"]')).toHaveCount(0);
+  const card = page.locator('#productsRoot .product-card').first();
+  const id = await card.getAttribute('data-id');
+  await card.locator('.product-tag-editor summary').click();
+  await card.locator('[data-product-tag="Limited Time"]').check();
+  await card.locator('[data-product-tag="Not restocking"]').check();
+  await expect(card.locator('.product-tags')).toContainText('Limited Time');
+  await expect(card.locator('.product-toggle')).toHaveAttribute('aria-pressed', 'false');
+  await page.reload();
+  await expect(page.locator(`#productsRoot [data-id="${id}"] .product-tags`)).toContainText('Not restocking');
+  await tab(page, 'restock');
+  await expect(page.locator('#panel-restock')).toBeVisible();
+  await expect(page.locator('#restockSubnav')).toBeVisible();
+  await page.locator('#restockSubnav [data-goto="products"]').click();
+  await expect(page.locator('#panel-products')).toBeVisible();
 });

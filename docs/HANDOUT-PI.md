@@ -84,7 +84,7 @@ sudo bash scripts/set-staff-pin.sh sam bartender 'Sam'
 ```
 
 The first argument is an internal account ID used only during provisioning;
-staff never enter it to sign in. Use `admin` for a person who manages products,
+staff never enter it to sign in. Use `manager` for booking approvals without catalog administration, or `admin` for a person who manages products,
 par levels and shelves. Both roles can edit the shared Handout. Repeating the
 command changes that person's PIN and preserves their account identity.
 Duplicate PINs are rejected. Existing read-only Handout permissions are kept
@@ -133,3 +133,31 @@ proxy to overwrite `X-Real-IP`; the default limits attempts by socket address.
 retries, persistence, date boundaries and archive immutability. Browser tests
 use an isolated, real local SQLite server to check multi-user live updates,
 conflicting drafts, read-only access and downloadable daily archives.
+
+## Bookings
+
+The same PIN session authorizes `/api/bookings`. Bartenders submit pending
+requests; managers/admins approve or decline them. Admins/managers can create
+approved bookings directly and edit or cancel active bookings. A requester can
+edit or withdraw their pending request. Viewing accounts cannot make changes.
+To provision a manager locally on the Pi:
+
+```bash
+sudo bash scripts/set-staff-pin.sh alex manager 'Alex'
+```
+
+All start/end times are interpreted in Australia/Brisbane. Approved bookings
+that overlap a business day appear in its Handout, including bookings spanning
+02:00. Pending, declined and cancelled bookings do not appear in the current
+Handout. Closing snapshots retain booking details and task statuses in both
+SQLite and the Markdown file; later edits cannot rewrite closed archives.
+Preparation task updates are shared across devices with per-task version
+checks. Bookings and task states are stored in the existing SQLite database.
+Past bookings are read-only, and cancelled/declined records remain available
+in the history view. Keep database and archive backups as described above.
+
+The health response includes `"features":{"bookings":true}` once the Pi is
+updated. Rerun the existing installer after pulling; it preserves accounts,
+PINs and archives while migrating the database automatically. The website
+must be published after this backend update. Bookings require connectivity;
+unsaved form details are kept in the current browser tab after a failed save.

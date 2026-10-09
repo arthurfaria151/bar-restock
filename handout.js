@@ -26,6 +26,7 @@
       $('#handoutIdentity').textContent = session ? session.user.name : '';
       if(!current || !session) return;
       const day=archive || current;
+      $('#handoutBookings').innerHTML=(day.bookings || []).length ? '<h3>Approved bookings for this business day</h3>'+(day.bookings || []).map(b=>`<article class="booking-card"><h4>${api.escapeHtml(b.name)}</h4>${window.BarRestockBookingUI.details(b,api.escapeHtml)}${window.BarRestockBookingUI.tasks(b,api.escapeHtml,!!archive || current.user.canEdit===false || Date.parse(b.endAt)<=Date.now())}</article>`).join('') : '';
       $('#handoutDate').textContent = `${day.date} · ${archive ? 'Archived handout' : 'Current business day'}`;
       $('#handoutClose').textContent = `Closes at ${String(current.closeHour).padStart(2,'0')}:${String(current.closeMinute).padStart(2,'0')} Brisbane time (Australia/Brisbane).`;
       $('#handoutBack').hidden=!archive;
@@ -100,6 +101,13 @@
       } finally {requestBusy=false;$('#handoutShared').querySelectorAll('button[type=submit],textarea').forEach(b=>b.disabled=false);}
     }
     let composerMutation=null;
+    $('#handoutBookings').addEventListener('change',async e=> {
+      const select=e.target.closest('[data-booking-task]');if(!select || archive || !current || current.user.canEdit===false)return;
+      select.disabled=true;
+      const saved=await api.updateBookingTask(select.dataset.bookingId,{taskId:select.dataset.bookingTask,taskVersion:Number(select.dataset.taskVersion),taskStatus:select.value});
+      status(saved?'Preparation task saved — visible to the team.':'The task change was not saved. Refresh and try again.');
+      await open();
+    });
     $('#handoutComposer').addEventListener('submit',async e=> {
       e.preventDefault();const text=$('#handoutText').value;
       if(!text.trim() || !current) return;

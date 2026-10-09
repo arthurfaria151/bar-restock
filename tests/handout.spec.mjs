@@ -63,7 +63,9 @@ test('one PIN opens the whole app and Handout, survives reload, and logs out tog
  expect(await page.evaluate(()=>sessionStorage.getItem('bar-restock-session-v2'))).toBeNull();
  await page.locator('#loginPin').fill('271828');await page.locator('#loginForm button[type=submit]').click();
  await expect(page.locator('#handoutConnection')).toHaveText('Live');await expect(page.locator('#roleLabel')).toHaveText('Sam · Bartender');
- await expect(page.locator('[data-tab=products]')).toBeHidden();
+ await expect(page.locator('[data-tab=products]')).toContainText('Restock');
+ await expect(page.locator('#productsRoot .product-tag-editor')).toHaveCount(0);
+ await expect(page.locator('[data-tab=par]')).toBeHidden();
 });
 test('wrong PIN and forged old role cannot unlock the app',async({page,service})=> {
  await page.route('**/handout-config.js*',route=>route.fulfill({contentType:'text/javascript',body:'window.BarRestockHandoutConfig='+JSON.stringify({apiBase:service.base})+';'}));
